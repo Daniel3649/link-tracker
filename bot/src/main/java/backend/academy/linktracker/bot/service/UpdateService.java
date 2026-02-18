@@ -2,6 +2,7 @@ package backend.academy.linktracker.bot.service;
 
 import backend.academy.linktracker.bot.command.Command;
 import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
+import backend.academy.linktracker.bot.sender.TelegramSender;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
@@ -13,17 +14,27 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UpdateService {
     private final CommandDispatcher commandDispatcher;
+    private final MessageService messageService;
+    private final TelegramSender sender;
 
     public void handleEvent(Update update) {
-        Objects.requireNonNull(update, "Event info is null");
+        if (update == null) { return; };
 
         Message message = update.message();
-        if (Objects.isNull(message)) { return; }
+        if (message == null) { return; }
 
         String messageText = message.text();
-        if (Objects.isNull(messageText)) { return; }
+        if (messageText == null) { return; }
 
-        commandDispatcher.getCommandByName(messageText.strip())
-            .ifPresent(command -> command.execute(update));
+        String raw = messageText.strip();
+        if (!raw.startsWith("/")) { return; }
+
+        String commandToken = raw.split("\\s+", 2)[0];  // "/start@MyBot hello" -> "/start@MyBot"
+        String commandName = commandToken.split("@", 2)[0];  // "/start@MyBot" -> "/start"
+
+        long chatId = message.chat().id();
+        commandDispatcher.getCommandByName(commandName)
+            .ifPresentOrElse(command -> command.execute(update),
+                () -> sender.sendPlain(chatId, messageService.get("command.unknown")));
     }
 }

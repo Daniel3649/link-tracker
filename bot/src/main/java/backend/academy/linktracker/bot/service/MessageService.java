@@ -12,7 +12,7 @@ public class MessageService {
     private final MessageSource messageSource;
 
     public String get(String key, Object... args) {
-        Objects.requireNonNull(key, "Message key is null");
+        if (key == null) throw new IllegalArgumentException("Key is null");
         return messageSource.getMessage(key, args, Locale.US);
     }
 }

@@ -1,10 +1,11 @@
-package backend.academy.linktracker.bot.command;
+package backend.academy.linktracker.bot.command.meta;
 
 import lombok.Getter;
 
 @Getter
 public enum CommandName {
-    START("/start");
+    START("/start"),
+    HELP("/help");
 
     private String text;
 
