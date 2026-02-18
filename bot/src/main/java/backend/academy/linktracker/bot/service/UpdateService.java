@@ -6,6 +6,8 @@ import backend.academy.linktracker.bot.sender.TelegramSender;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,28 +15,89 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UpdateService {
+    private static final Logger log = LoggerFactory.getLogger(UpdateService.class);
     private final CommandDispatcher commandDispatcher;
     private final MessageService messageService;
     private final TelegramSender sender;
 
     public void handleEvent(Update update) {
-        if (update == null) { return; };
+        if (update == null) {
+            log.atWarn()
+                .addKeyValue("event", "update_ignored")
+                .addKeyValue("reason", "update_null")
+                .log("Update ignored");
+            return;
+        }
 
         Message message = update.message();
-        if (message == null) { return; }
+        if (message == null) {
+            log.atWarn()
+                .addKeyValue("event", "update_ignored")
+                .addKeyValue("reason", "message_null")
+                .log("Update ignored");
+            return;
+        }
 
         String messageText = message.text();
-        if (messageText == null) { return; }
+        if (messageText == null) {
+            log.atWarn()
+                .addKeyValue("event", "update_ignored")
+                .addKeyValue("reason", "text_null")
+                .log("Update ignored");
+            return;
+        }
 
         String raw = messageText.strip();
-        if (!raw.startsWith("/")) { return; }
+        if (!raw.startsWith("/")) {
+            log.atWarn()
+                .addKeyValue("event", "update_ignored")
+                .addKeyValue("reason", "not_a_command")
+                .log("Update ignored");
+            return;
+        }
 
         String commandToken = raw.split("\\s+", 2)[0];  // "/start@MyBot hello" -> "/start@MyBot"
         String commandName = commandToken.split("@", 2)[0];  // "/start@MyBot" -> "/start"
 
-        long chatId = message.chat().id();
+        long chatId = update.message().chat().id();
+        long updateId = update.updateId();
+
+        log.atInfo()
+            .addKeyValue("event", "command_received")
+            .addKeyValue("updateId", updateId)
+            .addKeyValue("chatId", chatId)
+            .addKeyValue("command", commandName)
+            .log("Command received");
+
         commandDispatcher.getCommandByName(commandName)
-            .ifPresentOrElse(command -> command.execute(update),
-                () -> sender.sendPlain(chatId, messageService.get("command.unknown")));
+            .ifPresentOrElse(command -> {
+                    log.atInfo()
+                        .addKeyValue("event", "command_dispatch")
+                        .addKeyValue("updateId", updateId)
+                        .addKeyValue("chatId", chatId)
+                        .addKeyValue("command", commandName)
+                        .addKeyValue("handler", command.getClass().getSimpleName())
+                        .log("Dispatching command");
+
+                    command.execute(update);
+
+                    log.atInfo()
+                        .addKeyValue("event", "command_handled")
+                        .addKeyValue("updateId", updateId)
+                        .addKeyValue("chatId", chatId)
+                        .addKeyValue("command", commandName)
+                        .log("Command handled");
+
+                },
+                () -> {
+                    sender.sendPlain(chatId, messageService.get("command.unknown"));
+                    log.atWarn()
+                        .addKeyValue("event", "unknown_command")
+                        .addKeyValue("updateId", updateId)
+                        .addKeyValue("chatId", chatId)
+                        .addKeyValue("command", commandName)
+                        .log("Unknown command");
+                });
+
     }
 }

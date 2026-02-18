@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ public class CommandDispatcher {
     }
 
     public Optional<Command> getCommandByName(String name) {
-        if (name == null) {throw new IllegalArgumentException("Command name is null"); }
+        Objects.requireNonNull(name);
         var command = commandsByName.get(name);
         return Optional.ofNullable(command);
     }

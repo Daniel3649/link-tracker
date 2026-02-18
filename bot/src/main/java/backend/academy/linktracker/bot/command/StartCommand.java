@@ -7,17 +7,17 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
 public class StartCommand implements Command {
-    private final TelegramBot bot;
     private final MessageService messageService;
     private final TelegramSender sender;
 
     @Override
     public void execute(Update update) {
-        if (update == null) {throw new IllegalArgumentException("Update object is null");}
+        Objects.requireNonNull(update);
         long chatId = update.message().chat().id();
         String message = messageService.get("command.start");
         sender.sendPlain(chatId, message);

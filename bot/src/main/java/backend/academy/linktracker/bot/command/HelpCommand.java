@@ -8,6 +8,7 @@ import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -18,7 +19,7 @@ public class HelpCommand implements Command {
 
     @Override
     public void execute(Update update) {
-        if (update == null) {throw new IllegalArgumentException("Update object is null");}
+        Objects.requireNonNull(update);
 
         StringBuilder message = new StringBuilder();
         message.append(messageService.get("command.help.header")).append('\n');
