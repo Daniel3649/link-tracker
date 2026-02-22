@@ -29,4 +29,8 @@ public class CommandDispatcher {
         var command = commandsByName.get(name);
         return Optional.ofNullable(command);
     }
+
+    public final List<Command> getCommands() {
+        return commands;
+    }
 }
