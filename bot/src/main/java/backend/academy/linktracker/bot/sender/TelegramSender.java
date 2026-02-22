@@ -17,10 +17,10 @@ public class TelegramSender {
     public void sendPlain(long chatId, String message) {
         if (message == null || message.isBlank()) {
             log.atWarn()
-                .addKeyValue("event", "telegram_send_skipped")
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("reason", "message_null_or_blank")
-                .log("Send skipped");
+                    .addKeyValue("event", "telegram_send_skipped")
+                    .addKeyValue("chatId", chatId)
+                    .addKeyValue("reason", "message_null_or_blank")
+                    .log("Send skipped");
             return;
         }
 
@@ -32,11 +32,11 @@ public class TelegramSender {
             String description = response.description();
 
             log.atWarn()
-                .addKeyValue("event", "error_sending_response")
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("errorCode", errorCode)
-                .addKeyValue("description", description)
-                .log("Error sending response");
+                    .addKeyValue("event", "error_sending_response")
+                    .addKeyValue("chatId", chatId)
+                    .addKeyValue("errorCode", errorCode)
+                    .addKeyValue("description", description)
+                    .log("Error sending response");
         }
     }
 }

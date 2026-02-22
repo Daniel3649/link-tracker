@@ -1,25 +1,5 @@
 package backend.academy.linktracker.bot;
 
-import backend.academy.linktracker.bot.properties.TelegramProperties;
-import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.service.UpdateService;
-import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.UpdatesListener;
-import com.github.tomakehurst.wiremock.matching.ContentPattern;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ActiveProfiles;
-import org.wiremock.spring.EnableWireMock;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
@@ -31,6 +11,25 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import backend.academy.linktracker.bot.properties.TelegramProperties;
+import backend.academy.linktracker.bot.service.MessageService;
+import backend.academy.linktracker.bot.service.UpdateService;
+import com.github.tomakehurst.wiremock.matching.ContentPattern;
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.UpdatesListener;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+import org.wiremock.spring.EnableWireMock;
 
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
@@ -73,10 +72,12 @@ public class TelegramBotCommandsIntegrationTest {
 
         String expectedText = messageService.get("command.start");
 
-        verify(1, postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-            .withPathParam("token", equalTo(telegramProperties.getToken()))
-            .withRequestBody(matchingBodyContainsChatId(chatId))
-            .withRequestBody(matchingBodyContainsText(expectedText)));
+        verify(
+                1,
+                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                        .withPathParam("token", equalTo(telegramProperties.getToken()))
+                        .withRequestBody(matchingBodyContainsChatId(chatId))
+                        .withRequestBody(matchingBodyContainsText(expectedText)));
     }
 
     @Test
@@ -95,14 +96,16 @@ public class TelegramBotCommandsIntegrationTest {
 
         assertTrue(latch.await(10, TimeUnit.SECONDS));
 
-        String expectedText = messageService.get("command.help.header") + '\n' +
-            "/help - " + messageService.get("command.help.description") + '\n' +
-            "/start - " + messageService.get("command.start.description") + '\n';
+        String expectedText = messageService.get("command.help.header") + '\n' + "/help - "
+                + messageService.get("command.help.description") + '\n' + "/start - "
+                + messageService.get("command.start.description") + '\n';
 
-        verify(1, postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-            .withPathParam("token", equalTo(telegramProperties.getToken()))
-            .withRequestBody(matchingBodyContainsChatId(chatId))
-            .withRequestBody(matchingBodyContainsText(expectedText)));
+        verify(
+                1,
+                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                        .withPathParam("token", equalTo(telegramProperties.getToken()))
+                        .withRequestBody(matchingBodyContainsChatId(chatId))
+                        .withRequestBody(matchingBodyContainsText(expectedText)));
     }
 
     @Test
@@ -123,20 +126,22 @@ public class TelegramBotCommandsIntegrationTest {
 
         String expectedText = messageService.get("command.unknown");
 
-        verify(1, postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-            .withPathParam("token", equalTo(telegramProperties.getToken()))
-            .withRequestBody(matchingBodyContainsChatId(chatId))
-            .withRequestBody(matchingBodyContainsText(expectedText)));
+        verify(
+                1,
+                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                        .withPathParam("token", equalTo(telegramProperties.getToken()))
+                        .withRequestBody(matchingBodyContainsChatId(chatId))
+                        .withRequestBody(matchingBodyContainsText(expectedText)));
     }
 
     private void stubGetUpdatesOnceThenEmpty(String text, long chatId) {
         stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
-            .inScenario("cmd")
-            .whenScenarioStateIs(STARTED)
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("""
+                .inScenario("cmd")
+                .whenScenarioStateIs(STARTED)
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
                     {
                       "ok": true,
                       "result": [
@@ -153,27 +158,25 @@ public class TelegramBotCommandsIntegrationTest {
                       ]
                     }
                     """.formatted(chatId, escapeJson(text))))
-            .willSetStateTo("EMPTY"));
-
+                .willSetStateTo("EMPTY"));
 
         stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
-            .inScenario("cmd")
-            .whenScenarioStateIs("EMPTY")
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("""
+                .inScenario("cmd")
+                .whenScenarioStateIs("EMPTY")
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
                     { "ok": true, "result": [] }
-                    """))
-        );
+                    """)));
     }
 
     private void stubSendMessageOk(long chatId) {
         stubFor(post(urlMatching("/bot[^/]+/sendMessage"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("""
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
                     {
                       "ok": true,
                       "result": {
@@ -184,7 +187,6 @@ public class TelegramBotCommandsIntegrationTest {
                       }
                     }
                     """.formatted(chatId))));
-
     }
 
     private static ContentPattern<?> matchingBodyContainsChatId(long chatId) {
@@ -192,8 +194,7 @@ public class TelegramBotCommandsIntegrationTest {
     }
 
     private static ContentPattern<?> matchingBodyContainsText(String text) {
-        String encoded = URLEncoder.encode(text, StandardCharsets.UTF_8)
-            .replace("+", "%20");
+        String encoded = URLEncoder.encode(text, StandardCharsets.UTF_8).replace("+", "%20");
 
         String json = "\"text\"\\s*:\\s*\"" + Pattern.quote(text) + "\"";
         String form = "text=" + Pattern.quote(encoded);

@@ -5,10 +5,10 @@ import backend.academy.linktracker.bot.command.meta.CommandName;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import com.pengrad.telegrambot.model.Update;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -28,8 +28,10 @@ public class HelpCommand implements Command {
 
         for (Command command : dispatcher.getCommands()) {
             message.append("/")
-                .append(command.name()).append(" - ")
-                .append(command.description()).append('\n');
+                    .append(command.name())
+                    .append(" - ")
+                    .append(command.description())
+                    .append('\n');
         }
 
         long chatId = update.message().chat().id();

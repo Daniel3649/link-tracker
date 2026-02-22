@@ -6,9 +6,9 @@ import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +31,6 @@ public class TelegramUpdatesListener implements UpdatesListener {
         for (Update update : updates) {
             updateService.handleEvent(update);
         }
-        return UpdatesListener.CONFIRMED_UPDATES_ALL;
+        return CONFIRMED_UPDATES_ALL;
     }
 }

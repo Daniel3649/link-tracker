@@ -1,10 +1,10 @@
 package backend.academy.linktracker.bot.service;
 
+import java.util.Locale;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
-import java.util.Locale;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor

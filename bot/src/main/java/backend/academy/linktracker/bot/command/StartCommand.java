@@ -3,11 +3,10 @@ package backend.academy.linktracker.bot.command;
 import backend.academy.linktracker.bot.command.meta.CommandName;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
-import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Update;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor

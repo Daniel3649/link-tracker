@@ -7,7 +7,7 @@ public enum CommandName {
     START("start"),
     HELP("help");
 
-    private String text;
+    private final String text;
 
     CommandName(String text) {
         this.text = text;

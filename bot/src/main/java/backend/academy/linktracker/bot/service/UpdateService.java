@@ -1,6 +1,5 @@
 package backend.academy.linktracker.bot.service;
 
-import backend.academy.linktracker.bot.command.Command;
 import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import com.pengrad.telegrambot.model.Message;
@@ -9,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,83 +20,83 @@ public class UpdateService {
     public void handleEvent(Update update) {
         if (update == null) {
             log.atWarn()
-                .addKeyValue("event", "update_ignored")
-                .addKeyValue("reason", "update_null")
-                .log("Update ignored");
+                    .addKeyValue("event", "update_ignored")
+                    .addKeyValue("reason", "update_null")
+                    .log("Update ignored");
             return;
         }
 
         Message message = update.message();
         if (message == null) {
             log.atWarn()
-                .addKeyValue("event", "update_ignored")
-                .addKeyValue("reason", "message_null")
-                .log("Update ignored");
+                    .addKeyValue("event", "update_ignored")
+                    .addKeyValue("reason", "message_null")
+                    .log("Update ignored");
             return;
         }
 
         String messageText = message.text();
         if (messageText == null) {
             log.atWarn()
-                .addKeyValue("event", "update_ignored")
-                .addKeyValue("reason", "text_null")
-                .log("Update ignored");
+                    .addKeyValue("event", "update_ignored")
+                    .addKeyValue("reason", "text_null")
+                    .log("Update ignored");
             return;
         }
 
         String raw = messageText.strip();
         if (!raw.startsWith("/")) {
             log.atWarn()
-                .addKeyValue("event", "update_ignored")
-                .addKeyValue("reason", "not_a_command")
-                .log("Update ignored");
+                    .addKeyValue("event", "update_ignored")
+                    .addKeyValue("reason", "not_a_command")
+                    .log("Update ignored");
             return;
         }
 
-        String commandToken = raw.split("\\s+", 2)[0];  // "/start@MyBot hello" -> "/start@MyBot"
-        String withoutSlash = commandToken.substring(1);  // "/start@MyBot" -> "start@MyBot"
-        String[] parts = withoutSlash.split("@", 2);  // "start@MyBot" -> ["start", "MyBot"]
+        String commandToken = raw.split("\\s+", 2)[0]; // "/start@MyBot hello" -> "/start@MyBot"
+        String withoutSlash = commandToken.substring(1); // "/start@MyBot" -> "start@MyBot"
+        String[] parts = withoutSlash.split("@", 2); // "start@MyBot" -> ["start", "MyBot"]
         String commandName = parts[0].toLowerCase(); // ["start", "MyBot"] -> "start"
 
         long chatId = update.message().chat().id();
         long updateId = update.updateId();
 
         log.atInfo()
-            .addKeyValue("event", "command_received")
-            .addKeyValue("updateId", updateId)
-            .addKeyValue("chatId", chatId)
-            .addKeyValue("command", commandName)
-            .log("Command received");
+                .addKeyValue("event", "command_received")
+                .addKeyValue("updateId", updateId)
+                .addKeyValue("chatId", chatId)
+                .addKeyValue("command", commandName)
+                .log("Command received");
 
-        commandDispatcher.getCommandByName(commandName)
-            .ifPresentOrElse(command -> {
-                    log.atInfo()
-                        .addKeyValue("event", "command_dispatch")
-                        .addKeyValue("updateId", updateId)
-                        .addKeyValue("chatId", chatId)
-                        .addKeyValue("command", commandName)
-                        .addKeyValue("handler", command.getClass().getSimpleName())
-                        .log("Dispatching command");
+        commandDispatcher
+                .getCommandByName(commandName)
+                .ifPresentOrElse(
+                        command -> {
+                            log.atInfo()
+                                    .addKeyValue("event", "command_dispatch")
+                                    .addKeyValue("updateId", updateId)
+                                    .addKeyValue("chatId", chatId)
+                                    .addKeyValue("command", commandName)
+                                    .addKeyValue("handler", command.getClass().getSimpleName())
+                                    .log("Dispatching command");
 
-                    command.execute(update);
+                            command.execute(update);
 
-                    log.atInfo()
-                        .addKeyValue("event", "command_handled")
-                        .addKeyValue("updateId", updateId)
-                        .addKeyValue("chatId", chatId)
-                        .addKeyValue("command", commandName)
-                        .log("Command handled");
-
-                },
-                () -> {
-                    sender.sendPlain(chatId, messageService.get("command.unknown"));
-                    log.atWarn()
-                        .addKeyValue("event", "unknown_command")
-                        .addKeyValue("updateId", updateId)
-                        .addKeyValue("chatId", chatId)
-                        .addKeyValue("command", commandName)
-                        .log("Unknown command");
-                });
-
+                            log.atInfo()
+                                    .addKeyValue("event", "command_handled")
+                                    .addKeyValue("updateId", updateId)
+                                    .addKeyValue("chatId", chatId)
+                                    .addKeyValue("command", commandName)
+                                    .log("Command handled");
+                        },
+                        () -> {
+                            sender.sendPlain(chatId, messageService.get("command.unknown"));
+                            log.atWarn()
+                                    .addKeyValue("event", "unknown_command")
+                                    .addKeyValue("updateId", updateId)
+                                    .addKeyValue("chatId", chatId)
+                                    .addKeyValue("command", commandName)
+                                    .log("Unknown command");
+                        });
     }
 }
