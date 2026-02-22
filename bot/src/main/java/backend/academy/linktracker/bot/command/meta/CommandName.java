@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum CommandName {
-    START("/start"),
-    HELP("/help");
+    START("start"),
+    HELP("help");
 
     private String text;
 

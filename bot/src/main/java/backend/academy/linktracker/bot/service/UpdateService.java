@@ -57,7 +57,9 @@ public class UpdateService {
         }
 
         String commandToken = raw.split("\\s+", 2)[0];  // "/start@MyBot hello" -> "/start@MyBot"
-        String commandName = commandToken.split("@", 2)[0];  // "/start@MyBot" -> "/start"
+        String withoutSlash = commandToken.substring(1);  // "/start@MyBot" -> "start@MyBot"
+        String[] parts = withoutSlash.split("@", 2);  // "start@MyBot" -> ["start", "MyBot"]
+        String commandName = parts[0].toLowerCase(); // ["start", "MyBot"] -> "start"
 
         long chatId = update.message().chat().id();
         long updateId = update.updateId();

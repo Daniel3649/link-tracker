@@ -27,7 +27,7 @@ public class HelpCommand implements Command {
         CommandDispatcher dispatcher = dispatcherProvider.getObject();
 
         for (Command command : dispatcher.getCommands()) {
-            message
+            message.append("/")
                 .append(command.name()).append(" - ")
                 .append(command.description()).append('\n');
         }
