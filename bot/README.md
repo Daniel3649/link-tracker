@@ -1,6 +1,7 @@
 # Запуск Telegram-бота LinkTracker через IntelliJ IDEA
 
 ## Предварительные условия
+
 - У вас создан бот в **@BotFather** и есть **токен**.
 - Проект открыт в **IntelliJ IDEA**.
 - Зависимости проекта успешно скачиваются (Maven/Gradle настроен).
@@ -10,15 +11,14 @@
 ## 1) Указать токен через переменные окружения в IntelliJ IDEA
 
 1. Откройте **Run/Debug Configurations**:
-    - Справа сверху рядом с кнопкой запуска выберите вашу конфигурацию → **Edit Configurations…**
+   - Справа сверху рядом с кнопкой запуска выберите вашу конфигурацию → **Edit Configurations…**
 2. Выберите конфигурацию запуска вашего приложения (например, `BotApplication`).
 3. В разделе **Environment variables** добавьте переменную:
-
-    - **Name:** `TELEGRAM_TOKEN`
-    - **Value:** `<ваш_токен>`
+   - **Name:** `TELEGRAM_TOKEN`
+   - **Value:** `<ваш_токен>`
 
    Пример:
-    - `TELEGRAM_TOKEN=123456789:ABCDEF...`
+   - `TELEGRAM_TOKEN=123456789:ABCDEF...`
 
 4. Нажмите **Apply** → **OK**.
 
@@ -46,3 +46,4 @@
 - `/abracadabra`
 
 ---
+
