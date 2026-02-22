@@ -5,14 +5,13 @@ import backend.academy.linktracker.bot.sender.TelegramSender;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UpdateService {
-    private static final Logger log = LoggerFactory.getLogger(UpdateService.class);
     private final CommandDispatcher commandDispatcher;
     private final MessageService messageService;
     private final TelegramSender sender;
