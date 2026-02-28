@@ -28,9 +28,7 @@ public class TelegramUpdatesListener implements UpdatesListener {
 
     @Override
     public int process(List<Update> updates) {
-        for (Update update : updates) {
-            updateService.handleEvent(update);
-        }
+        updates.forEach(updateService::handleEvent);
         return CONFIRMED_UPDATES_ALL;
     }
 }
