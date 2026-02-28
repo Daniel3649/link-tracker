@@ -10,6 +10,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import backend.academy.linktracker.bot.properties.TelegramProperties;
@@ -21,7 +23,6 @@ import com.pengrad.telegrambot.UpdatesListener;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -68,16 +69,17 @@ public class TelegramBotCommandsIntegrationTest {
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
 
-        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        assertTrue(latch.await(10, SECONDS));
 
         String expectedText = messageService.get("command.start");
 
-        verify(
-                1,
-                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-                        .withPathParam("token", equalTo(telegramProperties.getToken()))
-                        .withRequestBody(matchingBodyContainsChatId(chatId))
-                        .withRequestBody(matchingBodyContainsText(expectedText)));
+        await().atMost(10, SECONDS)
+                .untilAsserted(() -> verify(
+                        1,
+                        postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                                .withPathParam("token", equalTo(telegramProperties.getToken()))
+                                .withRequestBody(matchingBodyContainsChatId(chatId))
+                                .withRequestBody(matchingBodyContainsText(expectedText))));
     }
 
     @Test
@@ -94,18 +96,19 @@ public class TelegramBotCommandsIntegrationTest {
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
 
-        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        assertTrue(latch.await(10, SECONDS));
 
         String expectedText = messageService.get("command.help.header") + '\n' + "/help - "
                 + messageService.get("command.help.description") + '\n' + "/start - "
                 + messageService.get("command.start.description") + '\n';
 
-        verify(
-                1,
-                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-                        .withPathParam("token", equalTo(telegramProperties.getToken()))
-                        .withRequestBody(matchingBodyContainsChatId(chatId))
-                        .withRequestBody(matchingBodyContainsText(expectedText)));
+        await().atMost(10, SECONDS)
+                .untilAsserted(() -> verify(
+                        1,
+                        postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                                .withPathParam("token", equalTo(telegramProperties.getToken()))
+                                .withRequestBody(matchingBodyContainsChatId(chatId))
+                                .withRequestBody(matchingBodyContainsText(expectedText))));
     }
 
     @Test
@@ -122,16 +125,17 @@ public class TelegramBotCommandsIntegrationTest {
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
 
-        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        assertTrue(latch.await(10, SECONDS));
 
         String expectedText = messageService.get("command.unknown");
 
-        verify(
-                1,
-                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-                        .withPathParam("token", equalTo(telegramProperties.getToken()))
-                        .withRequestBody(matchingBodyContainsChatId(chatId))
-                        .withRequestBody(matchingBodyContainsText(expectedText)));
+        await().atMost(10, SECONDS)
+                .untilAsserted(() -> verify(
+                        1,
+                        postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                                .withPathParam("token", equalTo(telegramProperties.getToken()))
+                                .withRequestBody(matchingBodyContainsChatId(chatId))
+                                .withRequestBody(matchingBodyContainsText(expectedText))));
     }
 
     private void stubGetUpdatesOnceThenEmpty(String text, long chatId) {
