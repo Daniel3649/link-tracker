@@ -5,6 +5,8 @@ import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -61,5 +63,12 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
     public void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         subscriptions.remove(mapKey);
+    }
+
+    @Override
+    public List<Subscription> findAllByTelegramChat(TelegramChat telegramChat) {
+        return subscriptions.values().stream()
+            .filter(subscription -> Objects.equals(subscription.getTelegramChat(), telegramChat))
+            .toList();
     }
 }

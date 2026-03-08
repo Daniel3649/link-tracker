@@ -2,18 +2,21 @@ package backend.academy.linktracker.scrapper.service;
 
 import backend.academy.linktracker.scrapper.dto.request.AddLinkRequest;
 import backend.academy.linktracker.scrapper.dto.request.RemoveLinkRequest;
+import backend.academy.linktracker.scrapper.dto.response.LinkResponse;
+import backend.academy.linktracker.scrapper.dto.response.ListLinksResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -46,6 +49,17 @@ public class SubscriptionService {
             ));
 
         deleteSubscription(trackedLink, telegramChat);
+    }
+
+    public ListLinksResponse getAllSubscriptions(long chatId) {
+        TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId)
+            .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
+
+        List<LinkResponse> links = subscriptionRepository.findAllByTelegramChat(telegramChat).stream()
+            .map(this::toLinkResponse)
+            .toList();
+
+        return new ListLinksResponse(links, links.size());
     }
 
     private void createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
@@ -84,4 +98,20 @@ public class SubscriptionService {
             }
         }
     }
+
+    private LinkResponse toLinkResponse(Subscription subscription) {
+        TrackedLink trackedLink = subscription.getTrackedLink();
+
+        List<String> tags = subscriptionTagRepository.findAllBySubscription(subscription).stream()
+            .sorted()
+            .toList();
+
+        return new LinkResponse(
+            trackedLink.getId(),
+            URI.create(trackedLink.getUrl()),
+            tags,
+            List.of()
+        );
+    }
+
 }
