@@ -1,9 +1,8 @@
 package backend.academy.linktracker.scrapper.handlers;
 
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
-import backend.academy.linktracker.scrapper.exception.link.OrphanTrackingStateException;
-import backend.academy.linktracker.scrapper.handlers.link.ParsedLink;
-import backend.academy.linktracker.scrapper.handlers.link.ResourceType;
+import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
+import backend.academy.linktracker.scrapper.handlers.common.ParsedLink;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
 import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
@@ -41,8 +40,7 @@ public class StackOverflowLinkParser implements LinkHandler{
 
         return new ParsedLink(
             uri.toString(),
-            new StackOverflowQuestionKey(questionId),
-            ResourceType.STACKOVERFLOW
+            new StackOverflowQuestionKey(questionId)
         );
     }
 
@@ -50,8 +48,9 @@ public class StackOverflowLinkParser implements LinkHandler{
     public void createTrackingState(TrackedLink trackedLink) {
         boolean isExisted = repository.existsByTrackedLink(trackedLink);
         if (isExisted) {
-            throw new OrphanTrackingStateException("Tracked state already exists");
+            throw new TrackingStateAlreadyExistsException("Tracked state already exists");
         }
+
         repository.save(new StackOverflowTrackingState(trackedLink));
     }
 

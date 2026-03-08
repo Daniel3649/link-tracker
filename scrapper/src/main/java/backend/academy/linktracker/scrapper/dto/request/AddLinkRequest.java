@@ -11,8 +11,10 @@ public record AddLinkRequest(
     @NotNull
     URI link,
 
+    @NotNull
     Set<@NotBlank String> tags,
 
+    @NotNull
     List<@NotBlank String> filters
 ) {
     @JsonCreator

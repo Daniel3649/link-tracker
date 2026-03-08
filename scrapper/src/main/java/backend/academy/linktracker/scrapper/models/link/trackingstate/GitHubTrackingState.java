@@ -16,6 +16,6 @@ public class GitHubTrackingState {
     @EqualsAndHashCode.Include
     private final TrackedLink trackedLink;
 
-    private GitHubCursor cursor;
-    private Instant nextCheckAt;
+    @Setter
+    private String etag;
 }

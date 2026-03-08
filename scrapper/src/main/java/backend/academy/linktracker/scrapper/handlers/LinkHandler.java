@@ -1,8 +1,10 @@
 package backend.academy.linktracker.scrapper.handlers;
 
-import backend.academy.linktracker.scrapper.handlers.link.ParsedLink;
+import backend.academy.linktracker.scrapper.handlers.common.LinkChange;
+import backend.academy.linktracker.scrapper.handlers.common.ParsedLink;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import java.net.URI;
+import java.util.Optional;
 
 public interface LinkHandler {
     boolean supports(URI uri);
@@ -12,4 +14,6 @@ public interface LinkHandler {
     void createTrackingState(TrackedLink trackedLink);
 
     void deleteTrackingState(TrackedLink trackedLink);
+
+    Optional<LinkChange> checkForUpdate(TrackedLink trackedLink);
 }

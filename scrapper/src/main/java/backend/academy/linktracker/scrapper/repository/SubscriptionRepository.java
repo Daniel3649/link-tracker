@@ -8,9 +8,16 @@ import java.util.Optional;
 
 public interface SubscriptionRepository {
     boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
+
     Subscription save(Subscription subscription);
+
     boolean existsByTrackedLink(TrackedLink trackedLink);
+
     Optional<Subscription> findByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
+
     void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
+
     List<Subscription> findAllByTelegramChat(TelegramChat telegramChat);
+
+    List<Subscription> findAllByTrackedLink(TrackedLink trackedLink);
 }

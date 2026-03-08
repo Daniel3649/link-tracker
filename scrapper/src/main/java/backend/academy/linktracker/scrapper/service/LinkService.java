@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.service;
 
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
-import backend.academy.linktracker.scrapper.handlers.link.ParsedLink;
+import backend.academy.linktracker.scrapper.handlers.common.ParsedLink;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;

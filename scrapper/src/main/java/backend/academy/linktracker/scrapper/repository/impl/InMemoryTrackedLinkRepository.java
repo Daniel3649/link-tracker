@@ -4,6 +4,7 @@ import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -39,5 +40,10 @@ public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
     @Override
     public void deleteByResourceKey(ResourceKey resourceKey) {
         trackedLinks.remove(resourceKey);
+    }
+
+    @Override
+    public List<TrackedLink> findAll() {
+        return trackedLinks.values().stream().toList();
     }
 }

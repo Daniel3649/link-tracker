@@ -3,9 +3,12 @@ package backend.academy.linktracker.scrapper.exception.handler;
 import backend.academy.linktracker.scrapper.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
+import backend.academy.linktracker.scrapper.exception.link.RepositoryPollingException;
+import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import java.util.Arrays;
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -31,7 +35,7 @@ public class GlobalExceptionHandler {
         MissingRequestHeaderException.class,
         BindException.class,
         IllegalArgumentException.class,
-        UnsupportedLinkException.class
+        UnsupportedLinkException.class,
     })
     public ResponseEntity<ApiErrorResponse> handleBadRequest(Exception ex) {
         return build(HttpStatus.BAD_REQUEST, "Некорректные параметры запроса", ex);
@@ -47,10 +51,27 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
         TelegramChatAlreadyExistsException.class,
-        SubscriptionAlreadyExistsException.class
+        SubscriptionAlreadyExistsException.class,
+        TrackingStateAlreadyExistsException.class
     })
     public ResponseEntity<ApiErrorResponse> handleConflict(RuntimeException ex) {
         return build(HttpStatus.CONFLICT, "Конфликт состояния ресурса", ex);
+    }
+
+    @ExceptionHandler(RepositoryPollingException.class)
+    public ResponseEntity<ApiErrorResponse> handleRepositoryPollingException(
+        RepositoryPollingException ex,
+        HttpServletRequest request
+    ) {
+        ApiErrorResponse response = new ApiErrorResponse(
+            "Repository polling failed",
+            "Failed to poll external repository",
+            ex.getClass().getSimpleName(),
+            ex.getMessage(),
+            List.of()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
     }
 
     @ExceptionHandler(Exception.class)

@@ -71,4 +71,11 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
             .filter(subscription -> Objects.equals(subscription.getTelegramChat(), telegramChat))
             .toList();
     }
+
+    @Override
+    public List<Subscription> findAllByTrackedLink(TrackedLink trackedLink) {
+        return subscriptions.values().stream()
+            .filter(subscription -> Objects.equals(subscription.getTrackedLink(), trackedLink))
+            .toList();
+    }
 }

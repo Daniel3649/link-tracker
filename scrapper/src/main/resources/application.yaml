@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: scrapper
+  config:
+    import: optional:file:scrapper/.env[.properties]
 
 app:
   stackoverflow:
@@ -11,3 +13,4 @@ app:
     access-token: ${STACKOVERFLOW_ACCESS_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
   github:
     token: ${GITHUB_TOKEN} # Use env variable. DO NOT KEEP TOKEN HERE
+    base-url: https://api.github.com
