@@ -13,8 +13,12 @@ public class InMemorySubscriptionTagRepository implements SubscriptionTagReposit
 
     @Override
     public void addTags(Subscription subscription, Set<String> subscriptionTags) {
-        tags.computeIfAbsent(subscription, _ -> ConcurrentHashMap.newKeySet())
-            .addAll(subscriptionTags);
+        if (subscriptionTags == null || subscriptionTags.isEmpty()) {
+            return;
+        }
+
+        tags.computeIfAbsent(subscription, ignored -> ConcurrentHashMap.newKeySet())
+            .addAll(Set.copyOf(subscriptionTags));
     }
 
 }

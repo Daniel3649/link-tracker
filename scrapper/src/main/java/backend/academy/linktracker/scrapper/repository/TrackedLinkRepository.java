@@ -7,6 +7,7 @@ import java.util.Optional;
 public interface TrackedLinkRepository {
     Optional<TrackedLink> findByResourceKey(ResourceKey resourceKey);
     TrackedLink save(TrackedLink trackedLink);
+    void deleteByResourceKey(ResourceKey resourceKey);
 
 
 }

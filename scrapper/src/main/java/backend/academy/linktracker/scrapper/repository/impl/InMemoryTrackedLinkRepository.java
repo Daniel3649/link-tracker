@@ -26,12 +26,18 @@ public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
             return trackedLink;
         }
 
-        long id = idSequence.incrementAndGet();
         TrackedLink newTrackedLink = new TrackedLink(
-            id,
+            idSequence.incrementAndGet(),
             trackedLink.getUrl(),
-            trackedLink.getResourceKey());
-        trackedLinks.put(newTrackedLink.getResourceKey(), newTrackedLink);
-        return newTrackedLink;
+            trackedLink.getResourceKey()
+        );
+
+        TrackedLink existing = trackedLinks.putIfAbsent(newTrackedLink.getResourceKey(), newTrackedLink);
+        return existing != null ? existing : newTrackedLink;
+    }
+
+    @Override
+    public void deleteByResourceKey(ResourceKey resourceKey) {
+        trackedLinks.remove(resourceKey);
     }
 }

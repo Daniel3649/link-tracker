@@ -9,24 +9,14 @@ import java.util.Objects;
 
 
 @RequiredArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 public class Subscription {
     private final Long id;
 
+    @EqualsAndHashCode.Include
     private final TrackedLink trackedLink;
+
+    @EqualsAndHashCode.Include
     private final TelegramChat telegramChat;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Subscription subscription = (Subscription) o;
-        return trackedLink.equals(subscription.trackedLink) &&
-            telegramChat.getId().equals(subscription.telegramChat.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(trackedLink, telegramChat.getId());
-    }
 }
