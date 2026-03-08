@@ -21,4 +21,9 @@ public class InMemorySubscriptionTagRepository implements SubscriptionTagReposit
             .addAll(Set.copyOf(subscriptionTags));
     }
 
+    @Override
+    public void deleteAllBySubscription(Subscription subscription) {
+        tags.remove(subscription);
+    }
+
 }

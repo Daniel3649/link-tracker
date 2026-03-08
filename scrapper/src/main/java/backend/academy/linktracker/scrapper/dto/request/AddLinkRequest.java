@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.dto;
+package backend.academy.linktracker.scrapper.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import jakarta.validation.constraints.NotBlank;

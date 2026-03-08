@@ -10,4 +10,6 @@ public interface LinkHandler {
     ParsedLink parse(URI uri);
 
     void createTrackingState(TrackedLink trackedLink);
+
+    void deleteTrackingState(TrackedLink trackedLink);
 }

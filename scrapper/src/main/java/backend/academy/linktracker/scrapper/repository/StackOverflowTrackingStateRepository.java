@@ -7,4 +7,5 @@ import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverf
 public interface StackOverflowTrackingStateRepository {
     boolean existsByTrackedLink(TrackedLink trackedLink);
     StackOverflowTrackingState save(StackOverflowTrackingState stackOverflowTrackingState);
+    void deleteByTrackedLink(TrackedLink trackedLink);
 }

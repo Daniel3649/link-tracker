@@ -21,4 +21,9 @@ public class InMemoryStackOverflowTrackingStateRepository implements StackOverfl
         trackingStates.put(stackOverflowTrackingState.getTrackedLink(), stackOverflowTrackingState);
         return stackOverflowTrackingState;
     }
+
+    @Override
+    public void deleteByTrackedLink(TrackedLink trackedLink) {
+        trackingStates.remove(trackedLink);
+    }
 }

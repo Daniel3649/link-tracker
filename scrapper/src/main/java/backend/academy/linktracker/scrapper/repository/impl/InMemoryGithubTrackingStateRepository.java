@@ -21,4 +21,9 @@ public class InMemoryGithubTrackingStateRepository implements GitHubTrackingStat
         trackingStates.put(gitHubTrackingState.getTrackedLink(), gitHubTrackingState);
         return gitHubTrackingState;
     }
+
+    @Override
+    public void deleteByTrackedLink(TrackedLink trackedLink) {
+        trackingStates.remove(trackedLink);
+    }
 }

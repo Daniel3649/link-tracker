@@ -49,5 +49,10 @@ public class GitHubLinkHandler implements LinkHandler {
         }
         repository.save(new GitHubTrackingState(trackedLink));
     }
+
+    @Override
+    public void deleteTrackingState(TrackedLink trackedLink) {
+        repository.deleteByTrackedLink(trackedLink);
+    }
 }
 

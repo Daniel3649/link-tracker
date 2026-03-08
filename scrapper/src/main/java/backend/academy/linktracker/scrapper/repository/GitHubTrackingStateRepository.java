@@ -7,4 +7,5 @@ import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrac
 public interface GitHubTrackingStateRepository {
     boolean existsByTrackedLink(TrackedLink trackedLink);
     GitHubTrackingState save(GitHubTrackingState gitHubTrackingState);
+    void deleteByTrackedLink(TrackedLink trackedLink);
 }

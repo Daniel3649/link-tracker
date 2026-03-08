@@ -54,4 +54,9 @@ public class StackOverflowLinkParser implements LinkHandler{
         }
         repository.save(new StackOverflowTrackingState(trackedLink));
     }
+
+    @Override
+    public void deleteTrackingState(TrackedLink trackedLink) {
+        repository.deleteByTrackedLink(trackedLink);
+    }
 }
