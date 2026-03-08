@@ -26,4 +26,9 @@ public class InMemoryTelegramChatRepository implements TelegramChatRepository {
     public boolean existsByChatId(Long chatId) {
         return chats.containsKey(chatId);
     }
+
+    @Override
+    public void deleteByChatId(Long chatId) {
+        chats.remove(chatId);
+    }
 }

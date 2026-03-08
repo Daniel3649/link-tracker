@@ -7,4 +7,5 @@ public interface TelegramChatRepository {
     Optional<TelegramChat> findByChatId(Long chatId);
     TelegramChat save(TelegramChat telegramChat);
     boolean existsByChatId(Long chatId);
+    void deleteByChatId(Long chatId);
 }
