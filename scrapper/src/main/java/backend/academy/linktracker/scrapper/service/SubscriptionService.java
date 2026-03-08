@@ -7,6 +7,7 @@ import backend.academy.linktracker.scrapper.dto.response.ListLinksResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
+import backend.academy.linktracker.scrapper.mapper.SubscriptionMapper;
 import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
@@ -15,6 +16,7 @@ import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
@@ -28,18 +30,23 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionTagRepository subscriptionTagRepository;
     private final LinkService linkService;
+    private final SubscriptionMapper subscriptionMapper;
 
     private final ConcurrentMap<MapKey, Object> linkOperationLocks = new ConcurrentHashMap<>();
+
     private record MapKey(TrackedLink trackedLink, TelegramChat telegramChat) {}
 
-    public void addSubscription(long chatId, AddLinkRequest request) {
+    public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
         TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId)
             .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
+
         TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
-        createSubscription(trackedLink, telegramChat, request.tags());
+        Subscription savedSubscription = createSubscription(trackedLink, telegramChat, request.tags());
+
+        return subscriptionMapper.toLinkResponse(savedSubscription);
     }
 
-    public void removeSubscription(long chatId, RemoveLinkRequest request) {
+    public LinkResponse removeSubscription(long chatId, RemoveLinkRequest request) {
         TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId)
             .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
 
@@ -48,21 +55,22 @@ public class SubscriptionService {
                 "Subscription not found for link: " + request.link()
             ));
 
-        deleteSubscription(trackedLink, telegramChat);
+        Subscription removedSubscription = deleteSubscription(trackedLink, telegramChat);
+        return subscriptionMapper.toLinkResponse(removedSubscription);
     }
 
     public ListLinksResponse getAllSubscriptions(long chatId) {
         TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId)
             .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
 
-        List<LinkResponse> links = subscriptionRepository.findAllByTelegramChat(telegramChat).stream()
-            .map(this::toLinkResponse)
-            .toList();
+        List<LinkResponse> links = subscriptionMapper.toLinkResponses(
+            subscriptionRepository.findAllByTelegramChat(telegramChat)
+        );
 
         return new ListLinksResponse(links, links.size());
     }
 
-    private void createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
+    private Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
@@ -76,10 +84,12 @@ public class SubscriptionService {
             );
 
             subscriptionTagRepository.addTags(savedSubscription, tags);
+
+            return savedSubscription;
         }
     }
 
-    private void deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
+    private Subscription deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
@@ -96,22 +106,8 @@ public class SubscriptionService {
             if (!subscriptionRepository.existsByTrackedLink(trackedLink)) {
                 linkService.deleteTrackedLinkWithState(trackedLink);
             }
+
+            return subscription;
         }
     }
-
-    private LinkResponse toLinkResponse(Subscription subscription) {
-        TrackedLink trackedLink = subscription.getTrackedLink();
-
-        List<String> tags = subscriptionTagRepository.findAllBySubscription(subscription).stream()
-            .sorted()
-            .toList();
-
-        return new LinkResponse(
-            trackedLink.getId(),
-            URI.create(trackedLink.getUrl()),
-            tags,
-            List.of()
-        );
-    }
-
 }
