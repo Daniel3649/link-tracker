@@ -2,10 +2,10 @@ package backend.academy.linktracker.scrapper.handlers.registry;
 
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -14,8 +14,8 @@ public class LinkHandlerRegistry {
 
     public LinkHandler getHandler(URI uri) {
         return handlers.stream()
-            .filter(handler -> handler.supports(uri))
-            .findFirst()
-            .orElseThrow(() -> new UnsupportedLinkException("Ссылка не поддерживается: " + uri));
+                .filter(handler -> handler.supports(uri))
+                .findFirst()
+                .orElseThrow(() -> new UnsupportedLinkException("Ссылка не поддерживается: " + uri));
     }
 }

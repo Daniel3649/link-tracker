@@ -6,12 +6,12 @@ import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistr
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +35,9 @@ public class LinkService {
         Object lock = linkLocks.computeIfAbsent(resourceKey, ignored -> new Object());
 
         synchronized (lock) {
-            return trackedLinkRepository.findByResourceKey(resourceKey)
-                .orElseGet(() -> createTrackedLink(handler, parsedLink));
+            return trackedLinkRepository
+                    .findByResourceKey(resourceKey)
+                    .orElseGet(() -> createTrackedLink(handler, parsedLink));
         }
     }
 
@@ -54,13 +55,8 @@ public class LinkService {
     }
 
     private TrackedLink createTrackedLink(LinkHandler handler, ParsedLink parsedLink) {
-        TrackedLink savedTrackedLink = trackedLinkRepository.save(
-            new TrackedLink(
-                null,
-                parsedLink.url(),
-                parsedLink.resourceKey()
-            )
-        );
+        TrackedLink savedTrackedLink =
+                trackedLinkRepository.save(new TrackedLink(null, parsedLink.url(), parsedLink.resourceKey()));
 
         try {
             handler.createTrackingState(savedTrackedLink);

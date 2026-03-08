@@ -14,14 +14,12 @@ import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.net.URI;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -37,8 +35,9 @@ public class SubscriptionService {
     private record MapKey(TrackedLink trackedLink, TelegramChat telegramChat) {}
 
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
-        TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId)
-            .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
+        TelegramChat telegramChat = telegramChatRepository
+                .findByChatId(chatId)
+                .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
 
         TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
         Subscription savedSubscription = createSubscription(trackedLink, telegramChat, request.tags());
@@ -47,25 +46,26 @@ public class SubscriptionService {
     }
 
     public LinkResponse removeSubscription(long chatId, RemoveLinkRequest request) {
-        TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId)
-            .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
+        TelegramChat telegramChat = telegramChatRepository
+                .findByChatId(chatId)
+                .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
 
-        TrackedLink trackedLink = linkService.findTrackedLink(request.link())
-            .orElseThrow(() -> new SubscriptionNotFoundException(
-                "Subscription not found for link: " + request.link()
-            ));
+        TrackedLink trackedLink = linkService
+                .findTrackedLink(request.link())
+                .orElseThrow(
+                        () -> new SubscriptionNotFoundException("Subscription not found for link: " + request.link()));
 
         Subscription removedSubscription = deleteSubscription(trackedLink, telegramChat);
         return subscriptionMapper.toLinkResponse(removedSubscription);
     }
 
     public ListLinksResponse getAllSubscriptions(long chatId) {
-        TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId)
-            .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
+        TelegramChat telegramChat = telegramChatRepository
+                .findByChatId(chatId)
+                .orElseThrow(() -> new TelegramChatNotFoundException("Chat not found. Id: " + chatId));
 
-        List<LinkResponse> links = subscriptionMapper.toLinkResponses(
-            subscriptionRepository.findAllByTelegramChat(telegramChat)
-        );
+        List<LinkResponse> links =
+                subscriptionMapper.toLinkResponses(subscriptionRepository.findAllByTelegramChat(telegramChat));
 
         return new ListLinksResponse(links, links.size());
     }
@@ -79,9 +79,8 @@ public class SubscriptionService {
                 throw new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
             }
 
-            Subscription savedSubscription = subscriptionRepository.save(
-                new Subscription(null, trackedLink, telegramChat)
-            );
+            Subscription savedSubscription =
+                    subscriptionRepository.save(new Subscription(null, trackedLink, telegramChat));
 
             subscriptionTagRepository.addTags(savedSubscription, tags);
 
@@ -95,10 +94,9 @@ public class SubscriptionService {
 
         synchronized (lock) {
             Subscription subscription = subscriptionRepository
-                .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
-                .orElseThrow(() -> new SubscriptionNotFoundException(
-                    "Subscription not found for link: " + trackedLink.getUrl()
-                ));
+                    .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
+                    .orElseThrow(() -> new SubscriptionNotFoundException(
+                            "Subscription not found for link: " + trackedLink.getUrl()));
 
             subscriptionTagRepository.deleteAllBySubscription(subscription);
             subscriptionRepository.deleteByTrackedLinkAndTelegramChat(trackedLink, telegramChat);

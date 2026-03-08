@@ -5,6 +5,8 @@ import java.util.Set;
 
 public interface SubscriptionTagRepository {
     void addTags(Subscription subscription, Set<String> tags);
+
     void deleteAllBySubscription(Subscription subscription);
+
     Set<String> findAllBySubscription(Subscription subscription);
 }

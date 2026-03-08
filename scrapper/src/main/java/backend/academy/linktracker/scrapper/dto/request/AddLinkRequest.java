@@ -8,15 +8,11 @@ import java.util.List;
 import java.util.Set;
 
 public record AddLinkRequest(
-    @NotNull
-    URI link,
+        @NotNull URI link,
 
-    @NotNull
-    Set<@NotBlank String> tags,
+        @NotNull Set<@NotBlank String> tags,
 
-    @NotNull
-    List<@NotBlank String> filters
-) {
+        @NotNull List<@NotBlank String> filters) {
     @JsonCreator
     public AddLinkRequest {
         tags = tags == null ? Set.of() : Set.copyOf(tags);

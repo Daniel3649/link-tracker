@@ -4,13 +4,13 @@ import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemorySubscriptionRepository implements SubscriptionRepository {
@@ -27,10 +27,7 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
 
     @Override
     public Subscription save(Subscription subscription) {
-        MapKey key = new MapKey(
-            subscription.getTrackedLink(),
-            subscription.getTelegramChat()
-        );
+        MapKey key = new MapKey(subscription.getTrackedLink(), subscription.getTelegramChat());
 
         if (subscription.getId() != null) {
             subscriptions.put(key, subscription);
@@ -38,10 +35,7 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
         }
 
         Subscription newSubscription = new Subscription(
-            idSequence.incrementAndGet(),
-            subscription.getTrackedLink(),
-            subscription.getTelegramChat()
-        );
+                idSequence.incrementAndGet(), subscription.getTrackedLink(), subscription.getTelegramChat());
 
         Subscription existing = subscriptions.putIfAbsent(key, newSubscription);
         return existing != null ? existing : newSubscription;
@@ -49,8 +43,7 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
 
     @Override
     public boolean existsByTrackedLink(TrackedLink trackedLink) {
-        return subscriptions.keySet().stream()
-            .anyMatch(key -> key.trackedLink().equals(trackedLink));
+        return subscriptions.keySet().stream().anyMatch(key -> key.trackedLink().equals(trackedLink));
     }
 
     @Override
@@ -68,14 +61,14 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
     @Override
     public List<Subscription> findAllByTelegramChat(TelegramChat telegramChat) {
         return subscriptions.values().stream()
-            .filter(subscription -> Objects.equals(subscription.getTelegramChat(), telegramChat))
-            .toList();
+                .filter(subscription -> Objects.equals(subscription.getTelegramChat(), telegramChat))
+                .toList();
     }
 
     @Override
     public List<Subscription> findAllByTrackedLink(TrackedLink trackedLink) {
         return subscriptions.values().stream()
-            .filter(subscription -> Objects.equals(subscription.getTrackedLink(), trackedLink))
-            .toList();
+                .filter(subscription -> Objects.equals(subscription.getTrackedLink(), trackedLink))
+                .toList();
     }
 }

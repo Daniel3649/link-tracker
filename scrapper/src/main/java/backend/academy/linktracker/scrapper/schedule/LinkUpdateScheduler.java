@@ -9,12 +9,12 @@ import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
+import java.net.URI;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import java.net.URI;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +32,7 @@ public class LinkUpdateScheduler {
                 URI uri = URI.create(trackedLink.getUrl());
                 LinkHandler handler = linkHandlerRegistry.getHandler(uri);
 
-                handler.checkForUpdate(trackedLink)
-                    .ifPresent(change -> sendUpdate(trackedLink, change));
+                handler.checkForUpdate(trackedLink).ifPresent(change -> sendUpdate(trackedLink, change));
             } catch (RepositoryPollingException e) {
                 log.warn("Repository polling failed for link {}", trackedLink.getUrl(), e);
             } catch (Exception e) {
@@ -44,19 +43,15 @@ public class LinkUpdateScheduler {
 
     private void sendUpdate(TrackedLink trackedLink, LinkChange change) {
         List<Long> tgChatIds = subscriptionRepository.findAllByTrackedLink(trackedLink).stream()
-            .map(subscription -> subscription.getTelegramChat().getId())
-            .toList();
+                .map(subscription -> subscription.getTelegramChat().getId())
+                .toList();
 
         if (tgChatIds.isEmpty()) {
             return;
         }
 
-        LinkUpdate update = new LinkUpdate(
-            trackedLink.getId(),
-            URI.create(trackedLink.getUrl()),
-            change.description(),
-            tgChatIds
-        );
+        LinkUpdate update =
+                new LinkUpdate(trackedLink.getId(), URI.create(trackedLink.getUrl()), change.description(), tgChatIds);
 
         linkUpdateSender.send(update);
     }

@@ -5,8 +5,6 @@ import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import java.util.Objects;
-
 
 @RequiredArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

@@ -4,10 +4,10 @@ import backend.academy.linktracker.scrapper.dto.response.LinkResponse;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -18,20 +18,13 @@ public class SubscriptionMapper {
         TrackedLink trackedLink = subscription.getTrackedLink();
 
         List<String> tags = subscriptionTagRepository.findAllBySubscription(subscription).stream()
-            .sorted()
-            .toList();
+                .sorted()
+                .toList();
 
-        return new LinkResponse(
-            trackedLink.getId(),
-            URI.create(trackedLink.getUrl()),
-            tags,
-            List.of()
-        );
+        return new LinkResponse(trackedLink.getId(), URI.create(trackedLink.getUrl()), tags, List.of());
     }
 
     public List<LinkResponse> toLinkResponses(List<Subscription> subscriptions) {
-        return subscriptions.stream()
-            .map(this::toLinkResponse)
-            .toList();
+        return subscriptions.stream().map(this::toLinkResponse).toList();
     }
 }

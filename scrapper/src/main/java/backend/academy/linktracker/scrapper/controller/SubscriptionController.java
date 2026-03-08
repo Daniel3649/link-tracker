@@ -24,25 +24,19 @@ public class SubscriptionController {
     private final SubscriptionService subscriptionService;
 
     @GetMapping("/links")
-    public ResponseEntity<ListLinksResponse> getSubscription(
-        @RequestHeader("Tg-Chat-Id") @Positive long chatId
-    ) {
+    public ResponseEntity<ListLinksResponse> getSubscription(@RequestHeader("Tg-Chat-Id") @Positive long chatId) {
         return ResponseEntity.ok(subscriptionService.getAllSubscriptions(chatId));
     }
 
     @PostMapping("/links")
     public ResponseEntity<LinkResponse> addSubscription(
-        @RequestHeader("Tg-Chat-Id") @Positive long chatId,
-        @Valid @RequestBody AddLinkRequest request
-    ) {
+            @RequestHeader("Tg-Chat-Id") @Positive long chatId, @Valid @RequestBody AddLinkRequest request) {
         return ResponseEntity.ok(subscriptionService.addSubscription(chatId, request));
     }
 
     @DeleteMapping("/links")
     public ResponseEntity<LinkResponse> removeSubscription(
-        @RequestHeader("Tg-Chat-Id") @Positive long chatId,
-        @Valid @RequestBody RemoveLinkRequest request
-    ) {
+            @RequestHeader("Tg-Chat-Id") @Positive long chatId, @Valid @RequestBody RemoveLinkRequest request) {
         return ResponseEntity.ok(subscriptionService.removeSubscription(chatId, request));
     }
 }

@@ -6,8 +6,8 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionTimelineEventResponse;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowTimelineFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
+import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.handlers.common.LinkChange;
 import backend.academy.linktracker.scrapper.handlers.common.ParsedLink;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
@@ -16,19 +16,19 @@ import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflo
 import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
 import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 @RequiredArgsConstructor
-public class StackOverflowLinkParser implements LinkHandler{
+public class StackOverflowLinkParser implements LinkHandler {
     private static final int TIMELINE_FETCH_LIMIT = 10;
     private static final long MIN_IDENTICAL_REQUEST_INTERVAL_SECONDS = 60L;
 
@@ -38,8 +38,7 @@ public class StackOverflowLinkParser implements LinkHandler{
     @Override
     public boolean supports(URI uri) {
         String host = uri.getHost();
-        return "stackoverflow.com".equalsIgnoreCase(host)
-            || "www.stackoverflow.com".equalsIgnoreCase(host);
+        return "stackoverflow.com".equalsIgnoreCase(host) || "www.stackoverflow.com".equalsIgnoreCase(host);
     }
 
     @Override
@@ -57,10 +56,7 @@ public class StackOverflowLinkParser implements LinkHandler{
             throw new UnsupportedLinkException("Incorrect questionId in link: " + uri, e);
         }
 
-        return new ParsedLink(
-            uri.toString(),
-            new StackOverflowQuestionKey(questionId)
-        );
+        return new ParsedLink(uri.toString(), new StackOverflowQuestionKey(questionId));
     }
 
     public void createTrackingState(TrackedLink trackedLink) {
@@ -69,13 +65,11 @@ public class StackOverflowLinkParser implements LinkHandler{
         StackOverflowQuestionFetchResult questionResult = stackOverflowClient.fetchQuestion(key);
         if (questionResult.question() == null) {
             throw new RepositoryPollingException(
-                "Failed to initialize StackOverflow tracking state for %s: question not found"
-                    .formatted(trackedLink.getUrl())
-            );
+                    "Failed to initialize StackOverflow tracking state for %s: question not found"
+                            .formatted(trackedLink.getUrl()));
         }
 
-        StackOverflowTimelineFetchResult timelineResult =
-            stackOverflowClient.fetchQuestionTimeline(key, 1);
+        StackOverflowTimelineFetchResult timelineResult = stackOverflowClient.fetchQuestionTimeline(key, 1);
 
         StackOverflowTrackingState state = new StackOverflowTrackingState(trackedLink);
         state.setTimelineCursor(buildInitialCursor(questionResult.question(), timelineResult.events()));
@@ -84,8 +78,7 @@ public class StackOverflowLinkParser implements LinkHandler{
         boolean saved = repository.saveIfAbsent(state);
         if (!saved) {
             throw new TrackingStateAlreadyExistsException(
-                "Tracking state already exists for link: " + trackedLink.getUrl()
-            );
+                    "Tracking state already exists for link: " + trackedLink.getUrl());
         }
     }
 
@@ -108,9 +101,8 @@ public class StackOverflowLinkParser implements LinkHandler{
         }
 
         StackOverflowQuestionKey key = extractKey(trackedLink.getResourceKey());
-        StackOverflowTimelineCursor cursor = state.getTimelineCursor() != null
-            ? state.getTimelineCursor()
-            : StackOverflowTimelineCursor.empty();
+        StackOverflowTimelineCursor cursor =
+                state.getTimelineCursor() != null ? state.getTimelineCursor() : StackOverflowTimelineCursor.empty();
 
         StackOverflowQuestionFetchResult questionResult = stackOverflowClient.fetchQuestion(key);
         StackOverflowQuestionResponse question = questionResult.question();
@@ -118,8 +110,7 @@ public class StackOverflowLinkParser implements LinkHandler{
         if (question == null) {
             state.setNextCheckAt(calculateNextCheckAt(questionResult.backoffSeconds(), null));
             repository.save(state);
-            throw new
-                RepositoryPollingException("Question is unavailable: " + key.questionId());
+            throw new RepositoryPollingException("Question is unavailable: " + key.questionId());
         }
 
         long currentLastActivity = safeLong(question.lastActivityDateEpochSec());
@@ -130,28 +121,23 @@ public class StackOverflowLinkParser implements LinkHandler{
         }
 
         StackOverflowTimelineFetchResult timelineResult =
-            stackOverflowClient.fetchQuestionTimeline(key, TIMELINE_FETCH_LIMIT);
+                stackOverflowClient.fetchQuestionTimeline(key, TIMELINE_FETCH_LIMIT);
 
-        List<StackOverflowQuestionTimelineEventResponse> newEvents =
-            extractNewEvents(timelineResult.events(), cursor);
+        List<StackOverflowQuestionTimelineEventResponse> newEvents = extractNewEvents(timelineResult.events(), cursor);
 
         state.setTimelineCursor(buildUpdatedCursor(question, timelineResult.events(), cursor));
         state.setNextCheckAt(calculateNextCheckAt(questionResult.backoffSeconds(), timelineResult.backoffSeconds()));
         repository.save(state);
 
         if (newEvents.isEmpty()) {
-            return Optional.of(new LinkChange(
-                "Question changed: " + question.title()
-            ));
+            return Optional.of(new LinkChange("Question changed: " + question.title()));
         }
 
         return Optional.of(new LinkChange(buildDescription(newEvents)));
     }
 
     private List<StackOverflowQuestionTimelineEventResponse> extractNewEvents(
-        List<StackOverflowQuestionTimelineEventResponse> events,
-        StackOverflowTimelineCursor cursor
-    ) {
+            List<StackOverflowQuestionTimelineEventResponse> events, StackOverflowTimelineCursor cursor) {
         if (events == null || events.isEmpty()) {
             return List.of();
         }
@@ -179,50 +165,37 @@ public class StackOverflowLinkParser implements LinkHandler{
     }
 
     private StackOverflowTimelineCursor buildUpdatedCursor(
-        StackOverflowQuestionResponse question,
-        List<StackOverflowQuestionTimelineEventResponse> events,
-        StackOverflowTimelineCursor oldCursor
-    ) {
+            StackOverflowQuestionResponse question,
+            List<StackOverflowQuestionTimelineEventResponse> events,
+            StackOverflowTimelineCursor oldCursor) {
         if (events == null || events.isEmpty()) {
             return new StackOverflowTimelineCursor(
-                safeLong(question.lastActivityDateEpochSec()),
-                oldCursor.lastCreationDateEpochSec(),
-                oldCursor.lastEventKey()
-            );
-        }
-
-        StackOverflowQuestionTimelineEventResponse newest = events.get(0);
-        return new StackOverflowTimelineCursor(
-            safeLong(question.lastActivityDateEpochSec()),
-            safeLong(newest.creationDateEpochSec()),
-            buildEventKey(newest)
-        );
-    }
-
-
-    private StackOverflowTimelineCursor buildInitialCursor(
-        StackOverflowQuestionResponse question,
-        List<StackOverflowQuestionTimelineEventResponse> events
-    ) {
-        if (events == null || events.isEmpty()) {
-            return new StackOverflowTimelineCursor(
-                safeLong(question.lastActivityDateEpochSec()),
-                0L,
-                null
-            );
+                    safeLong(question.lastActivityDateEpochSec()),
+                    oldCursor.lastCreationDateEpochSec(),
+                    oldCursor.lastEventKey());
         }
 
         StackOverflowQuestionTimelineEventResponse newest = events.getFirst();
         return new StackOverflowTimelineCursor(
-            safeLong(question.lastActivityDateEpochSec()),
-            safeLong(newest.creationDateEpochSec()),
-            buildEventKey(newest)
-        );
+                safeLong(question.lastActivityDateEpochSec()),
+                safeLong(newest.creationDateEpochSec()),
+                buildEventKey(newest));
     }
 
-    private String buildDescription(
-        List<StackOverflowQuestionTimelineEventResponse> newEvents
-    ) {
+    private StackOverflowTimelineCursor buildInitialCursor(
+            StackOverflowQuestionResponse question, List<StackOverflowQuestionTimelineEventResponse> events) {
+        if (events == null || events.isEmpty()) {
+            return new StackOverflowTimelineCursor(safeLong(question.lastActivityDateEpochSec()), 0L, null);
+        }
+
+        StackOverflowQuestionTimelineEventResponse newest = events.getFirst();
+        return new StackOverflowTimelineCursor(
+                safeLong(question.lastActivityDateEpochSec()),
+                safeLong(newest.creationDateEpochSec()),
+                buildEventKey(newest));
+    }
+
+    private String buildDescription(List<StackOverflowQuestionTimelineEventResponse> newEvents) {
 
         if (newEvents.size() == 1) {
             return "Question changed: one event happened";
@@ -253,14 +226,14 @@ public class StackOverflowLinkParser implements LinkHandler{
     }
 
     private String buildEventKey(StackOverflowQuestionTimelineEventResponse event) {
-        return "%s:%s:%s:%s:%s:%s".formatted(
-            safeString(event.timelineType()),
-            safeLong(event.creationDateEpochSec()),
-            safeLong(event.questionId()),
-            safeLong(event.postId()),
-            safeLong(event.commentId()),
-            safeString(event.revisionGuid())
-        );
+        return "%s:%s:%s:%s:%s:%s"
+                .formatted(
+                        safeString(event.timelineType()),
+                        safeLong(event.creationDateEpochSec()),
+                        safeLong(event.questionId()),
+                        safeLong(event.postId()),
+                        safeLong(event.commentId()),
+                        safeString(event.revisionGuid()));
     }
 
     private long safeLong(Long value) {

@@ -1,14 +1,13 @@
 package backend.academy.linktracker.scrapper.service;
 
-
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -22,9 +21,7 @@ public class TelegramChatService {
 
         synchronized (lock) {
             if (telegramChatRepository.existsByChatId(chatId)) {
-                throw new TelegramChatAlreadyExistsException(
-                    "Telegram chat already exists. Id: " + chatId
-                );
+                throw new TelegramChatAlreadyExistsException("Telegram chat already exists. Id: " + chatId);
             }
 
             telegramChatRepository.save(new TelegramChat(chatId));
@@ -36,9 +33,7 @@ public class TelegramChatService {
 
         synchronized (lock) {
             if (!telegramChatRepository.existsByChatId(chatId)) {
-                throw new TelegramChatNotFoundException(
-                    "Telegram chat not found. Id: " + chatId
-                );
+                throw new TelegramChatNotFoundException("Telegram chat not found. Id: " + chatId);
             }
 
             telegramChatRepository.deleteByChatId(chatId);

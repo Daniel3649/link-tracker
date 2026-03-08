@@ -2,10 +2,10 @@ package backend.academy.linktracker.scrapper.repository.impl;
 
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
-import org.springframework.stereotype.Repository;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemorySubscriptionTagRepository implements SubscriptionTagRepository {
@@ -18,7 +18,7 @@ public class InMemorySubscriptionTagRepository implements SubscriptionTagReposit
         }
 
         tags.computeIfAbsent(subscription, ignored -> ConcurrentHashMap.newKeySet())
-            .addAll(Set.copyOf(subscriptionTags));
+                .addAll(Set.copyOf(subscriptionTags));
     }
 
     @Override
@@ -30,5 +30,4 @@ public class InMemorySubscriptionTagRepository implements SubscriptionTagReposit
     public Set<String> findAllBySubscription(Subscription subscription) {
         return Set.copyOf(tags.getOrDefault(subscription, Set.of()));
     }
-
 }

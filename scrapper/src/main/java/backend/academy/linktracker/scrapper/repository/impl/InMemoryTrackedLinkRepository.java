@@ -3,12 +3,12 @@ package backend.academy.linktracker.scrapper.repository.impl;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
@@ -27,11 +27,8 @@ public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
             return trackedLink;
         }
 
-        TrackedLink newTrackedLink = new TrackedLink(
-            idSequence.incrementAndGet(),
-            trackedLink.getUrl(),
-            trackedLink.getResourceKey()
-        );
+        TrackedLink newTrackedLink =
+                new TrackedLink(idSequence.incrementAndGet(), trackedLink.getUrl(), trackedLink.getResourceKey());
 
         TrackedLink existing = trackedLinks.putIfAbsent(newTrackedLink.getResourceKey(), newTrackedLink);
         return existing != null ? existing : newTrackedLink;

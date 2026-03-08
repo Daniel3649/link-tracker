@@ -3,10 +3,10 @@ package backend.academy.linktracker.scrapper.repository.impl;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
-import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemoryGithubTrackingStateRepository implements GitHubTrackingStateRepository {
@@ -14,10 +14,7 @@ public class InMemoryGithubTrackingStateRepository implements GitHubTrackingStat
 
     @Override
     public boolean saveIfAbsent(GitHubTrackingState gitHubTrackingState) {
-        return trackingStates.putIfAbsent(
-            gitHubTrackingState.getTrackedLink(),
-            gitHubTrackingState
-        ) == null;
+        return trackingStates.putIfAbsent(gitHubTrackingState.getTrackedLink(), gitHubTrackingState) == null;
     }
 
     @Override

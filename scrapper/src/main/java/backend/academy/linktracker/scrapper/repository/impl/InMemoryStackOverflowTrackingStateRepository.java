@@ -3,10 +3,10 @@ package backend.academy.linktracker.scrapper.repository.impl;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
-import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemoryStackOverflowTrackingStateRepository implements StackOverflowTrackingStateRepository {
@@ -19,10 +19,8 @@ public class InMemoryStackOverflowTrackingStateRepository implements StackOverfl
 
     @Override
     public boolean saveIfAbsent(StackOverflowTrackingState stackOverflowTrackingState) {
-        return trackingStates.putIfAbsent(
-            stackOverflowTrackingState.getTrackedLink(),
-            stackOverflowTrackingState
-        ) == null;
+        return trackingStates.putIfAbsent(stackOverflowTrackingState.getTrackedLink(), stackOverflowTrackingState)
+                == null;
     }
 
     @Override

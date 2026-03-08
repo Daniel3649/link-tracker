@@ -6,28 +6,21 @@ import java.time.Instant;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record GitHubRepositoryActivityResponse(
-    Long id,
+        Long id,
 
-    @JsonProperty("activity_type")
-    String activityType,
+        @JsonProperty("activity_type") String activityType,
 
-    String ref,
+        String ref,
 
-    @JsonProperty("before")
-    String beforeSha,
+        @JsonProperty("before") String beforeSha,
 
-    @JsonProperty("after")
-    String afterSha,
+        @JsonProperty("after") String afterSha,
 
-    @JsonProperty("pushed_at")
-    Instant pushedAt,
+        @JsonProperty("pushed_at") Instant pushedAt,
 
-    @JsonProperty("push_type")
-    String pushType,
+        @JsonProperty("push_type") String pushType,
 
-    GitHubActivityActor pusher
-) {
+        GitHubActivityActor pusher) {
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record GitHubActivityActor(String login) {
-    }
+    public record GitHubActivityActor(String login) {}
 }

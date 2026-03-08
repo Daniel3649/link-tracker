@@ -9,6 +9,8 @@ import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkExcept
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -19,8 +21,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import java.util.Arrays;
-import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -40,10 +40,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Некорректные параметры запроса", ex);
     }
 
-    @ExceptionHandler({
-        TelegramChatNotFoundException.class,
-        SubscriptionNotFoundException.class
-    })
+    @ExceptionHandler({TelegramChatNotFoundException.class, SubscriptionNotFoundException.class})
     public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException ex) {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
     }
@@ -58,16 +55,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RepositoryPollingException.class)
-    public ResponseEntity<ApiErrorResponse> handleRepositoryPollingException(
-        RepositoryPollingException ex
-    ) {
+    public ResponseEntity<ApiErrorResponse> handleRepositoryPollingException(RepositoryPollingException ex) {
         ApiErrorResponse response = new ApiErrorResponse(
-            "Repository polling failed",
-            "Failed to poll external repository",
-            ex.getClass().getSimpleName(),
-            ex.getMessage(),
-            List.of()
-        );
+                "Repository polling failed",
+                "Failed to poll external repository",
+                ex.getClass().getSimpleName(),
+                ex.getMessage(),
+                List.of());
 
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
     }
@@ -79,14 +73,13 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String description, Exception ex) {
         ApiErrorResponse response = new ApiErrorResponse(
-            description,
-            String.valueOf(status.value()),
-            ex.getClass().getSimpleName(),
-            ex.getMessage(),
-            Arrays.stream(ex.getStackTrace())
-                .map(StackTraceElement::toString)
-                .toList()
-        );
+                description,
+                String.valueOf(status.value()),
+                ex.getClass().getSimpleName(),
+                ex.getMessage(),
+                Arrays.stream(ex.getStackTrace())
+                        .map(StackTraceElement::toString)
+                        .toList());
 
         return ResponseEntity.status(status).body(response);
     }
