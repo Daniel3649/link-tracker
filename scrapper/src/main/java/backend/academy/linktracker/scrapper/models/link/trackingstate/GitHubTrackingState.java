@@ -18,4 +18,7 @@ public class GitHubTrackingState {
 
     @Setter
     private String etag;
+
+    @Setter
+    private Long lastActivityId;
 }

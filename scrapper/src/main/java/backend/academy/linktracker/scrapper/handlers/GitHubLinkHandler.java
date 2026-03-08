@@ -1,8 +1,9 @@
 package backend.academy.linktracker.scrapper.handlers;
 
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
+import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
-import backend.academy.linktracker.scrapper.exception.link.RepositoryPollingException;
+import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.handlers.common.LinkChange;
@@ -16,12 +17,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class GitHubLinkHandler implements LinkHandler {
+    private static final int ACTIVITY_FETCH_LIMIT = 10;
+
     private final GitHubClient gitHubClient;
     private final GitHubTrackingStateRepository trackingStateRepository;
 
@@ -55,18 +60,23 @@ public class GitHubLinkHandler implements LinkHandler {
     public void createTrackingState(TrackedLink trackedLink) {
         GitHubRepositoryKey key = extractKey(trackedLink.getResourceKey());
 
-        GitHubRepositoryFetchResult result = gitHubClient.fetchRepository(key, null);
-        if (!result.isOk()) {
+        GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key, null);
+        if (!repositoryResult.isOk()) {
             throw new RepositoryPollingException(
                 "Failed to initialize GitHub tracking state for %s. HTTP status: %s"
-                    .formatted(trackedLink.getUrl(), result.statusCode().value())
+                    .formatted(trackedLink.getUrl(), repositoryResult.statusCode().value())
             );
         }
 
-        String etag = requireEtag(result, trackedLink.getUrl());
+        String etag = requireEtag(repositoryResult, trackedLink.getUrl());
+        List<GitHubRepositoryActivityResponse> recentActivities =
+            gitHubClient.fetchRecentActivities(key, 1);
 
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
         state.setEtag(etag);
+        state.setLastActivityId(
+            recentActivities.isEmpty() ? null : recentActivities.getFirst().id()
+        );
 
         boolean saved = trackingStateRepository.saveIfAbsent(state);
         if (!saved) {
@@ -83,7 +93,8 @@ public class GitHubLinkHandler implements LinkHandler {
 
     @Override
     public Optional<LinkChange> checkForUpdate(TrackedLink trackedLink) {
-        Optional<GitHubTrackingState> optionalState = trackingStateRepository.findByTrackedLink(trackedLink);
+        Optional<GitHubTrackingState> optionalState =
+            trackingStateRepository.findByTrackedLink(trackedLink);
 
         if (optionalState.isEmpty()) {
             return Optional.empty();
@@ -92,38 +103,40 @@ public class GitHubLinkHandler implements LinkHandler {
         GitHubTrackingState state = optionalState.get();
         GitHubRepositoryKey key = extractKey(trackedLink.getResourceKey());
 
-        String oldEtag = state.getEtag();
-        GitHubRepositoryFetchResult result = gitHubClient.fetchRepository(key, oldEtag);
+        GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key, state.getEtag());
 
-        if (result.isNotModified()) {
+        if (repositoryResult.isNotModified()) {
             return Optional.empty();
         }
 
-        if (result.isNotFound()) {
-            return Optional.of(new LinkChange(
-                "Repository is unavailable: " + key.owner() + "/" + key.repo()
-            ));
-        }
-
-        if (!result.isOk()) {
+        if (!repositoryResult.isOk()) {
             throw new RepositoryPollingException(
                 "Failed to check GitHub repository %s. HTTP status: %s"
-                    .formatted(trackedLink.getUrl(), result.statusCode().value())
+                    .formatted(trackedLink.getUrl(), repositoryResult.statusCode().value())
             );
         }
 
-        String newEtag = requireEtag(result, trackedLink.getUrl());
+        String newEtag = requireEtag(repositoryResult, trackedLink.getUrl());
 
-        if (Objects.equals(oldEtag, newEtag)) {
-            return Optional.empty();
-        }
+        List<GitHubRepositoryActivityResponse> recentActivities =
+            gitHubClient.fetchRecentActivities(key, ACTIVITY_FETCH_LIMIT);
+
+        List<GitHubRepositoryActivityResponse> newActivities =
+            extractNewActivities(recentActivities, state.getLastActivityId());
 
         state.setEtag(newEtag);
+        if (!newActivities.isEmpty()) {
+            state.setLastActivityId(newActivities.getFirst().id());
+        }
         trackingStateRepository.save(state);
 
-        return Optional.of(new LinkChange(
-            "Repository changed: " + key.owner() + "/" + key.repo()
-        ));
+        if (newActivities.isEmpty()) {
+            return Optional.of(new LinkChange(
+                "Repository changed: " + key.owner() + "/" + key.repo()
+            ));
+        }
+
+        return Optional.of(new LinkChange(buildDescription(key, newActivities)));
     }
 
     private GitHubRepositoryKey extractKey(ResourceKey resourceKey) {
@@ -140,6 +153,42 @@ public class GitHubLinkHandler implements LinkHandler {
             );
         }
         return result.etag();
+    }
+
+    private List<GitHubRepositoryActivityResponse> extractNewActivities(
+        List<GitHubRepositoryActivityResponse> recentActivities,
+        Long lastSeenActivityId
+    ) {
+        if (recentActivities.isEmpty()) {
+            return List.of();
+        }
+
+        if (lastSeenActivityId == null) {
+            return recentActivities;
+        }
+
+        List<GitHubRepositoryActivityResponse> result = new ArrayList<>();
+        for (GitHubRepositoryActivityResponse activity : recentActivities) {
+            if (Objects.equals(activity.id(), lastSeenActivityId)) {
+                break;
+            }
+            result.add(activity);
+        }
+        return result;
+    }
+
+    private String buildDescription(
+        GitHubRepositoryKey key,
+        List<GitHubRepositoryActivityResponse> newActivities
+    ) {
+
+        if (newActivities.size() == 1) {
+            return "Repository %s/%s changed. One event happened"
+                .formatted(key.owner(), key.repo());
+        }
+
+        return "Repository %s/%s changed: %d events happened"
+            .formatted(key.owner(), key.repo(), newActivities.size() - 1);
     }
 }
 

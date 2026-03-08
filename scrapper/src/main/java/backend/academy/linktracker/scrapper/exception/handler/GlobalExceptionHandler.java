@@ -3,12 +3,11 @@ package backend.academy.linktracker.scrapper.exception.handler;
 import backend.academy.linktracker.scrapper.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
-import backend.academy.linktracker.scrapper.exception.link.RepositoryPollingException;
+import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,8 +59,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RepositoryPollingException.class)
     public ResponseEntity<ApiErrorResponse> handleRepositoryPollingException(
-        RepositoryPollingException ex,
-        HttpServletRequest request
+        RepositoryPollingException ex
     ) {
         ApiErrorResponse response = new ApiErrorResponse(
             "Repository polling failed",

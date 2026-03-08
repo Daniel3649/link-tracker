@@ -1,6 +1,7 @@
 package backend.academy.linktracker.scrapper.schedule;
 
 import backend.academy.linktracker.scrapper.dto.request.LinkUpdate;
+import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.common.LinkChange;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
@@ -33,8 +34,10 @@ public class LinkUpdateScheduler {
 
                 handler.checkForUpdate(trackedLink)
                     .ifPresent(change -> sendUpdate(trackedLink, change));
+            } catch (RepositoryPollingException e) {
+                log.warn("Repository polling failed for link {}", trackedLink.getUrl(), e);
             } catch (Exception e) {
-                log.warn("Failed to check updates for link {}", trackedLink.getUrl(), e);
+                log.error("Unexpected error while checking link {}", trackedLink.getUrl(), e);
             }
         }
     }
