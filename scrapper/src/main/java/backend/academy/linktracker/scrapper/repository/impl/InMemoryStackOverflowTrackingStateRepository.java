@@ -4,6 +4,7 @@ import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -12,8 +13,16 @@ public class InMemoryStackOverflowTrackingStateRepository implements StackOverfl
     private final ConcurrentMap<TrackedLink, StackOverflowTrackingState> trackingStates = new ConcurrentHashMap<>();
 
     @Override
-    public boolean existsByTrackedLink(TrackedLink trackedLink) {
-        return trackingStates.containsKey(trackedLink);
+    public Optional<StackOverflowTrackingState> findByTrackedLink(TrackedLink trackedLink) {
+        return Optional.ofNullable(trackingStates.get(trackedLink));
+    }
+
+    @Override
+    public boolean saveIfAbsent(StackOverflowTrackingState stackOverflowTrackingState) {
+        return trackingStates.putIfAbsent(
+            stackOverflowTrackingState.getTrackedLink(),
+            stackOverflowTrackingState
+        ) == null;
     }
 
     @Override

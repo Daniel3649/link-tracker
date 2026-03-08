@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.exception.link;
+package backend.academy.linktracker.scrapper.exception.client;
 
 public class RepositoryPollingException extends RuntimeException {
     public RepositoryPollingException(String message) {

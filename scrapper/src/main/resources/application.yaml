@@ -9,8 +9,12 @@ spring:
 
 app:
   stackoverflow:
+    base-url: https://api.stackexchange.com/2.3
     key: ${STACKOVERFLOW_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
     access-token: ${STACKOVERFLOW_ACCESS_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
+    site: stackoverflow
   github:
     token: ${GITHUB_TOKEN} # Use env variable. DO NOT KEEP TOKEN HERE
     base-url: https://api.github.com
+  scheduler:
+    link-check-delay-ms: 10000s
