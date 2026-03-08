@@ -15,4 +15,15 @@ public class InMemoryTelegramChatRepository implements TelegramChatRepository {
     public Optional<TelegramChat> findByChatId(Long chatId) {
         return Optional.ofNullable(chats.get(chatId));
     }
+
+    @Override
+    public TelegramChat save(TelegramChat telegramChat) {
+        chats.put(telegramChat.getId(), telegramChat);
+        return telegramChat;
+    }
+
+    @Override
+    public boolean existsByChatId(Long chatId) {
+        return chats.containsKey(chatId);
+    }
 }
