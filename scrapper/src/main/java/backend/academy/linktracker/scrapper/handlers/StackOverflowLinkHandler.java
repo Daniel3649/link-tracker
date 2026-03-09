@@ -38,6 +38,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
     private final StackOverflowClient stackOverflowClient;
     private final StackOverflowTimelineSupport timelineSupport;
     private final StackOverflowTimelineDescriptionBuilder descriptionBuilder;
+    private final StackOverflowTimelineSupport stackOverflowTimelineSupport;
 
     @Override
     public boolean supports(URI uri) {
@@ -81,13 +82,16 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
         StackOverflowTrackingState state = new StackOverflowTrackingState(trackedLink);
         state.setTimelineCursor(
-            timelineSupport.buildInitialCursor(questionResult.question(), timelineResult.events())
+            timelineSupport.buildInitialCursor(timelineResult.events())
         );
         state.setNextCheckAt(
             timelineSupport.calculateNextCheckAt(
                 questionResult.backoffSeconds(),
                 timelineResult.backoffSeconds()
             )
+        );
+        state.setLastQuestionActivityDateEpochSec(
+            questionResult.question().lastActivityDateEpochSec()
         );
 
         boolean saved = repository.saveIfAbsent(state);
@@ -136,6 +140,16 @@ public class StackOverflowLinkHandler implements LinkHandler {
             ));
         }
 
+        Long currentLastActivity = question.lastActivityDateEpochSec();
+        if (currentLastActivity != null
+            && currentLastActivity <= state.getLastQuestionActivityDateEpochSec()) {
+            state.setNextCheckAt(
+                timelineSupport.calculateNextCheckAt(questionResult.backoffSeconds(), null)
+            );
+            repository.save(state);
+            return Optional.empty();
+        }
+
         StackOverflowTimelineFetchResult timelineResult =
             stackOverflowClient.fetchQuestionTimeline(key, TIMELINE_FETCH_LIMIT);
 
@@ -143,7 +157,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
             timelineSupport.extractNewEvents(timelineResult.events(), cursor);
 
         state.setTimelineCursor(
-            timelineSupport.buildUpdatedCursor(question, timelineResult.events(), cursor)
+            timelineSupport.buildUpdatedCursor(timelineResult.events(), cursor)
         );
         state.setNextCheckAt(
             timelineSupport.calculateNextCheckAt(
@@ -151,6 +165,9 @@ public class StackOverflowLinkHandler implements LinkHandler {
                 timelineResult.backoffSeconds()
             )
         );
+        state.setLastQuestionActivityDateEpochSec(
+            stackOverflowTimelineSupport.safeLong(currentLastActivity));
+
         repository.save(state);
 
         if (newEvents.isEmpty()) {

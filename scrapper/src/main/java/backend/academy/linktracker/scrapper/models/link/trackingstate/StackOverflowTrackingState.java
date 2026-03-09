@@ -18,4 +18,5 @@ public class StackOverflowTrackingState {
 
     private StackOverflowTimelineCursor timelineCursor;
     private Instant nextCheckAt;
+    private long lastQuestionActivityDateEpochSec;
 }

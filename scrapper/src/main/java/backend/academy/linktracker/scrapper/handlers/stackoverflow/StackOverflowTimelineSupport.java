@@ -15,7 +15,6 @@ public class StackOverflowTimelineSupport {
     private static final long MIN_IDENTICAL_REQUEST_INTERVAL_SECONDS = 60L;
 
     public StackOverflowTimelineCursor buildInitialCursor(
-        StackOverflowQuestionResponse question,
         List<StackOverflowQuestionTimelineEventResponse> events
     ) {
         if (events == null || events.isEmpty()) {
@@ -30,7 +29,6 @@ public class StackOverflowTimelineSupport {
     }
 
     public StackOverflowTimelineCursor buildUpdatedCursor(
-        StackOverflowQuestionResponse question,
         List<StackOverflowQuestionTimelineEventResponse> events,
         StackOverflowTimelineCursor oldCursor
     ) {
