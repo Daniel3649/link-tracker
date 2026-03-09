@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.handlers;
 
-import backend.academy.linktracker.scrapper.handlers.common.LinkChange;
-import backend.academy.linktracker.scrapper.handlers.common.ParsedLink;
+import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import java.net.URI;
 import java.util.Optional;

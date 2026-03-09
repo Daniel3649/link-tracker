@@ -13,7 +13,7 @@ public class GitHubActivityDescriptionBuilder {
     ) {
         int count = newActivities == null ? 0 : newActivities.size();
 
-        if (count <= 0) {
+        if (count == 0) {
             return "Repository changed: " + key.owner() + "/" + key.repo();
         }
 

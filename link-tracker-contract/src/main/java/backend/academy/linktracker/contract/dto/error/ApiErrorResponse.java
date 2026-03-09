@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.dto.error;
+package backend.academy.linktracker.contract.dto.error;
 
 import java.util.List;
 

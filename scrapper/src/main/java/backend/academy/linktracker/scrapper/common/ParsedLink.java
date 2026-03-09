@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.handlers.common;
+package backend.academy.linktracker.scrapper.common;
 
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
 

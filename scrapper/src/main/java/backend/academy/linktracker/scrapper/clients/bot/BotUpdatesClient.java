@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.clients.bot;
 
-import backend.academy.linktracker.scrapper.dto.error.ApiErrorResponse;
-import backend.academy.linktracker.scrapper.dto.request.LinkUpdate;
+import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
+import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.exception.client.BotClientException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

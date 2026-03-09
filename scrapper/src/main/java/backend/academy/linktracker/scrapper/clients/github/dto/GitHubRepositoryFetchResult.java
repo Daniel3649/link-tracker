@@ -10,8 +10,4 @@ public record GitHubRepositoryFetchResult(HttpStatusCode statusCode, String etag
     public boolean isNotModified() {
         return statusCode.value() == 304;
     }
-
-    public boolean isNotFound() {
-        return statusCode.value() == 404;
-    }
 }

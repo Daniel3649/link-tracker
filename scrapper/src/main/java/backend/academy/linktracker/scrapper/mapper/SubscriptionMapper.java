@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.mapper;
 
-import backend.academy.linktracker.scrapper.dto.response.LinkResponse;
+import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;

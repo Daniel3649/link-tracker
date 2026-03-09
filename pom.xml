@@ -29,6 +29,7 @@
         <module>bot</module>
         <module>build-report-aggregate</module>
         <module>scrapper</module>
+        <module>link-tracker-contract</module>
     </modules>
 
     <scm>
@@ -187,6 +188,11 @@
                 <groupId>org.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
                 <version>${awaitility.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>backend.academy.link-tracker</groupId>
+                <artifactId>link-tracker-contract</artifactId>
+                <version>${revision}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

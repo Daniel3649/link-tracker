@@ -198,6 +198,10 @@
             <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>backend.academy.link-tracker</groupId>
+            <artifactId>link-tracker-contract</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

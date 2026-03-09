@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.handlers;
+package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
 import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionFetchResult;
@@ -7,12 +7,10 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowTimelineFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
-import backend.academy.linktracker.scrapper.exception.link.TrackingStateNotFoundException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
-import backend.academy.linktracker.scrapper.handlers.common.LinkChange;
-import backend.academy.linktracker.scrapper.handlers.common.ParsedLink;
-import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowTimelineDescriptionBuilder;
-import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowTimelineSupport;
+import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.common.ParsedLink;
+import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;

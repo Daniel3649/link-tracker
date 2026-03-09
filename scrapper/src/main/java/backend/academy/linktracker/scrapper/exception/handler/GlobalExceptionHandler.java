@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.exception.handler;
 
-import backend.academy.linktracker.scrapper.dto.error.ApiErrorResponse;
+import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
