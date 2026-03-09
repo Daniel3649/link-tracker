@@ -8,9 +8,10 @@ import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistr
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
-import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
+import backend.academy.linktracker.scrapper.sender.HttpLinkUpdateSender;
 import java.net.URI;
 import java.util.List;
+import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

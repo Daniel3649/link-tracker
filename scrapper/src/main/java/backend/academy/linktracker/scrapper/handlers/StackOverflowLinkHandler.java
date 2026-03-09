@@ -21,13 +21,10 @@ import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.Sta
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import java.net.URI;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -38,7 +35,6 @@ public class StackOverflowLinkHandler implements LinkHandler {
     private final StackOverflowClient stackOverflowClient;
     private final StackOverflowTimelineSupport timelineSupport;
     private final StackOverflowTimelineDescriptionBuilder descriptionBuilder;
-    private final StackOverflowTimelineSupport stackOverflowTimelineSupport;
 
     @Override
     public boolean supports(URI uri) {
@@ -166,12 +162,12 @@ public class StackOverflowLinkHandler implements LinkHandler {
             )
         );
         state.setLastQuestionActivityDateEpochSec(
-            stackOverflowTimelineSupport.safeLong(currentLastActivity));
+            timelineSupport.safeLong(currentLastActivity));
 
         repository.save(state);
 
         if (newEvents.isEmpty()) {
-            return Optional.empty();
+            return Optional.of(new LinkChange("Something changed"));
         }
 
         return Optional.of(new LinkChange(
