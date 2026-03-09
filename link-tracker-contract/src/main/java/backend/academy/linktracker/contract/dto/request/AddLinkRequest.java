@@ -10,9 +10,9 @@ import java.util.Set;
 public record AddLinkRequest(
         @NotNull URI link,
 
-        @NotNull Set<@NotBlank String> tags,
+        Set<@NotBlank String> tags,
 
-        @NotNull List<@NotBlank String> filters) {
+        List<@NotBlank String> filters) {
     @JsonCreator
     public AddLinkRequest {
         tags = tags == null ? Set.of() : Set.copyOf(tags);
