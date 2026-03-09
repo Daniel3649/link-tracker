@@ -5,6 +5,7 @@ import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyEx
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
+import backend.academy.linktracker.scrapper.exception.link.TrackingStateNotFoundException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
@@ -40,7 +41,10 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Некорректные параметры запроса", ex);
     }
 
-    @ExceptionHandler({TelegramChatNotFoundException.class, SubscriptionNotFoundException.class})
+    @ExceptionHandler({TelegramChatNotFoundException.class,
+        SubscriptionNotFoundException.class,
+        TrackingStateNotFoundException.class
+    })
     public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException ex) {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
     }

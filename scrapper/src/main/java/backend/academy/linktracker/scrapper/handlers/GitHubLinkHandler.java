@@ -5,9 +5,12 @@ import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryA
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
+import backend.academy.linktracker.scrapper.exception.link.TrackingStateNotFoundException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.handlers.common.LinkChange;
 import backend.academy.linktracker.scrapper.handlers.common.ParsedLink;
+import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityDescriptionBuilder;
+import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityExtractor;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
@@ -29,25 +32,30 @@ public class GitHubLinkHandler implements LinkHandler {
 
     private final GitHubClient gitHubClient;
     private final GitHubTrackingStateRepository trackingStateRepository;
+    private final GitHubActivityExtractor activityExtractor;
+    private final GitHubActivityDescriptionBuilder descriptionBuilder;
 
     @Override
     public boolean supports(URI uri) {
         String host = uri.getHost();
-        return "github.com".equalsIgnoreCase(host) || "www.github.com".equalsIgnoreCase(host);
+        return "github.com".equalsIgnoreCase(host)
+            || "www.github.com".equalsIgnoreCase(host);
     }
 
     @Override
     public ParsedLink parse(URI uri) {
         String[] segments = uri.getPath().split("/");
 
-        if (segments.length < 3 || !StringUtils.hasText(segments[1]) || !StringUtils.hasText(segments[2])) {
+        if (segments.length < 3
+            || !StringUtils.hasText(segments[1])
+            || !StringUtils.hasText(segments[2])) {
             throw new UnsupportedLinkException("Incorrect GitHub link: " + uri);
         }
 
-        String owner = segments[1];
-        String repo = segments[2];
-
-        return new ParsedLink(uri.toString(), new GitHubRepositoryKey(owner, repo));
+        return new ParsedLink(
+            uri.toString(),
+            new GitHubRepositoryKey(segments[1], segments[2])
+        );
     }
 
     @Override
@@ -56,9 +64,10 @@ public class GitHubLinkHandler implements LinkHandler {
 
         GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key, null);
         if (!repositoryResult.isOk()) {
-            throw new RepositoryPollingException("Failed to initialize GitHub tracking state for %s. HTTP status: %s"
-                    .formatted(
-                            trackedLink.getUrl(), repositoryResult.statusCode().value()));
+            throw new RepositoryPollingException(
+                "Failed to initialize GitHub tracking state for %s. HTTP status: %s"
+                    .formatted(trackedLink.getUrl(), repositoryResult.statusCode().value())
+            );
         }
 
         String etag = requireEtag(repositoryResult, trackedLink.getUrl());
@@ -67,12 +76,14 @@ public class GitHubLinkHandler implements LinkHandler {
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
         state.setEtag(etag);
         state.setLastActivityId(
-                recentActivities.isEmpty() ? null : recentActivities.getFirst().id());
+            recentActivities.isEmpty() ? null : recentActivities.getFirst().id()
+        );
 
         boolean saved = trackingStateRepository.saveIfAbsent(state);
         if (!saved) {
             throw new TrackingStateAlreadyExistsException(
-                    "Tracking state already exists for link: " + trackedLink.getUrl());
+                "Tracking state already exists for link: " + trackedLink.getUrl()
+            );
         }
     }
 
@@ -84,7 +95,6 @@ public class GitHubLinkHandler implements LinkHandler {
     @Override
     public Optional<LinkChange> checkForUpdate(TrackedLink trackedLink) {
         Optional<GitHubTrackingState> optionalState = trackingStateRepository.findByTrackedLink(trackedLink);
-
         if (optionalState.isEmpty()) {
             return Optional.empty();
         }
@@ -99,18 +109,19 @@ public class GitHubLinkHandler implements LinkHandler {
         }
 
         if (!repositoryResult.isOk()) {
-            throw new RepositoryPollingException("Failed to check GitHub repository %s. HTTP status: %s"
-                    .formatted(
-                            trackedLink.getUrl(), repositoryResult.statusCode().value()));
+            throw new RepositoryPollingException(
+                "Failed to check GitHub repository %s. HTTP status: %s"
+                    .formatted(trackedLink.getUrl(), repositoryResult.statusCode().value())
+            );
         }
 
         String newEtag = requireEtag(repositoryResult, trackedLink.getUrl());
 
         List<GitHubRepositoryActivityResponse> recentActivities =
-                gitHubClient.fetchRecentActivities(key, ACTIVITY_FETCH_LIMIT);
+            gitHubClient.fetchRecentActivities(key, ACTIVITY_FETCH_LIMIT);
 
         List<GitHubRepositoryActivityResponse> newActivities =
-                extractNewActivities(recentActivities, state.getLastActivityId());
+            activityExtractor.extractNewActivities(recentActivities, state.getLastActivityId());
 
         state.setEtag(newEtag);
         if (!newActivities.isEmpty()) {
@@ -119,10 +130,14 @@ public class GitHubLinkHandler implements LinkHandler {
         trackingStateRepository.save(state);
 
         if (newActivities.isEmpty()) {
-            return Optional.of(new LinkChange("Repository changed: " + key.owner() + "/" + key.repo()));
+            return Optional.of(new LinkChange(
+                "Repository changed: " + key.owner() + "/" + key.repo()
+            ));
         }
 
-        return Optional.of(new LinkChange(buildDescription(key, newActivities)));
+        return Optional.of(new LinkChange(
+            descriptionBuilder.buildDescription(key, newActivities)
+        ));
     }
 
     private GitHubRepositoryKey extractKey(ResourceKey resourceKey) {
@@ -134,38 +149,10 @@ public class GitHubLinkHandler implements LinkHandler {
 
     private String requireEtag(GitHubRepositoryFetchResult result, String url) {
         if (!StringUtils.hasText(result.etag())) {
-            throw new RepositoryPollingException("GitHub response does not contain ETag for link: " + url);
+            throw new RepositoryPollingException(
+                "GitHub response does not contain ETag for link: " + url
+            );
         }
         return result.etag();
-    }
-
-    private List<GitHubRepositoryActivityResponse> extractNewActivities(
-            List<GitHubRepositoryActivityResponse> recentActivities, Long lastSeenActivityId) {
-        if (recentActivities.isEmpty()) {
-            return List.of();
-        }
-
-        if (lastSeenActivityId == null) {
-            return recentActivities;
-        }
-
-        List<GitHubRepositoryActivityResponse> result = new ArrayList<>();
-        for (GitHubRepositoryActivityResponse activity : recentActivities) {
-            if (Objects.equals(activity.id(), lastSeenActivityId)) {
-                break;
-            }
-            result.add(activity);
-        }
-        return result;
-    }
-
-    private String buildDescription(GitHubRepositoryKey key, List<GitHubRepositoryActivityResponse> newActivities) {
-
-        if (newActivities.size() == 1) {
-            return "Repository %s/%s changed. One event happened".formatted(key.owner(), key.repo());
-        }
-
-        return "Repository %s/%s changed: %d events happened"
-                .formatted(key.owner(), key.repo(), newActivities.size() - 1);
     }
 }
