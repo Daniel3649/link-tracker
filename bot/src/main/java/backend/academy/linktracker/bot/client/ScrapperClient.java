@@ -6,11 +6,14 @@ import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestEx
 import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
 import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
 import backend.academy.linktracker.bot.exception.link.LinkAlreadyTrackedException;
+import backend.academy.linktracker.bot.exception.link.LinkNotTrackedException;
 import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
+import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
@@ -65,6 +68,29 @@ public class ScrapperClient {
         }
     }
 
+    public LinkResponse removeLink(long chatId, RemoveLinkRequest request) {
+        try {
+            LinkResponse response = scrapperRestClient.method(HttpMethod.DELETE)
+                .uri("/links")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
+                .body(request)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
+                    throw mapRemoveLinkException(responseSpec);
+                })
+                .body(LinkResponse.class);
+
+            if (response == null) {
+                throw new ScrapperClientException("Scrapper returned empty response body");
+            }
+
+            return response;
+        } catch (ResourceAccessException e) {
+            throw new ScrapperUnavailableException("Scrapper is unavailable", e);
+        }
+    }
+
     private RuntimeException mapRegisterChatException(ClientHttpResponse response) throws IOException {
         ApiErrorResponse error = readError(response);
         int status = response.getStatusCode().value();
@@ -86,6 +112,18 @@ public class ScrapperClient {
             case 400 -> new InvalidScrapperRequestException(message);
             case 404 -> new ChatNotRegisteredException(message);
             case 409 -> new LinkAlreadyTrackedException(message);
+            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
+        };
+    }
+
+    private RuntimeException mapRemoveLinkException(ClientHttpResponse response) throws IOException {
+        ApiErrorResponse error = readError(response);
+        int status = response.getStatusCode().value();
+        String message = extractMessage(error, status);
+
+        return switch (status) {
+            case 400 -> new InvalidScrapperRequestException(message);
+            case 404 -> new LinkNotTrackedException(message);
             default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
         };
     }
