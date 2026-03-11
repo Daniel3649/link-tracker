@@ -18,11 +18,14 @@ public class BotApiExceptionHandler {
         ConstraintViolationException.class,
         IllegalArgumentException.class,
         MethodArgumentNotValidException.class,
+        HttpMessageNotReadableException.class,
         HttpMessageNotReadableException.class
     })
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(Exception ex) {
-        return build(HttpStatus.BAD_GATEWAY, "Некорректные параметры запроса", ex);
+        return build(HttpStatus.BAD_REQUEST, "Incorrect request parameters", ex);
     }
+
+
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String description, Exception ex) {
         ApiErrorResponse response = new ApiErrorResponse(

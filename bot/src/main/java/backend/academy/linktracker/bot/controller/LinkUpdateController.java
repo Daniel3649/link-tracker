@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LinkUpdateController {
     private final LinkUpdateNotificationService notificationService;
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     public ResponseEntity<Void> handleUpdate(@Valid @RequestBody LinkUpdate linkUpdate) {
         notificationService.process(linkUpdate);
         return ResponseEntity.ok().build();
