@@ -1,6 +1,10 @@
 package backend.academy.linktracker.bot.command;
 
+import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.command.meta.CommandName;
+import backend.academy.linktracker.bot.exception.chat.ChatAlreadyRegisteredException;
+import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
+import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import com.pengrad.telegrambot.model.Update;
@@ -12,14 +16,24 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StartCommand implements Command {
     private final MessageService messageService;
+    private final ScrapperClient scrapperClient;
     private final TelegramSender sender;
 
     @Override
     public void execute(Update update) {
         Objects.requireNonNull(update);
         long chatId = update.message().chat().id();
-        String message = messageService.get("command.start");
-        sender.sendPlain(chatId, message);
+
+        try {
+            scrapperClient.registerChat(chatId);
+            sender.sendPlain(chatId, messageService.get("command.start"));
+        } catch (ChatAlreadyRegisteredException e) {
+            sender.sendPlain(chatId, messageService.get("command.track.chart-already-registered"));
+        } catch (ScrapperUnavailableException e) {
+            sender.sendPlain(chatId, messageService.get("command.track.scrapper-is-unavailable"));
+        } catch (ScrapperClientException e) {
+            sender.sendPlain(chatId, messageService.get("command.track.client-error"));
+        }
     }
 
     @Override

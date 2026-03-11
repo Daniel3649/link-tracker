@@ -1,5 +1,7 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
+import backend.academy.linktracker.contract.link.dto.ParsedStackOverflowQuestionLink;
+import backend.academy.linktracker.contract.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionFetchResult;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionResponse;
@@ -33,30 +35,20 @@ public class StackOverflowLinkHandler implements LinkHandler {
     private final StackOverflowClient stackOverflowClient;
     private final StackOverflowTimelineSupport timelineSupport;
     private final StackOverflowTimelineDescriptionBuilder descriptionBuilder;
+    private final StackOverflowQuestionLinkParser stackOverflowQuestionLinkParser;
 
     @Override
     public boolean supports(URI uri) {
-        String host = uri.getHost();
-        return "stackoverflow.com".equalsIgnoreCase(host)
-            || "www.stackoverflow.com".equalsIgnoreCase(host);
+        return stackOverflowQuestionLinkParser.supports(uri);
     }
 
     @Override
     public ParsedLink parse(URI uri) {
-        String[] segments = uri.getPath().split("/");
-
-        if (segments.length < 3 || !"questions".equals(segments[1])) {
-            throw new UnsupportedLinkException("Incorrect StackOverflow link: " + uri);
-        }
-
-        long questionId;
-        try {
-            questionId = Long.parseLong(segments[2]);
-        } catch (NumberFormatException e) {
-            throw new UnsupportedLinkException("Incorrect questionId in link: " + uri, e);
-        }
-
-        return new ParsedLink(uri.toString(), new StackOverflowQuestionKey(questionId));
+        ParsedStackOverflowQuestionLink parsed = stackOverflowQuestionLinkParser.parse(uri);
+        return new ParsedLink(
+            parsed.uri().toString(),
+            new StackOverflowQuestionKey(parsed.questionId())
+        );
     }
 
     @Override

@@ -1,5 +1,7 @@
 package backend.academy.linktracker.scrapper.handlers.github;
 
+import backend.academy.linktracker.contract.link.dto.ParsedGitHubRepositoryLink;
+import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
@@ -30,27 +32,20 @@ public class GitHubLinkHandler implements LinkHandler {
     private final GitHubTrackingStateRepository trackingStateRepository;
     private final GitHubActivityExtractor activityExtractor;
     private final GitHubActivityDescriptionBuilder descriptionBuilder;
+    private final GitHubRepositoryLinkParser gitHubRepositoryLinkParser;
 
     @Override
     public boolean supports(URI uri) {
-        String host = uri.getHost();
-        return "github.com".equalsIgnoreCase(host)
-            || "www.github.com".equalsIgnoreCase(host);
+        return gitHubRepositoryLinkParser.supports(uri);
     }
 
     @Override
     public ParsedLink parse(URI uri) {
-        String[] segments = uri.getPath().split("/");
-
-        if (segments.length < 3
-            || !StringUtils.hasText(segments[1])
-            || !StringUtils.hasText(segments[2])) {
-            throw new UnsupportedLinkException("Incorrect GitHub link: " + uri);
-        }
+        ParsedGitHubRepositoryLink parsed = gitHubRepositoryLinkParser.parse(uri);
 
         return new ParsedLink(
-            uri.toString(),
-            new GitHubRepositoryKey(segments[1], segments[2])
+            parsed.uri().toString(),
+            new GitHubRepositoryKey(parsed.owner(), parsed.repo())
         );
     }
 
