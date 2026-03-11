@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
@@ -14,6 +15,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
 import backend.academy.linktracker.bot.properties.TelegramProperties;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.bot.service.UpdateService;
@@ -22,8 +24,10 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +47,9 @@ public class TelegramBotCommandsIntegrationTest {
     TelegramProperties telegramProperties;
 
     @Autowired
+    CommandDispatcher commandDispatcher;
+
+    @Autowired
     UpdateService updateService;
 
     @Autowired
@@ -58,6 +65,7 @@ public class TelegramBotCommandsIntegrationTest {
         long chatId = 987654321L;
 
         stubGetUpdatesOnceThenEmpty("/start", chatId);
+        stubRegisterChatOk(chatId);
         stubSendMessageOk(chatId);
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -72,12 +80,12 @@ public class TelegramBotCommandsIntegrationTest {
         String expectedText = messageService.get("command.start");
 
         await().atMost(10, SECONDS)
-                .untilAsserted(() -> verify(
-                        1,
-                        postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-                                .withPathParam("token", equalTo(telegramProperties.getToken()))
-                                .withRequestBody(matchingBodyContainsChatId(chatId))
-                                .withRequestBody(matchingBodyContainsText(expectedText))));
+            .untilAsserted(() -> verify(
+                1,
+                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                    .withPathParam("token", equalTo(telegramProperties.getToken()))
+                    .withRequestBody(matchingBodyContainsChatId(chatId))
+                    .withRequestBody(matchingBodyContainsText(expectedText))));
     }
 
     @Test
@@ -96,9 +104,10 @@ public class TelegramBotCommandsIntegrationTest {
 
         assertTrue(latch.await(10, SECONDS));
 
-        String expectedText = messageService.get("command.help.header") + '\n' + "/help - "
-                + messageService.get("command.help.description") + '\n' + "/start - "
-                + messageService.get("command.start.description") + '\n';
+        String expectedText = messageService.get("command.help.header") + '\n' +
+            commandDispatcher.getCommands().stream()
+                .map(command -> "/" + command.name() + " - " + command.description())
+                .collect(Collectors.joining("\n", "", "\n"));
 
         await().atMost(10, SECONDS)
                 .untilAsserted(() -> verify(
@@ -207,4 +216,11 @@ public class TelegramBotCommandsIntegrationTest {
     private static String escapeJson(String s) {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
+
+    private void stubRegisterChatOk(long chatId) {
+        stubFor(post(urlEqualTo("/tg-chat/" + chatId))
+            .willReturn(aResponse()
+                .withStatus(200)));
+    }
+
 }

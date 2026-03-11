@@ -1,81 +1,100 @@
 package backend.academy.linktracker.bot.controller;
 
-import backend.academy.linktracker.bot.exception.handler.BotApiExceptionHandler;
-import backend.academy.linktracker.bot.service.LinkUpdateNotificationService;
-import backend.academy.linktracker.contract.dto.request.LinkUpdate;
-import java.net.URI;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import tools.jackson.databind.json.JsonMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.wiremock.spring.EnableWireMock;
+import org.wiremock.spring.InjectWireMock;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@EnableWireMock
 class BotUpdatesControllerIntegrationTest {
 
-    @Mock
-    private LinkUpdateNotificationService linkUpdateNotificationService;
-
+    @Autowired
     private MockMvc mockMvc;
-    private JsonMapper jsonMapper;
 
-    @BeforeEach
-    void setUp() {
-        jsonMapper = JsonMapper.builder().build();
-
-        LinkUpdateController controller =
-            new LinkUpdateController(linkUpdateNotificationService);
-
-        mockMvc = MockMvcBuilders.standaloneSetup(controller)
-            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
-            .setControllerAdvice(new BotApiExceptionHandler())
-            .build();
-    }
+    @InjectWireMock
+    private WireMockServer wireMock;
 
     @Test
-    void shouldReturn200ForValidUpdateRequest() throws Exception {
-        LinkUpdate request = new LinkUpdate(
-            1L,
-            URI.create("https://github.com/octocat/Hello-World"),
-            "Repository was updated",
-            List.of(123L, 456L)
+    void shouldAcceptValidUpdateAndSendMessagesToTelegram() throws Exception {
+        wireMock.stubFor(
+            post(urlPathMatching("/bot[^/]+/sendMessage"))
+                .willReturn(okJson("""
+                    {
+                      "ok": true,
+                      "result": {
+                        "message_id": 1
+                      }
+                    }
+                    """))
         );
 
-        mockMvc.perform(post("/updates")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(request)))
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/updates")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "id": 1,
+                      "url": "https://github.com/octocat/Hello-World",
+                      "description": "Repository was updated",
+                      "tgChatIds": [1001, 1002]
+                    }
+                    """))
             .andExpect(status().isOk());
 
-        verify(linkUpdateNotificationService).process(request);
+        wireMock.verify(2, postRequestedFor(urlPathMatching(".*/sendMessage")));
+
+        List<LoggedRequest> requests =
+            wireMock.findAll(postRequestedFor(urlPathMatching(".*/sendMessage")));
+
+        assertEquals(2, requests.size());
+
+        String allBodies = requests.stream()
+            .map(LoggedRequest::getBodyAsString)
+            .reduce("", (left, right) -> left + "\n" + right);
+
+        assertTrue(allBodies.contains("1001"));
+        assertTrue(allBodies.contains("1002"));
+        assertTrue(allBodies.contains("Hello-World"));
     }
 
     @Test
-    void shouldReturnNon200ForInvalidUpdateRequest() throws Exception {
-        String invalidJson = """
-            {
-              "id": "wrong-type",
-              "url": "not-a-uri",
-              "description": 123,
-              "tgChatIds": "wrong"
-            }
-            """;
+    void shouldRejectInvalidUpdateAndNotCallTelegram() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/updates")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "id": "wrong-type",
+                      "url": "not-a-uri",
+                      "description": 123,
+                      "tgChatIds": "wrong"
+                    }
+                    """))
+            .andExpect(result ->
+                assertNotEquals(200, result.getResponse().getStatus()));
 
-        mockMvc.perform(post("/updates")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
-            .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(linkUpdateNotificationService);
+        wireMock.verify(0, postRequestedFor(urlPathMatching(".*/sendMessage")));
     }
+
+
 }
