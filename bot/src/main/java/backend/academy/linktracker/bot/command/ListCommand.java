@@ -1,0 +1,116 @@
+package backend.academy.linktracker.bot.command;
+
+import backend.academy.linktracker.bot.client.ScrapperClient;
+import backend.academy.linktracker.bot.command.meta.CommandName;
+import backend.academy.linktracker.bot.command.support.CommandArgSupport;
+import backend.academy.linktracker.bot.exception.chat.ChatNotRegisteredException;
+import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
+import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
+import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
+import backend.academy.linktracker.bot.sender.TelegramSender;
+import backend.academy.linktracker.bot.service.MessageService;
+import backend.academy.linktracker.contract.dto.response.LinkResponse;
+import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
+import com.pengrad.telegrambot.model.Update;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class ListCommand implements Command {
+    private final MessageService messageService;
+    private final ScrapperClient scrapperClient;
+    private final TelegramSender telegramSender;
+    private final CommandArgSupport commandArgSupport;
+
+    @Override
+    public void execute(Update update) {
+        Objects.requireNonNull(update);
+
+        long chatId = update.message().chat().id();
+        String rawText = update.message().text();
+        String tagFilter = commandArgSupport.extractFirstArgument(rawText);
+
+        try {
+            ListLinksResponse response = scrapperClient.getLinks(chatId);
+            List<LinkResponse> links = response.links() == null ? Collections.emptyList() : response.links();
+
+            List<LinkResponse> filteredLinks = filterByTag(links, tagFilter);
+
+            if (filteredLinks.isEmpty()) {
+                if (tagFilter == null) {
+                    telegramSender.sendPlain(chatId, messageService.get("command.list.empty"));
+                } else {
+                    telegramSender.sendPlain(
+                        chatId,
+                        messageService.get("command.list.empty.by-tag", tagFilter)
+                    );
+                }
+                return;
+            }
+
+            telegramSender.sendPlain(chatId, buildListMessage(filteredLinks, tagFilter));
+        } catch (ChatNotRegisteredException e) {
+            telegramSender.sendPlain(chatId, messageService.get("command.list.chat-not-registered"));
+        } catch (InvalidScrapperRequestException e) {
+            telegramSender.sendPlain(chatId, messageService.get("command.list.invalid-request"));
+        } catch (ScrapperUnavailableException e) {
+            telegramSender.sendPlain(chatId, messageService.get("command.list.scrapper-unavailable"));
+        } catch (ScrapperClientException e) {
+            telegramSender.sendPlain(chatId, messageService.get("command.list.client-error"));
+        }
+    }
+
+    @Override
+    public String name() {
+        return CommandName.LIST.getText();
+    }
+
+    @Override
+    public String description() {
+        return messageService.get("command.list.description");
+    }
+
+
+    private List<LinkResponse> filterByTag(List<LinkResponse> links, String tagFilter) {
+        if (tagFilter == null || tagFilter.isBlank()) {
+            return links;
+        }
+
+        return links.stream()
+            .filter(link -> link.tags() != null && link.tags().stream()
+                .anyMatch(tag -> tag != null && tag.trim().equalsIgnoreCase(tagFilter.trim())))
+            .toList();
+    }
+
+    private String buildListMessage(List<LinkResponse> links, String tagFilter) {
+        String header = tagFilter == null
+            ? messageService.get("command.list.header")
+            : messageService.get("command.list.header.by-tag", tagFilter);
+
+        String body = links.stream()
+            .map(this::formatLink)
+            .collect(Collectors.joining("\n\n"));
+
+        return header + "\n\n" + body;
+    }
+
+    private String formatLink(LinkResponse link) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("- ").append(link.url());
+
+        if (link.tags() != null && !link.tags().isEmpty()) {
+            builder.append("\n")
+                .append(messageService.get("command.list.tags-label"))
+                .append(": ")
+                .append(String.join(", ", link.tags()));
+        }
+
+        return builder.toString();
+    }
+}

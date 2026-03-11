@@ -11,6 +11,7 @@ import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
+import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
@@ -91,6 +92,27 @@ public class ScrapperClient {
         }
     }
 
+    public ListLinksResponse getLinks(long chatId) {
+        try {
+            ListLinksResponse response = scrapperRestClient.get()
+                .uri("/links")
+                .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
+                    throw mapGetLinksException(responseSpec);
+                })
+                .body(ListLinksResponse.class);
+
+            if (response == null) {
+                throw new ScrapperClientException("Scrapper returned empty response body");
+            }
+
+            return response;
+        } catch (ResourceAccessException e) {
+            throw new ScrapperUnavailableException("Scrapper is unavailable", e);
+        }
+    }
+
     private RuntimeException mapRegisterChatException(ClientHttpResponse response) throws IOException {
         ApiErrorResponse error = readError(response);
         int status = response.getStatusCode().value();
@@ -124,6 +146,18 @@ public class ScrapperClient {
         return switch (status) {
             case 400 -> new InvalidScrapperRequestException(message);
             case 404 -> new LinkNotTrackedException(message);
+            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
+        };
+    }
+
+    private RuntimeException mapGetLinksException(ClientHttpResponse response) throws IOException {
+        ApiErrorResponse error = readError(response);
+        int status = response.getStatusCode().value();
+        String message = extractMessage(error, status);
+
+        return switch (status) {
+            case 400 -> new InvalidScrapperRequestException(message);
+            case 404 -> new ChatNotRegisteredException(message);
             default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
         };
     }

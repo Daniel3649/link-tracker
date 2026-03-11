@@ -8,6 +8,7 @@ public enum CommandName {
     HELP("help"),
     TRACK("track"),
     CANCEL("cancel"),
+    LIST("list"),
     UNTRACK("untrack");
 
     private final String text;

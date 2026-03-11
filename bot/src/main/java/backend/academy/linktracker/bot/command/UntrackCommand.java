@@ -2,6 +2,7 @@ package backend.academy.linktracker.bot.command;
 
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.command.meta.CommandName;
+import backend.academy.linktracker.bot.command.support.CommandArgSupport;
 import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
 import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
 import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
@@ -24,6 +25,7 @@ public class UntrackCommand implements Command {
     private final SupportedLinkParser supportedLinkParser;
     private final ScrapperClient scrapperClient;
     private final TelegramSender telegramSender;
+    private final CommandArgSupport commandArgSupport;
 
     @Override
     public void execute(Update update) {
@@ -32,7 +34,7 @@ public class UntrackCommand implements Command {
         long chatId = update.message().chat().id();
         String rawText = update.message().text();
 
-        String linkArgument = extractLinkArgument(rawText);
+        String linkArgument = commandArgSupport.extractFirstArgument(rawText);
         if (linkArgument == null) {
             telegramSender.sendPlain(chatId, messageService.get("command.untrack.usage"));
             return;
@@ -70,20 +72,5 @@ public class UntrackCommand implements Command {
     @Override
     public String description() {
         return messageService.get("command.untrack.description");
-    }
-
-    private String extractLinkArgument(String rawText) {
-        if (rawText == null) {
-            return null;
-        }
-
-        String trimmed = rawText.trim();
-        String[] parts = trimmed.split("\\s+", 2);
-
-        if (parts.length < 2 || parts[1].isBlank()) {
-            return null;
-        }
-
-        return parts[1].trim();
     }
 }
