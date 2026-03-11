@@ -71,4 +71,11 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
                 .filter(subscription -> Objects.equals(subscription.getTrackedLink(), trackedLink))
                 .toList();
     }
+
+    @Override
+    public void clear() {
+        subscriptions.clear();
+    }
+
+
 }

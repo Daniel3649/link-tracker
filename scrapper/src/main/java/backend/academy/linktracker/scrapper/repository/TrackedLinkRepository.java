@@ -13,4 +13,6 @@ public interface TrackedLinkRepository {
     void deleteByResourceKey(ResourceKey resourceKey);
 
     List<TrackedLink> findAll();
+
+    void clear();
 }

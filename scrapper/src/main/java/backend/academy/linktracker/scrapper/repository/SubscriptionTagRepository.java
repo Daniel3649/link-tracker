@@ -9,4 +9,6 @@ public interface SubscriptionTagRepository {
     void deleteAllBySubscription(Subscription subscription);
 
     Set<String> findAllBySubscription(Subscription subscription);
+
+    void clear();
 }

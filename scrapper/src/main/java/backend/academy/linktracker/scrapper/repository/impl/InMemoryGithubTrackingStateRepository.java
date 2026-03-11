@@ -32,4 +32,11 @@ public class InMemoryGithubTrackingStateRepository implements GitHubTrackingStat
     public Optional<GitHubTrackingState> findByTrackedLink(TrackedLink trackedLink) {
         return Optional.ofNullable(trackingStates.get(trackedLink));
     }
+
+    @Override
+    public void clear() {
+        trackingStates.clear();
+    }
+
+
 }

@@ -43,4 +43,11 @@ public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
     public List<TrackedLink> findAll() {
         return trackedLinks.values().stream().toList();
     }
+
+    @Override
+    public void clear() {
+        trackedLinks.clear();
+    }
+
+
 }

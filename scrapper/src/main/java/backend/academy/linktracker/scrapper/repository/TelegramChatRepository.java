@@ -11,4 +11,6 @@ public interface TelegramChatRepository {
     boolean existsByChatId(Long chatId);
 
     void deleteByChatId(Long chatId);
+
+    void clear();
 }

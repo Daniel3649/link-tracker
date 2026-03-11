@@ -12,4 +12,6 @@ public interface GitHubTrackingStateRepository {
     void deleteByTrackedLink(TrackedLink trackedLink);
 
     Optional<GitHubTrackingState> findByTrackedLink(TrackedLink trackedLink);
+
+    void clear();
 }

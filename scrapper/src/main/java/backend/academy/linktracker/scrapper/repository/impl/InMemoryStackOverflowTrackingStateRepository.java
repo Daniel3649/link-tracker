@@ -33,4 +33,9 @@ public class InMemoryStackOverflowTrackingStateRepository implements StackOverfl
     public void deleteByTrackedLink(TrackedLink trackedLink) {
         trackingStates.remove(trackedLink);
     }
+
+    @Override
+    public void clear() {
+        trackingStates.clear();
+    }
 }

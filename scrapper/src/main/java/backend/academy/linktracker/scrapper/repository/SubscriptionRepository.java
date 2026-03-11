@@ -20,4 +20,6 @@ public interface SubscriptionRepository {
     List<Subscription> findAllByTelegramChat(TelegramChat telegramChat);
 
     List<Subscription> findAllByTrackedLink(TrackedLink trackedLink);
+
+    void clear();
 }

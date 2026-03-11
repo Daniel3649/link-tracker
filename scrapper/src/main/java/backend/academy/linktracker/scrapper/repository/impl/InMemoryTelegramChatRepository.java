@@ -31,4 +31,9 @@ public class InMemoryTelegramChatRepository implements TelegramChatRepository {
     public void deleteByChatId(Long chatId) {
         chats.remove(chatId);
     }
+
+    @Override
+    public void clear() {
+        chats.clear();
+    }
 }

@@ -12,4 +12,6 @@ public interface StackOverflowTrackingStateRepository {
     boolean saveIfAbsent(StackOverflowTrackingState stackOverflowTrackingState);
 
     Optional<StackOverflowTrackingState> findByTrackedLink(TrackedLink trackedLink);
+
+    void clear();
 }
