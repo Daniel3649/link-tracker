@@ -31,7 +31,7 @@ public class TrackCommand implements Command {
 
     @Override
     public String name() {
-        return CommandName.TRACK.name();
+        return CommandName.TRACK.getText();
     }
 
     @Override

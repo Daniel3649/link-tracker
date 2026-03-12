@@ -202,6 +202,12 @@
             <groupId>backend.academy.link-tracker</groupId>
             <artifactId>link-tracker-contract</artifactId>
         </dependency>
+        <dependency>
+            <groupId>backend.academy.link-tracker</groupId>
+            <artifactId>scrapper</artifactId>
+            <version>0.0.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

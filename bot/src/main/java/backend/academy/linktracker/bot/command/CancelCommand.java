@@ -34,7 +34,7 @@ public class CancelCommand implements Command {
 
     @Override
     public String name() {
-        return CommandName.CANCEL.name();
+        return CommandName.CANCEL.getText();
     }
 
     @Override

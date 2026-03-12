@@ -4,6 +4,7 @@ app:
     token: test-token
     update-listener-sleep: 1s
     debug: true
+    init-commands-on-startup: false
 
   scrapper:
     base-url: ${wiremock.server.baseUrl}

@@ -30,4 +30,11 @@ public class InMemoryTrackDialogStateRepository implements TrackDialogStateRepos
     public void deleteByChatId(long chatId) {
         states.remove(chatId);
     }
+
+    @Override
+    public void clear() {
+        states.clear();
+    }
+
+
 }

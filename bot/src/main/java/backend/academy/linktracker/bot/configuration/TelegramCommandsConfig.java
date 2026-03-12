@@ -9,10 +9,16 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@ConditionalOnProperty(
+    value = "app.telegram.init-commands-on-startup",
+    havingValue = "true",
+    matchIfMissing = true
+)
 @RequiredArgsConstructor
 public class TelegramCommandsConfig {
     private static final Logger logger = LoggerFactory.getLogger(TelegramCommandsConfig.class);

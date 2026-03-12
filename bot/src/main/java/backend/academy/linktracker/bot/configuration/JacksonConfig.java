@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot.config;
+package backend.academy.linktracker.bot.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;

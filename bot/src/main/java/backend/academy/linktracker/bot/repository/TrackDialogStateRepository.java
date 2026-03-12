@@ -11,4 +11,6 @@ public interface TrackDialogStateRepository {
     boolean existsByChatId(long chatId);
 
     void deleteByChatId(long chatId);
+
+    void clear();
 }

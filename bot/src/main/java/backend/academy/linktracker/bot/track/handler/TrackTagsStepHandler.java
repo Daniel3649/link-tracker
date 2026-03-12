@@ -69,7 +69,7 @@ public class TrackTagsStepHandler implements TrackStepHandler {
     private Set<String> parseTags(String rawText) {
         String normalized = rawText == null ? "" : rawText.strip();
 
-        if (normalized.isBlank()) {
+        if (normalized.isBlank() || normalized.equals("-")) {
             return Set.of();
         }
 

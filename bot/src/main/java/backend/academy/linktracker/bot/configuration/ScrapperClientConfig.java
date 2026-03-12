@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot.config;
+package backend.academy.linktracker.bot.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
