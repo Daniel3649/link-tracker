@@ -50,33 +50,32 @@ public class TelegramUpdateService {
         long chatId = message.chat().id();
         long updateId = update.updateId();
 
-        if (!raw.startsWith("/")) {
-            boolean handled = trackConversationService.handleDialogMessage(chatId, raw);
-
-            if (!handled) {
-                log.atWarn()
-                        .addKeyValue("event", LogEvent.UPDATE_IGNORED)
-                        .addKeyValue("reason", "not_a_command_and_no_active_dialog")
-                        .addKeyValue("chatId", chatId)
-                        .log("Update ignored");
-            }
-
-            return;
-        }
-
-        String commandName = extractCommandName(raw);
-
-        if (trackConversationService.hasActiveSession(chatId) && !"cancel".equals(commandName)) {
-            trackConversationService.cancel(chatId);
-        }
-
         try {
             MDC.put("chatId", String.valueOf(chatId));
             MDC.put("updateId", String.valueOf(updateId));
 
+            if (!raw.startsWith("/")) {
+                boolean handled = trackConversationService.handleDialogMessage(chatId, raw);
+
+                if (!handled) {
+                    log.atWarn()
+                            .addKeyValue("event", LogEvent.UPDATE_IGNORED)
+                            .addKeyValue("reason", "not_a_command_and_no_active_dialog")
+                            .log("Update ignored");
+                }
+
+                return;
+            }
+
+            String commandName = extractCommandName(raw);
+            MDC.put("commandName", commandName);
+
+            if (trackConversationService.hasActiveSession(chatId) && !"cancel".equals(commandName)) {
+                trackConversationService.cancel(chatId);
+            }
+
             log.atInfo()
                     .addKeyValue("event", LogEvent.COMMAND_RECEIVED)
-                    .addKeyValue("command", commandName)
                     .log("Command received");
 
             commandDispatcher
@@ -85,7 +84,6 @@ public class TelegramUpdateService {
                             command -> {
                                 log.atInfo()
                                         .addKeyValue("event", LogEvent.COMMAND_DISPATCH)
-                                        .addKeyValue("command", commandName)
                                         .addKeyValue(
                                                 "handler", command.getClass().getSimpleName())
                                         .log("Dispatching command");
@@ -94,14 +92,12 @@ public class TelegramUpdateService {
 
                                 log.atInfo()
                                         .addKeyValue("event", LogEvent.COMMAND_HANDLED)
-                                        .addKeyValue("command", commandName)
                                         .log("Command handled");
                             },
                             () -> {
                                 sender.sendPlain(chatId, messageService.get("command.unknown"));
                                 log.atWarn()
                                         .addKeyValue("event", LogEvent.UNKNOWN_COMMAND)
-                                        .addKeyValue("command", commandName)
                                         .log("Unknown command");
                             });
         } finally {

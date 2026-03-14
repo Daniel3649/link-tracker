@@ -3,6 +3,7 @@ package backend.academy.linktracker.bot.service;
 import backend.academy.linktracker.bot.conversation.TrackDialogState;
 import backend.academy.linktracker.bot.conversation.handler.TrackStepHandler;
 import backend.academy.linktracker.bot.conversation.handler.TrackStepHandlerRegistry;
+import backend.academy.linktracker.bot.logging.LogEvent;
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,7 @@ public class TrackConversationService {
         trackDialogStateRepository.save(chatId, TrackDialogState.waitingLink());
 
         log.atInfo()
-                .addKeyValue("event", "track_dialog_started")
-                .addKeyValue("chatId", chatId)
+                .addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED)
                 .log("Track dialog started");
     }
 
@@ -29,8 +29,7 @@ public class TrackConversationService {
         trackDialogStateRepository.deleteByChatId(chatId);
 
         log.atInfo()
-                .addKeyValue("event", "track_dialog_cancelled")
-                .addKeyValue("chatId", chatId)
+                .addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED)
                 .log("Track dialog cancelled");
     }
 
@@ -38,8 +37,7 @@ public class TrackConversationService {
         boolean hasActiveSession = trackDialogStateRepository.existsByChatId(chatId);
 
         log.atInfo()
-                .addKeyValue("event", "track_dialog_session_checked")
-                .addKeyValue("chatId", chatId)
+                .addKeyValue("event", LogEvent.TRACK_DIALOG_SESSION_CHECKED)
                 .addKeyValue("hasActiveSession", hasActiveSession)
                 .log("Track dialog session checked");
 
@@ -54,19 +52,10 @@ public class TrackConversationService {
                 .map(state -> {
                     TrackStepHandler handler = trackStepHandlerRegistry.getHandler(state);
 
-                    log.atInfo()
-                            .addKeyValue("event", "track_dialog_message_received")
-                            .addKeyValue("chatId", chatId)
-                            .addKeyValue("rawText", rawText)
-                            .addKeyValue("state", state)
-                            .addKeyValue("handler", handler.getClass().getSimpleName())
-                            .log("Track dialog message received");
-
                     handler.handle(chatId, rawText, state);
 
                     log.atInfo()
-                            .addKeyValue("event", "track_dialog_message_processed")
-                            .addKeyValue("chatId", chatId)
+                            .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
                             .addKeyValue("rawText", rawText)
                             .addKeyValue("state", state)
                             .addKeyValue("handler", handler.getClass().getSimpleName())
@@ -76,8 +65,7 @@ public class TrackConversationService {
                 })
                 .orElseGet(() -> {
                     log.atDebug()
-                            .addKeyValue("event", "track_dialog_message_ignored")
-                            .addKeyValue("chatId", chatId)
+                            .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_IGNORED)
                             .addKeyValue("rawText", rawText)
                             .addKeyValue("reason", "no_active_session")
                             .log("Track dialog message ignored");
