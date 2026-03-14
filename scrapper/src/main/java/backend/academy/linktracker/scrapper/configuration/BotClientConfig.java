@@ -1,5 +1,6 @@
 package backend.academy.linktracker.scrapper.configuration;
 
+import backend.academy.linktracker.scrapper.properties.BotProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,10 +11,10 @@ public class BotClientConfig {
     @Bean
     public RestClient botRestClient(
         RestClient.Builder builder,
-        @Value("${app.bot.base-url}") String botBaseUrl
+        BotProperties botProperties
     ) {
         return builder
-            .baseUrl(botBaseUrl)
+            .baseUrl(botProperties.getBaseUrl())
             .build();
     }
 }

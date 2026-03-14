@@ -8,6 +8,7 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
 import java.util.List;
+import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -26,23 +27,19 @@ public class StackOverflowClient {
                     StackOverflowApiResponse<StackOverflowQuestionTimelineEventResponse>>
             TIMELINE_RESPONSE_TYPE = new ParameterizedTypeReference<>() {};
 
+    private final StackoverflowProperties properties;
+
     private final RestClient stackOverflowRestClient;
-
-    @Value("${app.stackoverflow.site:stackoverflow}")
-    private String site;
-
-    @Value("${app.stackoverflow.key:}")
-    private String key;
 
     public StackOverflowQuestionFetchResult fetchQuestion(StackOverflowQuestionKey questionKey) {
         try {
             StackOverflowApiResponse<StackOverflowQuestionResponse> response = stackOverflowRestClient
                     .get()
                     .uri(uriBuilder -> {
-                        var builder = uriBuilder.path("/questions/{id}").queryParam("site", site);
+                        var builder = uriBuilder.path("/questions/{id}").queryParam("site", properties.getSite());
 
-                        if (StringUtils.hasText(key)) {
-                            builder.queryParam("key", key);
+                        if (StringUtils.hasText(properties.getKey())) {
+                            builder.queryParam("key", properties.getKey());
                         }
 
                         return builder.build(questionKey.questionId());
@@ -71,11 +68,11 @@ public class StackOverflowClient {
                     .uri(uriBuilder -> {
                         var builder = uriBuilder
                                 .path("/questions/{id}/timeline")
-                                .queryParam("site", site)
+                                .queryParam("site", properties.getSite())
                                 .queryParam("pagesize", pageSize);
 
-                        if (StringUtils.hasText(key)) {
-                            builder.queryParam("key", key);
+                        if (StringUtils.hasText(properties.getKey())) {
+                            builder.queryParam("key", properties.getKey());
                         }
 
                         return builder.build(questionKey.questionId());
