@@ -1,6 +1,6 @@
-package backend.academy.linktracker.bot.track.handler;
+package backend.academy.linktracker.bot.conversation.handler;
 
-import backend.academy.linktracker.bot.track.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.util.List;

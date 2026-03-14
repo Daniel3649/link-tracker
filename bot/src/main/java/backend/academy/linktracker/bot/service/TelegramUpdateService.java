@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UpdateService {
+public class TelegramUpdateService {
     private final CommandDispatcher commandDispatcher;
     private final MessageService messageService;
     private final TelegramSender sender;

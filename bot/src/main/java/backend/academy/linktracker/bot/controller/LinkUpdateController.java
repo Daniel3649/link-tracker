@@ -4,7 +4,6 @@ import backend.academy.linktracker.bot.service.LinkUpdateNotificationService;
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +18,7 @@ public class LinkUpdateController {
 
     @PostMapping
     public ResponseEntity<Void> handleUpdate(@Valid @RequestBody LinkUpdate linkUpdate) {
-        notificationService.process(linkUpdate);
+        notificationService.sendNotification(linkUpdate);
         return ResponseEntity.ok().build();
     }
 }

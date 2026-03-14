@@ -6,6 +6,7 @@ import com.pengrad.telegrambot.model.BotCommand;
 import com.pengrad.telegrambot.request.SetMyCommands;
 import com.pengrad.telegrambot.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
@@ -20,8 +21,8 @@ import org.springframework.context.annotation.Configuration;
     matchIfMissing = true
 )
 @RequiredArgsConstructor
+@Slf4j
 public class TelegramCommandsConfig {
-    private static final Logger logger = LoggerFactory.getLogger(TelegramCommandsConfig.class);
     private final TelegramBot bot;
     private final CommandDispatcher commandDispatcher;
 
@@ -35,7 +36,7 @@ public class TelegramCommandsConfig {
             BaseResponse resp = bot.execute(new SetMyCommands(commands));
 
             if (!resp.isOk()) {
-                logger.atError()
+                log.atError()
                         .addKeyValue("event", "telegram_set_my_commands_failed")
                         .addKeyValue("command_count", commands.length)
                         .addKeyValue("commands", commands)
@@ -45,7 +46,7 @@ public class TelegramCommandsConfig {
                 throw new IllegalStateException("Failed to set bot commands: " + resp.description());
             }
 
-            logger.atInfo()
+            log.atInfo()
                     .addKeyValue("event", "telegram_set_my_commands_ok")
                     .addKeyValue("command_count", commands.length)
                     .addKeyValue("commands", commands)

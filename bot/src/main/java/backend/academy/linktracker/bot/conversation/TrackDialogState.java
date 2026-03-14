@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot.track;
+package backend.academy.linktracker.bot.conversation;
 
 import java.net.URI;
 

@@ -1,9 +1,9 @@
 package backend.academy.linktracker.bot.service;
 
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
-import backend.academy.linktracker.bot.track.TrackDialogState;
-import backend.academy.linktracker.bot.track.handler.TrackStepHandler;
-import backend.academy.linktracker.bot.track.handler.TrackStepHandlerRegistry;
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.handler.TrackStepHandler;
+import backend.academy.linktracker.bot.conversation.handler.TrackStepHandlerRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.Objects;
@@ -27,16 +27,14 @@ public class TrackConversationService {
     }
 
     public boolean handleDialogMessage(long chatId, String rawText) {
-        Objects.requireNonNull(rawText);
+        Objects.requireNonNull(rawText, "rawText cannot be null");
 
-        TrackDialogState state = trackDialogStateRepository
-            .findByChatId(chatId).orElse(null);
-        if (state == null) {
-            return false;
-        }
-
-        TrackStepHandler handler = trackStepHandlerRegistry.getHandler(state);
-        handler.handle(chatId, rawText, state);
-        return true;
+        return trackDialogStateRepository.findByChatId(chatId)
+            .map(state -> {
+                TrackStepHandler handler = trackStepHandlerRegistry.getHandler(state);
+                handler.handle(chatId, rawText, state);
+                return true;
+            })
+            .orElse(false);
     }
 }

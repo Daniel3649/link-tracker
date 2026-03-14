@@ -1,6 +1,6 @@
-package backend.academy.linktracker.bot.track.handler;
+package backend.academy.linktracker.bot.conversation.handler;
 
-import backend.academy.linktracker.bot.track.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
 
 public interface TrackStepHandler {
     boolean supports(TrackDialogState state);

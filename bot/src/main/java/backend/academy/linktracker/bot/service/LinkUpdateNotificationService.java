@@ -1,7 +1,7 @@
 package backend.academy.linktracker.bot.service;
 
 import backend.academy.linktracker.bot.sender.TelegramSender;
-import backend.academy.linktracker.bot.sender.UpdateMessageBuilder;
+import backend.academy.linktracker.bot.support.message.UpdateMessageBuilder;
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ public class LinkUpdateNotificationService {
     private final TelegramSender telegramSender;
     private final UpdateMessageBuilder updateMessageBuilder;
 
-    public void process(LinkUpdate update) {
+    public void sendNotification(LinkUpdate update) {
         Objects.requireNonNull(update, "update cannot be null");
 
         String message = updateMessageBuilder.buildMessage(update);
@@ -25,7 +25,7 @@ public class LinkUpdateNotificationService {
         }
 
         log.atInfo()
-            .addKeyValue("event", "link_update_processed")
+            .addKeyValue("event", "link_update_notification")
             .addKeyValue("linkId", update.id())
             .addKeyValue("url", update.url())
             .addKeyValue("recipientsCount", update.tgChatIds().size())

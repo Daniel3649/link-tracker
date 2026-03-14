@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot.command;
+package backend.academy.linktracker.bot.integration.command;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -18,13 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
 import backend.academy.linktracker.bot.properties.TelegramProperties;
 import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.service.UpdateService;
+import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import com.github.tomakehurst.wiremock.matching.ContentPattern;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -38,7 +37,7 @@ import org.wiremock.spring.EnableWireMock;
 @SpringBootTest
 @ActiveProfiles("test")
 @EnableWireMock
-public class TelegramBotCommandsIntegrationTest {
+public class TelegramBotCommandsTest {
 
     @Autowired
     TelegramBot telegramBot;
@@ -50,7 +49,7 @@ public class TelegramBotCommandsIntegrationTest {
     CommandDispatcher commandDispatcher;
 
     @Autowired
-    UpdateService updateService;
+    TelegramUpdateService updateService;
 
     @Autowired
     MessageService messageService;

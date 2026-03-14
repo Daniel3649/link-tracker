@@ -24,14 +24,8 @@ public class LinkParserConfig {
 
     @Bean
     public SupportedLinkParser supportedLinkParser(
-        GitHubRepositoryLinkParser gitHubRepositoryLinkParser,
-        StackOverflowQuestionLinkParser stackOverflowQuestionLinkParser
+        List<LinkParser<? extends ParsedSupportedLink>> parsers
     ) {
-        List<LinkParser<? extends ParsedSupportedLink>> parsers = List.of(
-            gitHubRepositoryLinkParser,
-            stackOverflowQuestionLinkParser
-        );
-
         return new SupportedLinkParser(parsers);
     }
 }

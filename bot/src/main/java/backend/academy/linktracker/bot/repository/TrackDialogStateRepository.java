@@ -1,6 +1,6 @@
 package backend.academy.linktracker.bot.repository;
 
-import backend.academy.linktracker.bot.track.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
 import java.util.Optional;
 
 public interface TrackDialogStateRepository {

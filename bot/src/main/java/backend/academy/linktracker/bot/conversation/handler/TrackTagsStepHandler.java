@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot.track.handler;
+package backend.academy.linktracker.bot.conversation.handler;
 
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.exception.chat.ChatNotRegisteredException;
@@ -9,13 +9,14 @@ import backend.academy.linktracker.bot.exception.link.LinkAlreadyTrackedExceptio
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.track.TrackDialogState;
-import backend.academy.linktracker.bot.track.TrackStep;
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.TrackStep;
 import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,7 +39,6 @@ public class TrackTagsStepHandler implements TrackStepHandler {
     public void handle(long chatId, String rawText, TrackDialogState state) {
         URI link = state.link();
         Set<String> tags = parseTags(rawText);
-
         AddLinkRequest request = new AddLinkRequest(link, tags, List.of());
 
         try {
@@ -53,10 +53,7 @@ public class TrackTagsStepHandler implements TrackStepHandler {
             trackDialogStateRepository.deleteByChatId(chatId);
         } catch (InvalidScrapperRequestException e) {
             trackDialogStateRepository.save(chatId, TrackDialogState.waitingLink());
-            telegramSender.sendPlain(
-                chatId,
-                messageService.get("link.add.invalid-scrapper-request")
-            );
+            telegramSender.sendPlain(chatId, messageService.get("link.add.invalid-scrapper-request"));
         } catch (ScrapperUnavailableException e) {
             telegramSender.sendPlain(chatId, messageService.get("link.add.scrapper-is-unavailable"));
             trackDialogStateRepository.deleteByChatId(chatId);
@@ -73,12 +70,11 @@ public class TrackTagsStepHandler implements TrackStepHandler {
             return Set.of();
         }
 
-        return Arrays.stream(normalized.split(","))
+        LinkedHashSet<String> result = Arrays.stream(normalized.split(","))
             .map(String::trim)
             .filter(s -> !s.isBlank())
-            .collect(Collectors.collectingAndThen(
-                Collectors.toCollection(LinkedHashSet::new),
-                Set::copyOf
-            ));
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return Collections.unmodifiableSet(result);
     }
 }

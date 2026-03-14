@@ -1,6 +1,6 @@
 package backend.academy.linktracker.bot.listener;
 
-import backend.academy.linktracker.bot.service.UpdateService;
+import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TelegramUpdatesListener implements UpdatesListener {
     private final TelegramBot bot;
-    private final UpdateService updateService;
+    private final TelegramUpdateService updateService;
 
     @PostConstruct
     public void start() {

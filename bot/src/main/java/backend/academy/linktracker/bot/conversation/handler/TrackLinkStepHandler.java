@@ -1,10 +1,10 @@
-package backend.academy.linktracker.bot.track.handler;
+package backend.academy.linktracker.bot.conversation.handler;
 
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.track.TrackDialogState;
-import backend.academy.linktracker.bot.track.TrackStep;
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.TrackStep;
 import backend.academy.linktracker.contract.link.dto.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;

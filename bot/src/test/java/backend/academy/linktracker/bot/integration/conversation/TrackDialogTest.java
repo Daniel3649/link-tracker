@@ -1,11 +1,10 @@
-package backend.academy.linktracker.bot.integration;
+package backend.academy.linktracker.bot.integration.conversation;
 
 import backend.academy.linktracker.bot.BotApplication;
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
-import backend.academy.linktracker.bot.service.TrackConversationService;
-import backend.academy.linktracker.bot.service.UpdateService;
+import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
@@ -36,7 +35,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -47,9 +45,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.client.RestClient;
-import java.util.concurrent.ThreadLocalRandom;
-import org.mockito.ArgumentCaptor;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -58,23 +53,20 @@ import static org.mockito.Mockito.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("test")
 @SpringBootTest(
-    classes = BotApplication.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+    classes = BotApplication.class
 )
-class TrackDialogIntegrationTest {
+class TrackDialogTest {
 
     private static ConfigurableApplicationContext scrapperContext;
     private static int scrapperPort;
 
-
     @Autowired
-    private UpdateService updateService;
+    private TelegramUpdateService updateService;
 
     @Autowired
     private ScrapperClient scrapperClient;
@@ -144,7 +136,7 @@ class TrackDialogIntegrationTest {
         scrapperContext.getBean(InMemorySubscriptionTagRepository.class).clear();
         scrapperContext.getBean(InMemoryTelegramChatRepository.class).clear();
         scrapperContext.getBean(InMemoryGithubTrackingStateRepository.class).clear();
-        scrapperContext.getBean(InMemoryStackOverflowTrackingStateRepository.class);
+        scrapperContext.getBean(InMemoryStackOverflowTrackingStateRepository.class).clear();
     }
 
     @BeforeEach
@@ -197,20 +189,6 @@ class TrackDialogIntegrationTest {
         assertThat(response).isNotNull();
         assertThat(response.links()).isEmpty();
         assertThat(response.size()).isZero();
-    }
-
-    private Update update(int updateId, long chatId, String text) {
-        Update update = mock(Update.class);
-        Message message = mock(Message.class);
-        Chat chat = mock(Chat.class);
-
-        when(update.updateId()).thenReturn(updateId);
-        when(update.message()).thenReturn(message);
-        when(message.chat()).thenReturn(chat);
-        when(message.text()).thenReturn(text);
-        when(chat.id()).thenReturn(chatId);
-
-        return update;
     }
 
     @Test
@@ -344,6 +322,20 @@ class TrackDialogIntegrationTest {
                 assertThat(normalized).contains(workLink2.toString().toLowerCase());
                 assertThat(normalized).doesNotContain(studyLink.toString().toLowerCase());
             });
+    }
+
+    private Update update(int updateId, long chatId, String text) {
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
+        Chat chat = mock(Chat.class);
+
+        when(update.updateId()).thenReturn(updateId);
+        when(update.message()).thenReturn(message);
+        when(message.chat()).thenReturn(chat);
+        when(message.text()).thenReturn(text);
+        when(chat.id()).thenReturn(chatId);
+
+        return update;
     }
 
     @Configuration

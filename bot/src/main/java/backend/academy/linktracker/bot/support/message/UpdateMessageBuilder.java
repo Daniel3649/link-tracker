@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot.sender;
+package backend.academy.linktracker.bot.support.message;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import org.springframework.stereotype.Component;

@@ -1,8 +1,9 @@
-package backend.academy.linktracker.bot.controller;
+package backend.academy.linktracker.bot.integration.controller;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -28,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @EnableWireMock
-class BotUpdatesControllerIntegrationTest {
+class BotUpdatesControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -71,7 +72,7 @@ class BotUpdatesControllerIntegrationTest {
 
         String allBodies = requests.stream()
             .map(LoggedRequest::getBodyAsString)
-            .reduce("", (left, right) -> left + "\n" + right);
+            .collect(Collectors.joining("\n"));
 
         assertTrue(allBodies.contains("1001"));
         assertTrue(allBodies.contains("1002"));

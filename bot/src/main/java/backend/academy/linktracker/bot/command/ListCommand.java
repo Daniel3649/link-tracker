@@ -29,11 +29,15 @@ public class ListCommand implements Command {
 
     @Override
     public void execute(Update update) {
-        Objects.requireNonNull(update);
+        Objects.requireNonNull(update, "update cannot be null");
+
+        if (update.message() == null || update.message().chat() == null) {
+            return;
+        }
 
         long chatId = update.message().chat().id();
         String rawText = update.message().text();
-        String tagFilter = commandArgSupport.extractFirstArgument(rawText);
+        String tagFilter = normalizeTagFilter(commandArgSupport.extractFirstArgument(rawText));
 
         try {
             ListLinksResponse response = scrapperClient.getLinks(chatId);
@@ -42,14 +46,12 @@ public class ListCommand implements Command {
             List<LinkResponse> filteredLinks = filterByTag(links, tagFilter);
 
             if (filteredLinks.isEmpty()) {
-                if (tagFilter == null) {
-                    telegramSender.sendPlain(chatId, messageService.get("command.list.empty"));
-                } else {
-                    telegramSender.sendPlain(
-                        chatId,
-                        messageService.get("command.list.empty.by-tag", tagFilter)
-                    );
-                }
+                telegramSender.sendPlain(
+                    chatId,
+                    tagFilter == null
+                        ? messageService.get("command.list.empty")
+                        : messageService.get("command.list.empty.by-tag", tagFilter)
+                );
                 return;
             }
 
@@ -63,6 +65,15 @@ public class ListCommand implements Command {
         } catch (ScrapperClientException e) {
             telegramSender.sendPlain(chatId, messageService.get("command.list.client-error"));
         }
+    }
+
+    private String normalizeTagFilter(String tagFilter) {
+        if (tagFilter == null) {
+            return null;
+        }
+
+        String normalized = tagFilter.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
     @Override
