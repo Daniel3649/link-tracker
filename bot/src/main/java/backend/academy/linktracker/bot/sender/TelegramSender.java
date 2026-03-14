@@ -18,7 +18,6 @@ public class TelegramSender {
         if (message == null || message.isBlank()) {
             log.atWarn()
                     .addKeyValue("event", LogEvent.TELEGRAM_SEND_SKIPPED)
-                    .addKeyValue("chatId", chatId)
                     .addKeyValue("reason", "message_null_or_blank")
                     .log("Send skipped");
             return;
@@ -33,7 +32,6 @@ public class TelegramSender {
 
             log.atWarn()
                     .addKeyValue("event", LogEvent.ERROR_SENDING_RESPONSE)
-                    .addKeyValue("chatId", chatId)
                     .addKeyValue("errorCode", errorCode)
                     .addKeyValue("description", description)
                     .log("Error sending response");

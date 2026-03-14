@@ -7,6 +7,7 @@ import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -61,42 +62,42 @@ public class UpdateService {
         long chatId = update.message().chat().id();
         long updateId = update.updateId();
 
-        log.atInfo()
-                .addKeyValue("event", LogEvent.COMMAND_RECEIVED)
-                .addKeyValue("updateId", updateId)
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("command", commandName)
-                .log("Command received");
+        try {
+            MDC.put("chatId", String.valueOf(chatId));
+            MDC.put("updateId", String.valueOf(updateId));
 
-        commandDispatcher
-                .getCommandByName(commandName)
-                .ifPresentOrElse(
-                        command -> {
-                            log.atInfo()
-                                    .addKeyValue("event", LogEvent.COMMAND_DISPATCH)
-                                    .addKeyValue("updateId", updateId)
-                                    .addKeyValue("chatId", chatId)
-                                    .addKeyValue("command", commandName)
-                                    .addKeyValue("handler", command.getClass().getSimpleName())
-                                    .log("Dispatching command");
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.COMMAND_RECEIVED)
+                    .addKeyValue("command", commandName)
+                    .log("Command received");
 
-                            command.execute(update);
+            commandDispatcher
+                    .getCommandByName(commandName)
+                    .ifPresentOrElse(
+                            command -> {
+                                log.atInfo()
+                                        .addKeyValue("event", LogEvent.COMMAND_DISPATCH)
+                                        .addKeyValue("command", commandName)
+                                        .addKeyValue(
+                                                "handler", command.getClass().getSimpleName())
+                                        .log("Dispatching command");
 
-                            log.atInfo()
-                                    .addKeyValue("event", LogEvent.COMMAND_HANDLED)
-                                    .addKeyValue("updateId", updateId)
-                                    .addKeyValue("chatId", chatId)
-                                    .addKeyValue("command", commandName)
-                                    .log("Command handled");
-                        },
-                        () -> {
-                            sender.sendPlain(chatId, messageService.get("command.unknown"));
-                            log.atWarn()
-                                    .addKeyValue("event", LogEvent.UNKNOWN_COMMAND)
-                                    .addKeyValue("updateId", updateId)
-                                    .addKeyValue("chatId", chatId)
-                                    .addKeyValue("command", commandName)
-                                    .log("Unknown command");
-                        });
+                                command.execute(update);
+
+                                log.atInfo()
+                                        .addKeyValue("event", LogEvent.COMMAND_HANDLED)
+                                        .addKeyValue("command", commandName)
+                                        .log("Command handled");
+                            },
+                            () -> {
+                                sender.sendPlain(chatId, messageService.get("command.unknown"));
+                                log.atWarn()
+                                        .addKeyValue("event", LogEvent.UNKNOWN_COMMAND)
+                                        .addKeyValue("command", commandName)
+                                        .log("Unknown command");
+                            });
+        } finally {
+            MDC.clear();
+        }
     }
 }
