@@ -1,17 +1,15 @@
 package backend.academy.linktracker.scrapper.handlers.github;
 
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
-import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.stereotype.Component;
 
 @Component
 public class GitHubActivityExtractor {
     public List<GitHubRepositoryActivityResponse> extractNewActivities(
-        List<GitHubRepositoryActivityResponse> recentActivities,
-        Long lastSeenActivityId
-    ) {
+            List<GitHubRepositoryActivityResponse> recentActivities, Long lastSeenActivityId) {
         if (recentActivities == null || recentActivities.isEmpty()) {
             return List.of();
         }

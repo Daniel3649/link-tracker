@@ -76,6 +76,4 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
     public void clear() {
         subscriptions.clear();
     }
-
-
 }

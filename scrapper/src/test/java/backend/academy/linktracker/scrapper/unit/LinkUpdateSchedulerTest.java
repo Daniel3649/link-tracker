@@ -1,4 +1,8 @@
-package backend.academy.linktracker.scrapper.schedule;
+package backend.academy.linktracker.scrapper.unit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.common.LinkChange;
@@ -9,6 +13,7 @@ import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
+import backend.academy.linktracker.scrapper.schedule.LinkUpdateScheduler;
 import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
 import java.net.URI;
 import java.util.List;
@@ -19,10 +24,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LinkUpdateSchedulerTest {
@@ -73,7 +74,7 @@ class LinkUpdateSchedulerTest {
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(linkHandler);
         when(linkHandler.checkForUpdate(trackedLink)).thenReturn(Optional.of(change));
         when(subscriptionRepository.findAllByTrackedLink(trackedLink))
-            .thenReturn(List.of(subscription1, subscription2));
+                .thenReturn(List.of(subscription1, subscription2));
 
         scheduler.checkUpdates();
 

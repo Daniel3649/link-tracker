@@ -3,7 +3,6 @@ package backend.academy.linktracker.scrapper.sender;
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.clients.bot.BotUpdatesClient;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component

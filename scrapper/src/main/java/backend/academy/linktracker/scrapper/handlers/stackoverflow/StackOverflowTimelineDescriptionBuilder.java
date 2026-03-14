@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionTimelineEventResponse;
-import org.springframework.stereotype.Component;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 @Component
 public class StackOverflowTimelineDescriptionBuilder {

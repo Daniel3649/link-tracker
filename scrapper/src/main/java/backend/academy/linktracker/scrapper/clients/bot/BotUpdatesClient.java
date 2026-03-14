@@ -4,11 +4,11 @@ import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.exception.client.BotClientException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -17,34 +17,29 @@ public class BotUpdatesClient {
     private final ObjectMapper objectMapper;
 
     public void sendUpdate(LinkUpdate update) {
-        botRestClient.post()
-            .uri("/updates")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(update)
-            .exchange((request, response) -> {
-                int status = response.getStatusCode().value();
+        botRestClient
+                .post()
+                .uri("/updates")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(update)
+                .exchange((request, response) -> {
+                    int status = response.getStatusCode().value();
 
-                if (status == 200) {
-                    return null;
-                }
+                    if (status == 200) {
+                        return null;
+                    }
 
-                if (status == 400) {
-                    ApiErrorResponse error = readError(response);
-                    throw new BotClientException(
-                        "Bot rejected update: " + error.exceptionMessage()
-                    );
-                }
+                    if (status == 400) {
+                        ApiErrorResponse error = readError(response);
+                        throw new BotClientException("Bot rejected update: " + error.exceptionMessage());
+                    }
 
-                if (status >= 500) {
-                    throw new BotClientException(
-                        "Bot service error. HTTP status: " + status
-                    );
-                }
+                    if (status >= 500) {
+                        throw new BotClientException("Bot service error. HTTP status: " + status);
+                    }
 
-                throw new BotClientException(
-                    "Unexpected bot response. HTTP status: " + status
-                );
-            });
+                    throw new BotClientException("Unexpected bot response. HTTP status: " + status);
+                });
     }
 
     private ApiErrorResponse readError(RestClient.RequestHeadersSpec.ConvertibleClientHttpResponse response) {

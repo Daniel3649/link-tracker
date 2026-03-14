@@ -7,10 +7,9 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowTimelineFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
-import java.util.List;
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

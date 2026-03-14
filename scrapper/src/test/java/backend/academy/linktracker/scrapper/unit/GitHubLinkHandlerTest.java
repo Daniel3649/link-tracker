@@ -1,4 +1,13 @@
-package backend.academy.linktracker.scrapper.schedule;
+package backend.academy.linktracker.scrapper.unit;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
@@ -18,15 +27,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatusCode;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GitHubLinkHandlerTest {
@@ -51,32 +51,29 @@ class GitHubLinkHandlerTest {
     @BeforeEach
     void setUp() {
         handler = new GitHubLinkHandler(
-            gitHubClient,
-            trackingStateRepository,
-            activityExtractor,
-            descriptionBuilder,
-            gitHubRepositoryLinkParser
-        );
+                gitHubClient,
+                trackingStateRepository,
+                activityExtractor,
+                descriptionBuilder,
+                gitHubRepositoryLinkParser);
     }
 
     @Test
     void createTrackingState_shouldThrowRepositoryPollingException_whenGitHubReturnsNon2xx() {
         TrackedLink trackedLink = trackedLink(
-            "https://github.com/octocat/Hello-World",
-            new GitHubRepositoryKey("octocat", "Hello-World")
-        );
+                "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
         GitHubRepositoryFetchResult fetchResult = mock(GitHubRepositoryFetchResult.class);
         when(fetchResult.isOk()).thenReturn(false);
         when(fetchResult.statusCode()).thenReturn(HttpStatusCode.valueOf(401));
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
-            .thenReturn(fetchResult);
+                .thenReturn(fetchResult);
 
         assertThatThrownBy(() -> handler.createTrackingState(trackedLink))
-            .isInstanceOf(RepositoryPollingException.class)
-            .hasMessageContaining("Failed to initialize GitHub tracking state")
-            .hasMessageContaining("401");
+                .isInstanceOf(RepositoryPollingException.class)
+                .hasMessageContaining("Failed to initialize GitHub tracking state")
+                .hasMessageContaining("401");
 
         verify(gitHubClient, never()).fetchRecentActivities(any(GitHubRepositoryKey.class), anyInt());
         verify(trackingStateRepository, never()).saveIfAbsent(any(GitHubTrackingState.class));
@@ -85,20 +82,18 @@ class GitHubLinkHandlerTest {
     @Test
     void createTrackingState_shouldThrowRepositoryPollingException_whenGitHubResponseHasNoEtag() {
         TrackedLink trackedLink = trackedLink(
-            "https://github.com/octocat/Hello-World",
-            new GitHubRepositoryKey("octocat", "Hello-World")
-        );
+                "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
         GitHubRepositoryFetchResult fetchResult = mock(GitHubRepositoryFetchResult.class);
         when(fetchResult.isOk()).thenReturn(true);
         when(fetchResult.etag()).thenReturn(null);
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
-            .thenReturn(fetchResult);
+                .thenReturn(fetchResult);
 
         assertThatThrownBy(() -> handler.createTrackingState(trackedLink))
-            .isInstanceOf(RepositoryPollingException.class)
-            .hasMessageContaining("does not contain ETag");
+                .isInstanceOf(RepositoryPollingException.class)
+                .hasMessageContaining("does not contain ETag");
 
         verify(gitHubClient, never()).fetchRecentActivities(any(GitHubRepositoryKey.class), anyInt());
         verify(trackingStateRepository, never()).saveIfAbsent(any(GitHubTrackingState.class));
@@ -107,9 +102,7 @@ class GitHubLinkHandlerTest {
     @Test
     void checkForUpdate_shouldThrowRepositoryPollingException_whenGitHubReturnsNon2xx() {
         TrackedLink trackedLink = trackedLink(
-            "https://github.com/octocat/Hello-World",
-            new GitHubRepositoryKey("octocat", "Hello-World")
-        );
+                "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
         state.setEtag("\"old-etag\"");
@@ -122,12 +115,12 @@ class GitHubLinkHandlerTest {
 
         when(trackingStateRepository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
-            .thenReturn(fetchResult);
+                .thenReturn(fetchResult);
 
         assertThatThrownBy(() -> handler.checkForUpdate(trackedLink))
-            .isInstanceOf(RepositoryPollingException.class)
-            .hasMessageContaining("Failed to check GitHub repository")
-            .hasMessageContaining("500");
+                .isInstanceOf(RepositoryPollingException.class)
+                .hasMessageContaining("Failed to check GitHub repository")
+                .hasMessageContaining("500");
 
         verify(gitHubClient, never()).fetchRecentActivities(any(GitHubRepositoryKey.class), anyInt());
     }

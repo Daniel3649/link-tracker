@@ -12,8 +12,6 @@ public class StackOverflowClientConfig {
 
     @Bean
     public RestClient stackOverflowRestClient(RestClient.Builder builder, StackoverflowProperties properties) {
-        return builder.baseUrl(
-            properties.getBaseUrl())
-            .build();
+        return builder.baseUrl(properties.getBaseUrl()).build();
     }
 }

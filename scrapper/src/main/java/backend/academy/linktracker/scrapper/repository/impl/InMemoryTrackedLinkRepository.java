@@ -48,6 +48,4 @@ public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
     public void clear() {
         trackedLinks.clear();
     }
-
-
 }

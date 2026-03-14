@@ -5,6 +5,5 @@ public class BotClientException extends RuntimeException {
         super(message);
     }
 
-    public BotClientException(String message, Throwable cause) {
-    }
+    public BotClientException(String message, Throwable cause) {}
 }

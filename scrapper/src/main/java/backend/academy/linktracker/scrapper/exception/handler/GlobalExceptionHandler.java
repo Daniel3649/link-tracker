@@ -41,7 +41,8 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Некорректные параметры запроса", ex);
     }
 
-    @ExceptionHandler({TelegramChatNotFoundException.class,
+    @ExceptionHandler({
+        TelegramChatNotFoundException.class,
         SubscriptionNotFoundException.class,
         TrackingStateNotFoundException.class
     })

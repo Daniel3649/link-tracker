@@ -22,17 +22,17 @@ public class TelegramChatService {
         Object lock = chatRegistrationLocks.computeIfAbsent(chatId, ignored -> new Object());
 
         log.atInfo()
-            .addKeyValue("event", "telegram_chat_register_started")
-            .addKeyValue("chatId", chatId)
-            .log("Telegram chat registration started");
+                .addKeyValue("event", "telegram_chat_register_started")
+                .addKeyValue("chatId", chatId)
+                .log("Telegram chat registration started");
 
         synchronized (lock) {
             if (telegramChatRepository.existsByChatId(chatId)) {
                 log.atWarn()
-                    .addKeyValue("event", "telegram_chat_register_rejected")
-                    .addKeyValue("chatId", chatId)
-                    .addKeyValue("reason", "chat_already_exists")
-                    .log("Telegram chat registration rejected");
+                        .addKeyValue("event", "telegram_chat_register_rejected")
+                        .addKeyValue("chatId", chatId)
+                        .addKeyValue("reason", "chat_already_exists")
+                        .log("Telegram chat registration rejected");
 
                 throw new TelegramChatAlreadyExistsException("Telegram chat already exists. Id: " + chatId);
             }
@@ -40,9 +40,9 @@ public class TelegramChatService {
             telegramChatRepository.save(new TelegramChat(chatId));
 
             log.atInfo()
-                .addKeyValue("event", "telegram_chat_registered")
-                .addKeyValue("chatId", chatId)
-                .log("Telegram chat registered");
+                    .addKeyValue("event", "telegram_chat_registered")
+                    .addKeyValue("chatId", chatId)
+                    .log("Telegram chat registered");
         }
     }
 
@@ -50,17 +50,17 @@ public class TelegramChatService {
         Object lock = chatRegistrationLocks.computeIfAbsent(chatId, ignored -> new Object());
 
         log.atInfo()
-            .addKeyValue("event", "telegram_chat_unregister_started")
-            .addKeyValue("chatId", chatId)
-            .log("Telegram chat unregistration started");
+                .addKeyValue("event", "telegram_chat_unregister_started")
+                .addKeyValue("chatId", chatId)
+                .log("Telegram chat unregistration started");
 
         synchronized (lock) {
             if (!telegramChatRepository.existsByChatId(chatId)) {
                 log.atWarn()
-                    .addKeyValue("event", "telegram_chat_unregister_rejected")
-                    .addKeyValue("chatId", chatId)
-                    .addKeyValue("reason", "chat_not_found")
-                    .log("Telegram chat unregistration rejected");
+                        .addKeyValue("event", "telegram_chat_unregister_rejected")
+                        .addKeyValue("chatId", chatId)
+                        .addKeyValue("reason", "chat_not_found")
+                        .log("Telegram chat unregistration rejected");
 
                 throw new TelegramChatNotFoundException("Telegram chat not found. Id: " + chatId);
             }
@@ -68,9 +68,9 @@ public class TelegramChatService {
             telegramChatRepository.deleteByChatId(chatId);
 
             log.atInfo()
-                .addKeyValue("event", "telegram_chat_unregistered")
-                .addKeyValue("chatId", chatId)
-                .log("Telegram chat unregistered");
+                    .addKeyValue("event", "telegram_chat_unregistered")
+                    .addKeyValue("chatId", chatId)
+                    .log("Telegram chat unregistered");
         }
     }
 }

@@ -35,6 +35,4 @@ public class InMemorySubscriptionTagRepository implements SubscriptionTagReposit
     public void clear() {
         tags.clear();
     }
-
-
 }

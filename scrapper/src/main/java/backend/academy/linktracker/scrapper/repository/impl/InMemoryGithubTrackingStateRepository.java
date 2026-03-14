@@ -37,6 +37,4 @@ public class InMemoryGithubTrackingStateRepository implements GitHubTrackingStat
     public void clear() {
         trackingStates.clear();
     }
-
-
 }
