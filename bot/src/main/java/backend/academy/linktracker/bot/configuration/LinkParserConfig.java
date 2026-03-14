@@ -1,6 +1,6 @@
 package backend.academy.linktracker.bot.configuration;
 
-import backend.academy.linktracker.contract.link.dto.ParsedSupportedLink;
+import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.contract.link.parser.LinkParser;
 import backend.academy.linktracker.contract.link.parser.StackOverflowQuestionLinkParser;

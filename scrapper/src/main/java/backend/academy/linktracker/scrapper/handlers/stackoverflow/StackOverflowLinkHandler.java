@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
-import backend.academy.linktracker.contract.link.dto.ParsedStackOverflowQuestionLink;
+import backend.academy.linktracker.contract.link.common.ParsedStackOverflowQuestionLink;
 import backend.academy.linktracker.contract.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionFetchResult;
@@ -9,7 +9,6 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowTimelineFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
-import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;

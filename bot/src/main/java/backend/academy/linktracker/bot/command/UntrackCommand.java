@@ -10,7 +10,7 @@ import backend.academy.linktracker.bot.exception.link.LinkNotTrackedException;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
-import backend.academy.linktracker.contract.link.dto.ParsedSupportedLink;
+import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
 import com.pengrad.telegrambot.model.Update;

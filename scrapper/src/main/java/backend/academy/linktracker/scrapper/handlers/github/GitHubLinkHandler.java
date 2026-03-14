@@ -1,13 +1,12 @@
 package backend.academy.linktracker.scrapper.handlers.github;
 
-import backend.academy.linktracker.contract.link.dto.ParsedGitHubRepositoryLink;
+import backend.academy.linktracker.contract.link.common.ParsedGitHubRepositoryLink;
 import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
-import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;

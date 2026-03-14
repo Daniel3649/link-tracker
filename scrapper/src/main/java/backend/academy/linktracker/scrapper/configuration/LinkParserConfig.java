@@ -1,13 +1,9 @@
 package backend.academy.linktracker.scrapper.configuration;
 
-import backend.academy.linktracker.contract.link.dto.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
-import backend.academy.linktracker.contract.link.parser.LinkParser;
 import backend.academy.linktracker.contract.link.parser.StackOverflowQuestionLinkParser;
-import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.util.List;
 
 @Configuration
 public class LinkParserConfig {

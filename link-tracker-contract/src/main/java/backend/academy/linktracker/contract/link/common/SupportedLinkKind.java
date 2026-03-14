@@ -1,4 +1,4 @@
-package backend.academy.linktracker.contract.link.dto;
+package backend.academy.linktracker.contract.link.common;
 
 public enum SupportedLinkKind {
     GITHUB_REPOSITORY,

@@ -1,6 +1,6 @@
 package backend.academy.linktracker.contract.link.parser;
 
-import backend.academy.linktracker.contract.link.dto.ParsedGitHubRepositoryLink;
+import backend.academy.linktracker.contract.link.common.ParsedGitHubRepositoryLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import java.net.URI;
 

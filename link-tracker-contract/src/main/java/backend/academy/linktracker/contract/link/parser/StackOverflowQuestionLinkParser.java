@@ -1,6 +1,6 @@
 package backend.academy.linktracker.contract.link.parser;
 
-import backend.academy.linktracker.contract.link.dto.ParsedStackOverflowQuestionLink;
+import backend.academy.linktracker.contract.link.common.ParsedStackOverflowQuestionLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import java.net.URI;
 

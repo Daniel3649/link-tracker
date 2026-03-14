@@ -1,6 +1,6 @@
 package backend.academy.linktracker.contract.link.parser;
 
-import backend.academy.linktracker.contract.link.dto.ParsedSupportedLink;
+import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import lombok.RequiredArgsConstructor;
 import java.net.URI;

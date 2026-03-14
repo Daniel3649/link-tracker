@@ -5,7 +5,7 @@ import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.bot.conversation.TrackDialogState;
 import backend.academy.linktracker.bot.conversation.TrackStep;
-import backend.academy.linktracker.contract.link.dto.ParsedSupportedLink;
+import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
 import lombok.RequiredArgsConstructor;
