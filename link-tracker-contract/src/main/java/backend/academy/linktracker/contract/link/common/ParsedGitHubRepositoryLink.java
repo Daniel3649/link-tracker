@@ -3,10 +3,7 @@ package backend.academy.linktracker.contract.link.common;
 import java.net.URI;
 import java.util.Objects;
 
-public record ParsedGitHubRepositoryLink(
-    URI uri,
-    String owner,
-    String repo) implements ParsedSupportedLink {
+public record ParsedGitHubRepositoryLink(URI uri, String owner, String repo) implements ParsedSupportedLink {
     public ParsedGitHubRepositoryLink {
         Objects.requireNonNull(uri);
         Objects.requireNonNull(owner);

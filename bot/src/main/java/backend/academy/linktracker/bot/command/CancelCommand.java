@@ -5,9 +5,9 @@ import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.bot.service.TrackConversationService;
 import com.pengrad.telegrambot.model.Update;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -24,11 +24,9 @@ public class CancelCommand implements Command {
 
         if (trackConversationService.hasActiveSession(chatId)) {
             trackConversationService.cancel(chatId);
-            telegramSender.sendPlain(chatId,
-                messageService.get("command.cancel"));
+            telegramSender.sendPlain(chatId, messageService.get("command.cancel"));
         } else {
-            telegramSender.sendPlain(chatId,
-                messageService.get("command.cancel.dialog-not-found"));
+            telegramSender.sendPlain(chatId, messageService.get("command.cancel.dialog-not-found"));
         }
     }
 

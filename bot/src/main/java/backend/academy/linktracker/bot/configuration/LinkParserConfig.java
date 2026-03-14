@@ -5,9 +5,9 @@ import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkPars
 import backend.academy.linktracker.contract.link.parser.LinkParser;
 import backend.academy.linktracker.contract.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.util.List;
 
 @Configuration
 public class LinkParserConfig {
@@ -23,9 +23,7 @@ public class LinkParserConfig {
     }
 
     @Bean
-    public SupportedLinkParser supportedLinkParser(
-        List<LinkParser<? extends ParsedSupportedLink>> parsers
-    ) {
+    public SupportedLinkParser supportedLinkParser(List<LinkParser<? extends ParsedSupportedLink>> parsers) {
         return new SupportedLinkParser(parsers);
     }
 }

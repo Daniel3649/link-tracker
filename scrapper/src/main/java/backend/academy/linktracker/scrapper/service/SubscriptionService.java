@@ -44,7 +44,6 @@ public class SubscriptionService {
                 .addKeyValue(
                         "tagsCount", request.tags() == null ? 0 : request.tags().size())
                 .log("Subscription add started");
-
         TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId).orElseThrow(() -> {
             log.atWarn()
                     .addKeyValue("event", "subscription_add_failed")

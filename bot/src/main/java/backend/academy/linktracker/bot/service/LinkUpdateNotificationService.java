@@ -3,10 +3,10 @@ package backend.academy.linktracker.bot.service;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.support.message.UpdateMessageBuilder;
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import java.util.Objects;
 
 @Service
 @Slf4j
@@ -25,10 +25,10 @@ public class LinkUpdateNotificationService {
         }
 
         log.atInfo()
-            .addKeyValue("event", "link_update_notification")
-            .addKeyValue("linkId", update.id())
-            .addKeyValue("url", update.url())
-            .addKeyValue("recipientsCount", update.tgChatIds().size())
-            .log("Link update processed");
+                .addKeyValue("event", "link_update_notification")
+                .addKeyValue("linkId", update.id())
+                .addKeyValue("url", update.url())
+                .addKeyValue("recipientsCount", update.tgChatIds().size())
+                .log("Link update processed");
     }
 }

@@ -79,12 +79,12 @@ public class TelegramBotCommandsTest {
         String expectedText = messageService.get("command.start");
 
         await().atMost(10, SECONDS)
-            .untilAsserted(() -> verify(
-                1,
-                postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
-                    .withPathParam("token", equalTo(telegramProperties.getToken()))
-                    .withRequestBody(matchingBodyContainsChatId(chatId))
-                    .withRequestBody(matchingBodyContainsText(expectedText))));
+                .untilAsserted(() -> verify(
+                        1,
+                        postRequestedFor(urlPathTemplate("/bot{token}/sendMessage"))
+                                .withPathParam("token", equalTo(telegramProperties.getToken()))
+                                .withRequestBody(matchingBodyContainsChatId(chatId))
+                                .withRequestBody(matchingBodyContainsText(expectedText))));
     }
 
     @Test
@@ -103,10 +103,11 @@ public class TelegramBotCommandsTest {
 
         assertTrue(latch.await(10, SECONDS));
 
-        String expectedText = messageService.get("command.help.header") + '\n' +
-            commandDispatcher.getCommands().stream()
-                .map(command -> "/" + command.name() + " - " + command.description())
-                .collect(Collectors.joining("\n", "", "\n"));
+        String expectedText = messageService.get("command.help.header")
+                + '\n'
+                + commandDispatcher.getCommands().stream()
+                        .map(command -> "/" + command.name() + " - " + command.description())
+                        .collect(Collectors.joining("\n", "", "\n"));
 
         await().atMost(10, SECONDS)
                 .untilAsserted(() -> verify(
@@ -217,9 +218,6 @@ public class TelegramBotCommandsTest {
     }
 
     private void stubRegisterChatOk(long chatId) {
-        stubFor(post(urlEqualTo("/tg-chat/" + chatId))
-            .willReturn(aResponse()
-                .withStatus(200)));
+        stubFor(post(urlEqualTo("/tg-chat/" + chatId)).willReturn(aResponse().withStatus(200)));
     }
-
 }

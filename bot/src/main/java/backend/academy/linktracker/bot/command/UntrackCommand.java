@@ -14,9 +14,9 @@ import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
 import com.pengrad.telegrambot.model.Update;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor

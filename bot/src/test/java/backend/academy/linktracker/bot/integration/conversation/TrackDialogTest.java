@@ -1,75 +1,56 @@
 package backend.academy.linktracker.bot.integration.conversation;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import backend.academy.linktracker.bot.BotApplication;
-import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.TelegramUpdateService;
-import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
-import backend.academy.linktracker.contract.dto.response.LinkResponse;
-import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
-import backend.academy.linktracker.scrapper.ScrapperApplication;
-import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
-import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
-import backend.academy.linktracker.scrapper.repository.impl.InMemoryGithubTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.impl.InMemoryStackOverflowTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.impl.InMemorySubscriptionRepository;
-import backend.academy.linktracker.scrapper.repository.impl.InMemorySubscriptionTagRepository;
-import backend.academy.linktracker.scrapper.repository.impl.InMemoryTelegramChatRepository;
-import backend.academy.linktracker.scrapper.repository.impl.InMemoryTrackedLinkRepository;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.wiremock.spring.ConfigureWireMock;
+import org.wiremock.spring.EnableWireMock;
+import org.wiremock.spring.InjectWireMock;
 
 @ActiveProfiles("test")
-@SpringBootTest(
-    classes = BotApplication.class
-)
+@SpringBootTest(classes = BotApplication.class, properties = "app.telegram.url=http://localhost:9999/bot")
+@EnableWireMock({@ConfigureWireMock(name = "scrapper", baseUrlProperties = "app.scrapper.base-url")})
 class TrackDialogTest {
 
-    private static ConfigurableApplicationContext scrapperContext;
-    private static int scrapperPort;
+    @InjectWireMock("scrapper")
+    private WireMockServer wireMock;
 
     @Autowired
     private TelegramUpdateService updateService;
-
-    @Autowired
-    private ScrapperClient scrapperClient;
 
     @Autowired
     private TrackDialogStateRepository trackDialogStateRepository;
@@ -80,131 +61,66 @@ class TrackDialogTest {
     @MockitoBean
     private TelegramBot telegramBot;
 
-    @BeforeAll
-    static void startScrapper() {
-        if (scrapperContext == null) {
-            scrapperContext = new SpringApplicationBuilder(
-                ScrapperApplication.class,
-                ScrapperTestConfig.class
-            )
-                .properties(
-                    "spring.main.allow-bean-definition-overriding=true",
-                    "server.port=0",
-                    "spring.profiles.active=test",
-
-                    "app.bot.base-url=http://localhost:65535",
-
-                    "app.github.base-url=https://api.github.com",
-                    "app.github.token=dummy-token",
-
-                    "app.stackoverflow.base-url=https://api.stackexchange.com/2.3",
-                    "app.stackoverflow.access-token=dummy-access-token",
-                    "app.stackoverflow.key=dummy-key",
-
-                    "app.scheduler.link-check-delay-ms=60000"
-                )
-                .run();
-
-            ServletWebServerApplicationContext webContext =
-                (ServletWebServerApplicationContext) scrapperContext;
-
-            scrapperPort = webContext.getWebServer().getPort();
-        }
-    }
-
-    @AfterAll
-    static void stopScrapper() {
-        if (scrapperContext != null) {
-            scrapperContext.close();
-        }
-    }
-
-    @DynamicPropertySource
-    static void registerProps(DynamicPropertyRegistry registry) {
-        if (scrapperContext == null) {
-            startScrapper();
-        }
-
-        registry.add("app.scrapper.base-url", () -> "http://localhost:" + scrapperPort);
-        registry.add("app.telegram.url", () -> "http://localhost:9999/bot");
-    }
-
     @BeforeEach
-    void clearState() {
-        scrapperContext.getBean(InMemorySubscriptionRepository.class).clear();
-        scrapperContext.getBean(InMemoryTrackedLinkRepository.class).clear();
-        scrapperContext.getBean(InMemorySubscriptionTagRepository.class).clear();
-        scrapperContext.getBean(InMemoryTelegramChatRepository.class).clear();
-        scrapperContext.getBean(InMemoryGithubTrackingStateRepository.class).clear();
-        scrapperContext.getBean(InMemoryStackOverflowTrackingStateRepository.class).clear();
-    }
-
-    @BeforeEach
-    void clearBotState() {
+    void setUp() {
+        wireMock.resetAll();
         trackDialogStateRepository.clear();
+        Mockito.clearInvocations(telegramSender, telegramBot);
     }
 
     @Test
-    void shouldSaveLinkAfterTrackDialog() {
+    void shouldSendAddLinkRequestAfterTrackDialog() {
         long chatId = 123456L;
         URI link = URI.create("https://github.com/octocat/Hello-World");
 
-        scrapperClient.registerChat(chatId);
+        wireMock.stubFor(post(urlEqualTo("/links")).willReturn(okJson(linkResponseJson(1L, link, "work", "hobby"))));
 
         updateService.handleEvent(update(1, chatId, "/track"));
         updateService.handleEvent(update(2, chatId, link.toString()));
         updateService.handleEvent(update(3, chatId, "work, hobby"));
 
-
-        ListLinksResponse response = scrapperClient.getLinks(chatId);
-
-        assertThat(response).isNotNull();
-        assertThat(response.links()).hasSize(1);
-
-        LinkResponse saved = response.links().getFirst();
-        assertThat(saved.url()).isEqualTo(link);
-        assertThat(saved.tags()).containsExactlyInAnyOrder("work", "hobby");
+        wireMock.verify(1, postRequestedForLinks(chatId, link.toString()));
     }
 
     @Test
     void shouldNotifyUserWhenTrackLinkIsInvalid() {
         long chatId = 123456L;
-        String invalidLink = "jjbj://github.com/user/repo";
-
-        scrapperClient.registerChat(chatId);
+        String invalidLink = "tbank://github.com/user/repo";
 
         updateService.handleEvent(update(1, chatId, "/track"));
+        Mockito.clearInvocations(telegramSender);
+
         updateService.handleEvent(update(2, chatId, invalidLink));
 
-        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        List<String> messages = capturedMessages(chatId);
 
-        verify(telegramSender, atLeastOnce())
-            .sendPlain(eq(chatId), messageCaptor.capture());
+        assertThat(messages).anySatisfy(text -> assertThat(text.toLowerCase()).contains("invalid"));
 
-        assertThat(messageCaptor.getAllValues())
-            .anySatisfy(text -> assertThat(text.toLowerCase()).contains("invalid"));
-
-        ListLinksResponse response = scrapperClient.getLinks(chatId);
-
-        assertThat(response).isNotNull();
-        assertThat(response.links()).isEmpty();
-        assertThat(response.size()).isZero();
+        wireMock.verify(0, postRequestedFor(urlEqualTo("/links")));
     }
 
     @Test
     void shouldNotifyUserWhenLinkIsAlreadyTrackedDuringTrackDialog() {
-        long chatId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+        long chatId = 223344L;
         URI link = URI.create("https://github.com/octocat/Hello-World");
 
-        scrapperClient.registerChat(chatId);
+        wireMock.stubFor(post(urlEqualTo("/links"))
+                .inScenario("duplicate-track")
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willSetStateTo("already-tracked")
+                .willReturn(okJson(linkResponseJson(1L, link, "work", "hobby"))));
+
+        wireMock.stubFor(post(urlEqualTo("/links"))
+                .inScenario("duplicate-track")
+                .whenScenarioStateIs("already-tracked")
+                .willReturn(aResponse()
+                        .withStatus(409)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(apiErrorJson("Link is already tracked", "Link is already tracked", "409"))));
 
         updateService.handleEvent(update(1, chatId, "/track"));
         updateService.handleEvent(update(2, chatId, link.toString()));
         updateService.handleEvent(update(3, chatId, "work, hobby"));
-
-        ListLinksResponse afterFirstTrack = scrapperClient.getLinks(chatId);
-        assertThat(afterFirstTrack).isNotNull();
-        assertThat(afterFirstTrack.links()).hasSize(1);
 
         Mockito.clearInvocations(telegramSender);
 
@@ -212,116 +128,96 @@ class TrackDialogTest {
         updateService.handleEvent(update(5, chatId, link.toString()));
         updateService.handleEvent(update(6, chatId, "work, hobby"));
 
-        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        List<String> messages = capturedMessages(chatId);
 
-        verify(telegramSender, atLeastOnce())
-            .sendPlain(eq(chatId), messageCaptor.capture());
+        assertThat(messages).anySatisfy(text -> {
+            String normalized = text.toLowerCase();
+            assertThat(normalized.contains("already") || normalized.contains("follow"))
+                    .isTrue();
+        });
 
-        assertThat(messageCaptor.getAllValues())
-            .anySatisfy(text -> assertThat(text.toLowerCase())
-                .contains("followed"));
-
-        ListLinksResponse afterSecondTrack = scrapperClient.getLinks(chatId);
-        assertThat(afterSecondTrack).isNotNull();
-        assertThat(afterSecondTrack.links()).hasSize(1);
-
-        LinkResponse saved = afterSecondTrack.links().getFirst();
-        assertThat(saved.url()).isEqualTo(link);
+        wireMock.verify(2, postRequestedForLinks(chatId, link.toString()));
     }
 
     @Test
     void shouldSendActiveSubscriptionsListWhenUserRequestsList() {
-        long chatId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+        long chatId = 345678L;
 
         URI firstLink = URI.create("https://github.com/octocat/Hello-World");
         URI secondLink = URI.create("https://github.com/spring-projects/spring-boot");
 
-        scrapperClient.registerChat(chatId);
-
-        scrapperClient.addLink(chatId, new AddLinkRequest(firstLink, Set.of("work"), List.of()));
-        scrapperClient.addLink(chatId, new AddLinkRequest(secondLink, Set.of("study"), List.of()));
-
-        ListLinksResponse storedLinks = scrapperClient.getLinks(chatId);
-        assertThat(storedLinks).isNotNull();
-        assertThat(storedLinks.links()).hasSize(2);
-
-        Mockito.clearInvocations(telegramSender);
+        wireMock.stubFor(get(urlEqualTo("/links"))
+                .withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId)))
+                .willReturn(okJson(listLinksResponseJson(
+                        linkResponseJson(1L, firstLink, "work"), linkResponseJson(2L, secondLink, "study")))));
 
         updateService.handleEvent(update(1, chatId, "/list"));
 
-        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        List<String> messages = capturedMessages(chatId);
 
-        verify(telegramSender, atLeastOnce())
-            .sendPlain(eq(chatId), messageCaptor.capture());
+        assertThat(messages).anySatisfy(text -> {
+            String normalized = text.toLowerCase();
+            assertThat(normalized).contains(firstLink.toString().toLowerCase());
+            assertThat(normalized).contains(secondLink.toString().toLowerCase());
+        });
 
-        assertThat(messageCaptor.getAllValues())
-            .anySatisfy(text -> {
-                String normalized = text.toLowerCase();
-                assertThat(normalized).contains(firstLink.toString().toLowerCase());
-                assertThat(normalized).contains(secondLink.toString().toLowerCase());
-            });
+        wireMock.verify(
+                1, getRequestedFor(urlEqualTo("/links")).withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId))));
     }
 
     @Test
     void shouldSendNoActiveSubscriptionsMessageWhenUserRequestsListAndHasNoSubscriptions() {
-        long chatId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+        long chatId = 445566L;
 
-        scrapperClient.registerChat(chatId);
-
-        ListLinksResponse storedLinks = scrapperClient.getLinks(chatId);
-        assertThat(storedLinks).isNotNull();
-        assertThat(storedLinks.links()).isEmpty();
-        assertThat(storedLinks.size()).isZero();
-
-        Mockito.clearInvocations(telegramSender);
+        wireMock.stubFor(get(urlEqualTo("/links"))
+                .withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId)))
+                .willReturn(okJson("""
+                {
+                  "links": [],
+                  "size": 0
+                }
+                """)));
 
         updateService.handleEvent(update(1, chatId, "/list"));
 
-        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+        List<String> messages = capturedMessages(chatId);
 
-        verify(telegramSender, atLeastOnce())
-            .sendPlain(eq(chatId), messageCaptor.capture());
-
-        assertThat(messageCaptor.getAllValues())
-            .anySatisfy(text -> assertThat(text.toLowerCase())
-                .contains("empty"));
+        assertThat(messages).anySatisfy(text -> assertThat(text.toLowerCase()).contains("empty"));
     }
 
     @Test
     void shouldSendOnlySubscriptionsWithRequestedTagWhenUserRequestsListByTag() {
-        long chatId = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+        long chatId = 556677L;
 
         URI workLink1 = URI.create("https://github.com/octocat/Hello-World");
         URI workLink2 = URI.create("https://github.com/spring-projects/spring-boot");
         URI studyLink = URI.create("https://github.com/openjdk/jdk");
 
-        scrapperClient.registerChat(chatId);
-
-        scrapperClient.addLink(chatId, new AddLinkRequest(workLink1, Set.of("work"), List.of()));
-        scrapperClient.addLink(chatId, new AddLinkRequest(workLink2, Set.of("backend", "work"), List.of()));
-        scrapperClient.addLink(chatId, new AddLinkRequest(studyLink, Set.of("study"), List.of()));
-
-        ListLinksResponse storedLinks = scrapperClient.getLinks(chatId);
-        assertThat(storedLinks).isNotNull();
-        assertThat(storedLinks.links()).hasSize(3);
-
-        Mockito.clearInvocations(telegramSender);
+        wireMock.stubFor(get(urlEqualTo("/links"))
+                .withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId)))
+                .willReturn(okJson(listLinksResponseJson(
+                        linkResponseJson(1L, workLink1, "work"),
+                        linkResponseJson(2L, workLink2, "backend", "work"),
+                        linkResponseJson(3L, studyLink, "study")))));
 
         updateService.handleEvent(update(1, chatId, "/list work"));
 
+        List<String> messages = capturedMessages(chatId);
+
+        assertThat(messages).anySatisfy(text -> {
+            String normalized = text.toLowerCase();
+            assertThat(normalized).contains(workLink1.toString().toLowerCase());
+            assertThat(normalized).contains(workLink2.toString().toLowerCase());
+            assertThat(normalized).doesNotContain(studyLink.toString().toLowerCase());
+        });
+    }
+
+    private List<String> capturedMessages(long chatId) {
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(telegramSender, atLeastOnce())
-            .sendPlain(eq(chatId), messageCaptor.capture());
+        Mockito.verify(telegramSender, atLeastOnce()).sendPlain(eq(chatId), messageCaptor.capture());
 
-        assertThat(messageCaptor.getAllValues())
-            .anySatisfy(text -> {
-                String normalized = text.toLowerCase();
-
-                assertThat(normalized).contains(workLink1.toString().toLowerCase());
-                assertThat(normalized).contains(workLink2.toString().toLowerCase());
-                assertThat(normalized).doesNotContain(studyLink.toString().toLowerCase());
-            });
+        return messageCaptor.getAllValues();
     }
 
     private Update update(int updateId, long chatId, String text) {
@@ -338,27 +234,46 @@ class TrackDialogTest {
         return update;
     }
 
-    @Configuration
-    static class ScrapperTestConfig {
+    private static com.github.tomakehurst.wiremock.matching.RequestPatternBuilder postRequestedForLinks(
+            long chatId, String link) {
+        return postRequestedFor(urlEqualTo("/links"))
+                .withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId)))
+                .withRequestBody(matchingJsonPath("$.link", equalTo(link)));
+    }
 
-        @Bean(name = "gitHubClient")
-        @Primary
-        GitHubClient gitHubClient() {
-            GitHubClient client = Mockito.mock(GitHubClient.class);
-            GitHubRepositoryFetchResult fetchResult = Mockito.mock(GitHubRepositoryFetchResult.class);
+    private static String linkResponseJson(long id, URI url, String... tags) {
+        String tagsJson = Arrays.stream(tags).map(tag -> "\"" + tag + "\"").collect(Collectors.joining(", "));
 
-            when(fetchResult.isOk()).thenReturn(true);
-            when(fetchResult.isNotModified()).thenReturn(false);
-            when(fetchResult.etag()).thenReturn("\"test-etag\"");
-            when(fetchResult.statusCode()).thenReturn(HttpStatusCode.valueOf(200));
+        return """
+            {
+              "id": %d,
+              "url": "%s",
+              "tags": [%s],
+              "filters": []
+            }
+            """.formatted(id, url, tagsJson);
+    }
 
-            when(client.fetchRepository(any(GitHubRepositoryKey.class), Mockito.nullable(String.class)))
-                .thenReturn(fetchResult);
+    private static String listLinksResponseJson(String... links) {
+        String linksJson = String.join(",", links);
 
-            when(client.fetchRecentActivities(any(GitHubRepositoryKey.class), anyInt()))
-                .thenReturn(List.of());
+        return """
+            {
+              "links": [%s],
+              "size": %d
+            }
+            """.formatted(linksJson, links.length);
+    }
 
-            return client;
-        }
+    private static String apiErrorJson(String description, String exceptionMessage, String code) {
+        return """
+            {
+              "description": "%s",
+              "code": "%s",
+              "exceptionName": "TestException",
+              "exceptionMessage": "%s",
+              "stacktrace": []
+            }
+            """.formatted(description, code, exceptionMessage);
     }
 }

@@ -1,10 +1,10 @@
 package backend.academy.linktracker.bot.conversation.handler;
 
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.TrackStep;
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.conversation.TrackDialogState;
-import backend.academy.linktracker.bot.conversation.TrackStep;
 import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
 import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
 import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
@@ -29,20 +29,11 @@ public class TrackLinkStepHandler implements TrackStepHandler {
         try {
             ParsedSupportedLink parsedLink = supportedLinkParser.parse(rawText);
 
-            trackDialogStateRepository.save(
-                chatId,
-                TrackDialogState.waitingTags(parsedLink.uri())
-            );
+            trackDialogStateRepository.save(chatId, TrackDialogState.waitingTags(parsedLink.uri()));
 
-            telegramSender.sendPlain(
-                chatId,
-                messageService.get("link.accept.success")
-            );
+            telegramSender.sendPlain(chatId, messageService.get("link.accept.success"));
         } catch (UnsupportedLinkFormatException e) {
-            telegramSender.sendPlain(
-                chatId,
-                messageService.get("link.accept.fail")
-            );
+            telegramSender.sendPlain(chatId, messageService.get("link.accept.fail"));
         }
     }
 }

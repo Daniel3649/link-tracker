@@ -13,6 +13,8 @@ import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.io.InputStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
@@ -21,8 +23,6 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
-import java.io.IOException;
-import java.io.InputStream;
 
 @Component
 @RequiredArgsConstructor
@@ -34,13 +34,14 @@ public class ScrapperClient {
 
     public void registerChat(long chatId) {
         try {
-            scrapperRestClient.post()
-                .uri("/tg-chat/{id}", chatId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (request, response) -> {
-                    throw mapRegisterChatException(response);
-                })
-                .toBodilessEntity();
+            scrapperRestClient
+                    .post()
+                    .uri("/tg-chat/{id}", chatId)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, (request, response) -> {
+                        throw mapRegisterChatException(response);
+                    })
+                    .toBodilessEntity();
         } catch (ResourceAccessException e) {
             throw new ScrapperUnavailableException("Scrapper is unavailable", e);
         }
@@ -48,16 +49,17 @@ public class ScrapperClient {
 
     public LinkResponse addLink(long chatId, AddLinkRequest request) {
         try {
-            LinkResponse response = scrapperRestClient.post()
-                .uri("/links")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
-                .body(request)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
-                    throw mapAddLinkException(responseSpec);
-                })
-                .body(LinkResponse.class);
+            LinkResponse response = scrapperRestClient
+                    .post()
+                    .uri("/links")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
+                    .body(request)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
+                        throw mapAddLinkException(responseSpec);
+                    })
+                    .body(LinkResponse.class);
 
             if (response == null) {
                 throw new ScrapperClientException("Scrapper returned empty response body");
@@ -71,16 +73,17 @@ public class ScrapperClient {
 
     public LinkResponse removeLink(long chatId, RemoveLinkRequest request) {
         try {
-            LinkResponse response = scrapperRestClient.method(HttpMethod.DELETE)
-                .uri("/links")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
-                .body(request)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
-                    throw mapRemoveLinkException(responseSpec);
-                })
-                .body(LinkResponse.class);
+            LinkResponse response = scrapperRestClient
+                    .method(HttpMethod.DELETE)
+                    .uri("/links")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
+                    .body(request)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
+                        throw mapRemoveLinkException(responseSpec);
+                    })
+                    .body(LinkResponse.class);
 
             if (response == null) {
                 throw new ScrapperClientException("Scrapper returned empty response body");
@@ -94,14 +97,15 @@ public class ScrapperClient {
 
     public ListLinksResponse getLinks(long chatId) {
         try {
-            ListLinksResponse response = scrapperRestClient.get()
-                .uri("/links")
-                .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
-                    throw mapGetLinksException(responseSpec);
-                })
-                .body(ListLinksResponse.class);
+            ListLinksResponse response = scrapperRestClient
+                    .get()
+                    .uri("/links")
+                    .header(TG_CHAT_ID_HEADER, String.valueOf(chatId))
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, (req, responseSpec) -> {
+                        throw mapGetLinksException(responseSpec);
+                    })
+                    .body(ListLinksResponse.class);
 
             if (response == null) {
                 throw new ScrapperClientException("Scrapper returned empty response body");
@@ -169,7 +173,9 @@ public class ScrapperClient {
     }
 
     private String extractMessage(ApiErrorResponse error, int status) {
-        if (error != null && error.exceptionMessage() != null && !error.exceptionMessage().isBlank()) {
+        if (error != null
+                && error.exceptionMessage() != null
+                && !error.exceptionMessage().isBlank()) {
             return error.exceptionMessage();
         }
         if (error != null && error.description() != null && !error.description().isBlank()) {

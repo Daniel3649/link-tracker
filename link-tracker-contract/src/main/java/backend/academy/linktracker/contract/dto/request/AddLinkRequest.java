@@ -7,12 +7,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
-public record AddLinkRequest(
-        @NotNull URI link,
+public record AddLinkRequest(@NotNull URI link, Set<@NotBlank String> tags, List<@NotBlank String> filters) {
 
-        Set<@NotBlank String> tags,
-
-        List<@NotBlank String> filters) {
     @JsonCreator
     public AddLinkRequest {
         tags = tags == null ? Set.of() : Set.copyOf(tags);

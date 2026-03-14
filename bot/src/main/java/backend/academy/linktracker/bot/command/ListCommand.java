@@ -12,12 +12,12 @@ import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
 import com.pengrad.telegrambot.model.Update;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -47,11 +47,10 @@ public class ListCommand implements Command {
 
             if (filteredLinks.isEmpty()) {
                 telegramSender.sendPlain(
-                    chatId,
-                    tagFilter == null
-                        ? messageService.get("command.list.empty")
-                        : messageService.get("command.list.empty.by-tag", tagFilter)
-                );
+                        chatId,
+                        tagFilter == null
+                                ? messageService.get("command.list.empty")
+                                : messageService.get("command.list.empty.by-tag", tagFilter));
                 return;
             }
 
@@ -86,26 +85,24 @@ public class ListCommand implements Command {
         return messageService.get("command.list.description");
     }
 
-
     private List<LinkResponse> filterByTag(List<LinkResponse> links, String tagFilter) {
         if (tagFilter == null || tagFilter.isBlank()) {
             return links;
         }
 
         return links.stream()
-            .filter(link -> link.tags() != null && link.tags().stream()
-                .anyMatch(tag -> tag != null && tag.trim().equalsIgnoreCase(tagFilter.trim())))
-            .toList();
+                .filter(link -> link.tags() != null
+                        && link.tags().stream()
+                                .anyMatch(tag -> tag != null && tag.trim().equalsIgnoreCase(tagFilter.trim())))
+                .toList();
     }
 
     private String buildListMessage(List<LinkResponse> links, String tagFilter) {
         String header = tagFilter == null
-            ? messageService.get("command.list.header")
-            : messageService.get("command.list.header.by-tag", tagFilter);
+                ? messageService.get("command.list.header")
+                : messageService.get("command.list.header.by-tag", tagFilter);
 
-        String body = links.stream()
-            .map(this::formatLink)
-            .collect(Collectors.joining("\n\n"));
+        String body = links.stream().map(this::formatLink).collect(Collectors.joining("\n\n"));
 
         return header + "\n\n" + body;
     }
@@ -117,9 +114,9 @@ public class ListCommand implements Command {
 
         if (link.tags() != null && !link.tags().isEmpty()) {
             builder.append("\n")
-                .append(messageService.get("command.list.tags-label"))
-                .append(": ")
-                .append(String.join(", ", link.tags()));
+                    .append(messageService.get("command.list.tags-label"))
+                    .append(": ")
+                    .append(String.join(", ", link.tags()));
         }
 
         return builder.toString();

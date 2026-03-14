@@ -1,6 +1,8 @@
 package backend.academy.linktracker.bot.conversation.handler;
 
 import backend.academy.linktracker.bot.client.ScrapperClient;
+import backend.academy.linktracker.bot.conversation.TrackDialogState;
+import backend.academy.linktracker.bot.conversation.TrackStep;
 import backend.academy.linktracker.bot.exception.chat.ChatNotRegisteredException;
 import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
 import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
@@ -9,18 +11,16 @@ import backend.academy.linktracker.bot.exception.link.LinkAlreadyTrackedExceptio
 import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.conversation.TrackDialogState;
-import backend.academy.linktracker.bot.conversation.TrackStep;
 import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.LinkedHashSet;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -71,9 +71,9 @@ public class TrackTagsStepHandler implements TrackStepHandler {
         }
 
         LinkedHashSet<String> result = Arrays.stream(normalized.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .collect(Collectors.toCollection(LinkedHashSet::new));
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         return Collections.unmodifiableSet(result);
     }

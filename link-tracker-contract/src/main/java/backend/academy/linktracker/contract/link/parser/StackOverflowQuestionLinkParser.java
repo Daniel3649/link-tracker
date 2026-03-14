@@ -9,12 +9,16 @@ public class StackOverflowQuestionLinkParser implements LinkParser<ParsedStackOv
     @Override
     public boolean supports(URI uri) {
         String host = uri.getHost();
-        return "stackoverflow.com".equalsIgnoreCase(host)
-            || "www.stackoverflow.com".equalsIgnoreCase(host);
+        return LinkParser.isValidScheme(uri)
+                && ("stackoverflow.com".equalsIgnoreCase(host) || "www.stackoverflow.com".equalsIgnoreCase(host));
     }
 
     @Override
     public ParsedStackOverflowQuestionLink parse(URI uri) {
+        if (!LinkParser.isValidScheme(uri)) {
+            throw new UnsupportedLinkFormatException("Incorrect stackoverflow link: " + uri);
+        }
+
         String path = uri.getPath();
         if (path == null || path.isBlank()) {
             throw new UnsupportedLinkFormatException("Incorrect StackOverflow link: " + uri);
@@ -34,6 +38,4 @@ public class StackOverflowQuestionLinkParser implements LinkParser<ParsedStackOv
 
         return new ParsedStackOverflowQuestionLink(uri, questionId);
     }
-
-
 }

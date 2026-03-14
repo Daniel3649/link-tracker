@@ -8,12 +8,10 @@ public class UpdateMessageBuilder {
     public String buildMessage(LinkUpdate update) {
         StringBuilder builder = new StringBuilder();
 
-        builder.append("Link update").append('\n')
-            .append(update.url());
+        builder.append("Link update").append('\n').append(update.url());
 
         if (update.description() != null && !update.description().isBlank()) {
-            builder.append('\n').append('\n')
-                .append(update.description());
+            builder.append('\n').append('\n').append(update.description());
         }
 
         return builder.toString();

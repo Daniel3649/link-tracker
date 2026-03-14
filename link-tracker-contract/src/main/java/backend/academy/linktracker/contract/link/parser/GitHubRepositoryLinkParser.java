@@ -9,20 +9,23 @@ public class GitHubRepositoryLinkParser implements LinkParser<ParsedGitHubReposi
     @Override
     public boolean supports(URI uri) {
         String host = uri.getHost();
-        return "github.com".equalsIgnoreCase(host)
-            || "www.github.com".equalsIgnoreCase(host);
+        return LinkParser.isValidScheme(uri)
+                && ("github.com".equalsIgnoreCase(host) || "www.github.com".equalsIgnoreCase(host));
     }
 
     @Override
     public ParsedGitHubRepositoryLink parse(URI uri) {
+        if (!LinkParser.isValidScheme(uri)) {
+            throw new UnsupportedLinkFormatException("Incorrect stackoverflow link: " + uri);
+        }
+
         String path = uri.getPath();
         if (hasNotText(path)) {
             throw new UnsupportedLinkFormatException("Incorrect GitHub link: " + uri);
         }
 
         String[] segments = path.split("/");
-        if (segments.length < 3 || hasNotText(segments[1])
-            || hasNotText(segments[2])) {
+        if (segments.length < 3 || hasNotText(segments[1]) || hasNotText(segments[2])) {
             throw new UnsupportedLinkFormatException("Incorrect GitHub link: " + uri);
         }
 

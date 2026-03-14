@@ -1,11 +1,11 @@
 package backend.academy.linktracker.bot.repository.impl;
 
-import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import backend.academy.linktracker.bot.conversation.TrackDialogState;
-import org.springframework.stereotype.Repository;
+import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemoryTrackDialogStateRepository implements TrackDialogStateRepository {
@@ -35,6 +35,4 @@ public class InMemoryTrackDialogStateRepository implements TrackDialogStateRepos
     public void clear() {
         states.clear();
     }
-
-
 }
