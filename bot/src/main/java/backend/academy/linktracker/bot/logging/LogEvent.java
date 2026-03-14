@@ -1,0 +1,14 @@
+package backend.academy.linktracker.bot.logging;
+
+public enum LogEvent {
+    UPDATE_IGNORED,
+    COMMAND_RECEIVED,
+    COMMAND_DISPATCH,
+    COMMAND_HANDLED,
+    UNKNOWN_COMMAND,
+    ERROR_SENDING_RESPONSE,
+    TELEGRAM_SEND_SKIPPED,
+    TELEGRAM_SET_MY_COMMANDS_FAILED,
+    TELEGRAM_SET_MY_COMMANDS_OK,
+
+}
