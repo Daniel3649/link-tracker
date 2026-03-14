@@ -15,9 +15,4 @@ public record ParsedStackOverflowQuestionLink(
             throw new IllegalArgumentException("questionId must be positive");
         }
     }
-
-    @Override
-    public SupportedLinkKind kind() {
-        return SupportedLinkKind.STACKOVERFLOW_QUESTION;
-    }
 }

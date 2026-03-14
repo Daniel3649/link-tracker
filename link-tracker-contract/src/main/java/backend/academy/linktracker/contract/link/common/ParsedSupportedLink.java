@@ -4,5 +4,4 @@ import java.net.URI;
 
 public sealed interface ParsedSupportedLink permits ParsedGitHubRepositoryLink, ParsedStackOverflowQuestionLink {
     URI uri();
-    SupportedLinkKind kind();
 }

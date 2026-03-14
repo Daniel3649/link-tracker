@@ -19,9 +19,4 @@ public record ParsedGitHubRepositoryLink(
             throw new IllegalArgumentException("repo must not be blank");
         }
     }
-
-    @Override
-    public SupportedLinkKind kind() {
-        return SupportedLinkKind.GITHUB_REPOSITORY;
-    }
 }
