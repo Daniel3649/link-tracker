@@ -1,6 +1,7 @@
 package backend.academy.linktracker.bot.configuration;
 
 import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
+import backend.academy.linktracker.bot.logging.LogEvent;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.BotCommand;
 import com.pengrad.telegrambot.request.SetMyCommands;
@@ -31,7 +32,7 @@ public class TelegramCommandsConfig {
 
             if (!resp.isOk()) {
                 log.atError()
-                        .addKeyValue("event", "telegram_set_my_commands_failed")
+                        .addKeyValue("event", LogEvent.TELEGRAM_SET_MY_COMMANDS_FAILED)
                         .addKeyValue("command_count", commands.length)
                         .addKeyValue("commands", commands)
                         .addKeyValue("telegram_error_code", resp.errorCode())
@@ -41,7 +42,7 @@ public class TelegramCommandsConfig {
             }
 
             log.atInfo()
-                    .addKeyValue("event", "telegram_set_my_commands_ok")
+                    .addKeyValue("event", LogEvent.TELEGRAM_SET_MY_COMMANDS_OK)
                     .addKeyValue("command_count", commands.length)
                     .addKeyValue("commands", commands)
                     .log("Telegram bot menu commands set");

@@ -1,5 +1,6 @@
 package backend.academy.linktracker.bot.sender;
 
+import backend.academy.linktracker.bot.logging.LogEvent;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.BaseResponse;
@@ -16,8 +17,7 @@ public class TelegramSender {
     public void sendPlain(long chatId, String message) {
         if (message == null || message.isBlank()) {
             log.atWarn()
-                    .addKeyValue("event", "telegram_send_skipped")
-                    .addKeyValue("chatId", chatId)
+                    .addKeyValue("event", LogEvent.TELEGRAM_SEND_SKIPPED)
                     .addKeyValue("reason", "message_null_or_blank")
                     .log("Send skipped");
             return;
@@ -31,8 +31,7 @@ public class TelegramSender {
             String description = response.description();
 
             log.atWarn()
-                    .addKeyValue("event", "error_sending_response")
-                    .addKeyValue("chatId", chatId)
+                    .addKeyValue("event", LogEvent.ERROR_SENDING_RESPONSE)
                     .addKeyValue("errorCode", errorCode)
                     .addKeyValue("description", description)
                     .log("Error sending response");

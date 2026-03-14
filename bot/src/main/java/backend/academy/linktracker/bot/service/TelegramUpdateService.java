@@ -1,11 +1,13 @@
 package backend.academy.linktracker.bot.service;
 
 import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
+import backend.academy.linktracker.bot.logging.LogEvent;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,7 +22,7 @@ public class TelegramUpdateService {
     public void handleEvent(Update update) {
         if (update == null) {
             log.atWarn()
-                    .addKeyValue("event", "update_ignored")
+                    .addKeyValue("event", LogEvent.UPDATE_IGNORED)
                     .addKeyValue("reason", "update_null")
                     .log("Update ignored");
             return;
@@ -29,7 +31,7 @@ public class TelegramUpdateService {
         Message message = update.message();
         if (message == null) {
             log.atWarn()
-                    .addKeyValue("event", "update_ignored")
+                    .addKeyValue("event", LogEvent.UPDATE_IGNORED)
                     .addKeyValue("reason", "message_null")
                     .log("Update ignored");
             return;
@@ -38,7 +40,7 @@ public class TelegramUpdateService {
         String messageText = message.text();
         if (messageText == null) {
             log.atWarn()
-                    .addKeyValue("event", "update_ignored")
+                    .addKeyValue("event", LogEvent.UPDATE_IGNORED)
                     .addKeyValue("reason", "text_null")
                     .log("Update ignored");
             return;
@@ -53,7 +55,7 @@ public class TelegramUpdateService {
 
             if (!handled) {
                 log.atWarn()
-                        .addKeyValue("event", "update_ignored")
+                        .addKeyValue("event", LogEvent.UPDATE_IGNORED)
                         .addKeyValue("reason", "not_a_command_and_no_active_dialog")
                         .addKeyValue("chatId", chatId)
                         .log("Update ignored");
@@ -68,43 +70,43 @@ public class TelegramUpdateService {
             trackConversationService.cancel(chatId);
         }
 
-        log.atInfo()
-                .addKeyValue("event", "command_received")
-                .addKeyValue("updateId", updateId)
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("command", commandName)
-                .log("Command received");
+        try {
+            MDC.put("chatId", String.valueOf(chatId));
+            MDC.put("updateId", String.valueOf(updateId));
 
-        commandDispatcher
-                .getCommandByName(commandName)
-                .ifPresentOrElse(
-                        command -> {
-                            log.atInfo()
-                                    .addKeyValue("event", "command_dispatch")
-                                    .addKeyValue("updateId", updateId)
-                                    .addKeyValue("chatId", chatId)
-                                    .addKeyValue("command", commandName)
-                                    .addKeyValue("handler", command.getClass().getSimpleName())
-                                    .log("Dispatching command");
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.COMMAND_RECEIVED)
+                    .addKeyValue("command", commandName)
+                    .log("Command received");
 
-                            command.execute(update);
+            commandDispatcher
+                    .getCommandByName(commandName)
+                    .ifPresentOrElse(
+                            command -> {
+                                log.atInfo()
+                                        .addKeyValue("event", LogEvent.COMMAND_DISPATCH)
+                                        .addKeyValue("command", commandName)
+                                        .addKeyValue(
+                                                "handler", command.getClass().getSimpleName())
+                                        .log("Dispatching command");
 
-                            log.atInfo()
-                                    .addKeyValue("event", "command_handled")
-                                    .addKeyValue("updateId", updateId)
-                                    .addKeyValue("chatId", chatId)
-                                    .addKeyValue("command", commandName)
-                                    .log("Command handled");
-                        },
-                        () -> {
-                            sender.sendPlain(chatId, messageService.get("command.unknown"));
-                            log.atWarn()
-                                    .addKeyValue("event", "unknown_command")
-                                    .addKeyValue("updateId", updateId)
-                                    .addKeyValue("chatId", chatId)
-                                    .addKeyValue("command", commandName)
-                                    .log("Unknown command");
-                        });
+                                command.execute(update);
+
+                                log.atInfo()
+                                        .addKeyValue("event", LogEvent.COMMAND_HANDLED)
+                                        .addKeyValue("command", commandName)
+                                        .log("Command handled");
+                            },
+                            () -> {
+                                sender.sendPlain(chatId, messageService.get("command.unknown"));
+                                log.atWarn()
+                                        .addKeyValue("event", LogEvent.UNKNOWN_COMMAND)
+                                        .addKeyValue("command", commandName)
+                                        .log("Unknown command");
+                            });
+        } finally {
+            MDC.clear();
+        }
     }
 
     private String extractCommandName(String raw) {
