@@ -65,11 +65,9 @@ public class UpdateService {
         try {
             MDC.put("chatId", String.valueOf(chatId));
             MDC.put("updateId", String.valueOf(updateId));
+            MDC.put("commandName", commandName);
 
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.COMMAND_RECEIVED)
-                    .addKeyValue("command", commandName)
-                    .log("Command received");
+            log.atInfo().addKeyValue("event", LogEvent.COMMAND_RECEIVED).log("Command received");
 
             commandDispatcher
                     .getCommandByName(commandName)
@@ -77,7 +75,6 @@ public class UpdateService {
                             command -> {
                                 log.atInfo()
                                         .addKeyValue("event", LogEvent.COMMAND_DISPATCH)
-                                        .addKeyValue("command", commandName)
                                         .addKeyValue(
                                                 "handler", command.getClass().getSimpleName())
                                         .log("Dispatching command");
@@ -86,14 +83,12 @@ public class UpdateService {
 
                                 log.atInfo()
                                         .addKeyValue("event", LogEvent.COMMAND_HANDLED)
-                                        .addKeyValue("command", commandName)
                                         .log("Command handled");
                             },
                             () -> {
                                 sender.sendPlain(chatId, messageService.get("command.unknown"));
                                 log.atWarn()
                                         .addKeyValue("event", LogEvent.UNKNOWN_COMMAND)
-                                        .addKeyValue("command", commandName)
                                         .log("Unknown command");
                             });
         } finally {
