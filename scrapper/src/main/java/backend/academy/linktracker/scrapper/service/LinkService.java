@@ -64,30 +64,30 @@ public class LinkService {
                 .log("Tracked link get-or-create started");
 
         synchronized (lock) {
-            Optional<TrackedLink> existingTrackedLink = trackedLinkRepository.findByResourceKey(resourceKey);
-            if (existingTrackedLink.isPresent()) {
-                TrackedLink trackedLink = existingTrackedLink.get();
+            return trackedLinkRepository
+                    .findByResourceKey(resourceKey)
+                    .map(trackedLink -> {
+                        log.atInfo()
+                                .addKeyValue("event", "tracked_link_reused")
+                                .addKeyValue("url", trackedLink.getUrl())
+                                .addKeyValue("resourceKey", resourceKey)
+                                .addKeyValue("trackedLinkId", trackedLink.getId())
+                                .log("Tracked link reused");
 
-                log.atInfo()
-                        .addKeyValue("event", "tracked_link_reused")
-                        .addKeyValue("url", trackedLink.getUrl())
-                        .addKeyValue("resourceKey", resourceKey)
-                        .addKeyValue("trackedLinkId", trackedLink.getId())
-                        .log("Tracked link reused");
+                        return trackedLink;
+                    })
+                    .orElseGet(() -> {
+                        TrackedLink createdTrackedLink = createTrackedLink(handler, parsedLink);
 
-                return trackedLink;
-            }
+                        log.atInfo()
+                                .addKeyValue("event", "tracked_link_created")
+                                .addKeyValue("url", createdTrackedLink.getUrl())
+                                .addKeyValue("resourceKey", resourceKey)
+                                .addKeyValue("trackedLinkId", createdTrackedLink.getId())
+                                .log("Tracked link created");
 
-            TrackedLink createdTrackedLink = createTrackedLink(handler, parsedLink);
-
-            log.atInfo()
-                    .addKeyValue("event", "tracked_link_created")
-                    .addKeyValue("url", createdTrackedLink.getUrl())
-                    .addKeyValue("resourceKey", resourceKey)
-                    .addKeyValue("trackedLinkId", createdTrackedLink.getId())
-                    .log("Tracked link created");
-
-            return createdTrackedLink;
+                        return createdTrackedLink;
+                    });
         }
     }
 

@@ -83,7 +83,7 @@ public class GitHubLinkHandler implements LinkHandler {
             return Optional.empty();
         }
 
-        GitHubTrackingState state = optionalState.get();
+        GitHubTrackingState state = optionalState.orElseThrow();
         GitHubRepositoryKey key = extractKey(trackedLink.getResourceKey());
 
         GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key, state.getEtag());

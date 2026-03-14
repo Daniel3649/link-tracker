@@ -80,12 +80,12 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
     @Override
     public Optional<LinkChange> checkForUpdate(TrackedLink trackedLink) {
-        Optional<StackOverflowTrackingState> optionalState = repository.findByTrackedLink(trackedLink);
-        if (optionalState.isEmpty()) {
+        StackOverflowTrackingState state =
+                repository.findByTrackedLink(trackedLink).orElse(null);
+
+        if (state == null) {
             return Optional.empty();
         }
-
-        StackOverflowTrackingState state = optionalState.get();
 
         if (state.getNextCheckAt() != null && Instant.now().isBefore(state.getNextCheckAt())) {
             return Optional.empty();
