@@ -7,6 +7,7 @@ import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
+import backend.academy.linktracker.scrapper.logging.LogEvent;
 import backend.academy.linktracker.scrapper.mapper.SubscriptionMapper;
 import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,140 +39,150 @@ public class SubscriptionService {
     private record MapKey(TrackedLink trackedLink, TelegramChat telegramChat) {}
 
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
-        log.atInfo()
-                .addKeyValue("event", "subscription_add_started")
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("url", request.link())
-                .addKeyValue(
-                        "tagsCount", request.tags() == null ? 0 : request.tags().size())
-                .log("Subscription add started");
-        TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId).orElseThrow(() -> {
-            log.atWarn()
-                    .addKeyValue("event", "subscription_add_failed")
-                    .addKeyValue("chatId", chatId)
-                    .addKeyValue("url", request.link())
-                    .addKeyValue("reason", "telegram_chat_not_found")
-                    .log("Subscription add failed");
+        try {
+            MDC.put("chatId", String.valueOf(chatId));
+            MDC.put("url", request.link().toString());
+            MDC.put(
+                    "tagsCount",
+                    request.tags() == null ? "0" : String.valueOf(request.tags().size()));
 
-            return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
-        });
+            log.atInfo().addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_STARTED).log("Subscription add started");
+            TelegramChat telegramChat = telegramChatRepository
+                    .findByChatId(chatId)
+                    .orElseThrow(() -> {
+                        log.atWarn()
+                                .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_FAILED)
+                                .addKeyValue("reason", "telegram_chat_not_found")
+                                .log("Subscription add failed");
 
-        TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
-        Subscription savedSubscription = createSubscription(trackedLink, telegramChat, request.tags());
+                        return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
+                    });
 
-        log.atInfo()
-                .addKeyValue("event", "subscription_added")
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("trackedLinkId", trackedLink.getId())
-                .addKeyValue("url", trackedLink.getUrl())
-                .addKeyValue(
-                        "tagsCount", request.tags() == null ? 0 : request.tags().size())
-                .addKeyValue("subscriptionId", savedSubscription.getId())
-                .log("Subscription added");
+            TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
+            Subscription savedSubscription = createSubscription(trackedLink, telegramChat, request.tags());
 
-        return subscriptionMapper.toLinkResponse(savedSubscription);
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.SUBSCRIPTION_ADDED)
+                    .addKeyValue("trackedLinkId", trackedLink.getId())
+                    .addKeyValue("subscriptionId", savedSubscription.getId())
+                    .log("Subscription added");
+
+            return subscriptionMapper.toLinkResponse(savedSubscription);
+        } finally {
+            MDC.clear();
+        }
     }
 
     public LinkResponse removeSubscription(long chatId, RemoveLinkRequest request) {
-        log.atInfo()
-                .addKeyValue("event", "subscription_remove_started")
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("url", request.link())
-                .log("Subscription remove started");
+        try {
+            MDC.put("chatId", String.valueOf(chatId));
+            MDC.put("url", request.link().toString());
 
-        TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId).orElseThrow(() -> {
-            log.atWarn()
-                    .addKeyValue("event", "subscription_remove_chat_not_found")
-                    .addKeyValue("chatId", chatId)
-                    .addKeyValue("url", request.link())
-                    .log("Cannot remove subscription because chat was not found");
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_STARTED)
+                    .log("Subscription remove started");
 
-            return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
-        });
+            TelegramChat telegramChat = telegramChatRepository
+                    .findByChatId(chatId)
+                    .orElseThrow(() -> {
+                        log.atWarn()
+                                .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_CHAT_NOT_FOUND)
+                                .log("Cannot remove subscription because chat was not found");
 
-        TrackedLink trackedLink = linkService.findTrackedLink(request.link()).orElseThrow(() -> {
-            log.atWarn()
-                    .addKeyValue("event", "subscription_remove_tracked_link_not_found")
-                    .addKeyValue("chatId", chatId)
-                    .addKeyValue("url", request.link())
-                    .log("Cannot remove subscription because tracked link was not found");
+                        return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
+                    });
 
-            return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
-        });
+            TrackedLink trackedLink = linkService
+                    .findTrackedLink(request.link())
+                    .orElseThrow(() -> {
+                        log.atWarn()
+                                .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_TRACKED_LINK_NOT_FOUND)
+                                .log("Cannot remove subscription because tracked link was not found");
 
-        Subscription removedSubscription = deleteSubscription(trackedLink, telegramChat);
+                        return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
+                    });
 
-        log.atInfo()
-                .addKeyValue("event", "subscription_removed")
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("trackedLinkId", trackedLink.getId())
-                .addKeyValue("url", trackedLink.getUrl())
-                .addKeyValue("subscriptionId", removedSubscription.getId())
-                .log("Subscription removed");
+            Subscription removedSubscription = deleteSubscription(trackedLink, telegramChat);
 
-        return subscriptionMapper.toLinkResponse(removedSubscription);
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVED)
+                    .addKeyValue("trackedLinkId", trackedLink.getId())
+                    .addKeyValue("subscriptionId", removedSubscription.getId())
+                    .log("Subscription removed");
+
+            return subscriptionMapper.toLinkResponse(removedSubscription);
+        } finally {
+            MDC.clear();
+        }
     }
 
     public ListLinksResponse getAllSubscriptions(long chatId) {
-        log.atDebug()
-                .addKeyValue("event", "subscription_list_requested")
-                .addKeyValue("chatId", chatId)
-                .log("Subscription list requested");
+        try {
+            MDC.put("chatId", String.valueOf(chatId));
 
-        TelegramChat telegramChat = telegramChatRepository.findByChatId(chatId).orElseThrow(() -> {
-            log.atWarn()
-                    .addKeyValue("event", "subscription_list_failed")
-                    .addKeyValue("chatId", chatId)
-                    .addKeyValue("reason", "telegram_chat_not_found")
-                    .log("Subscription list failed");
+            log.atDebug()
+                    .addKeyValue("event", LogEvent.SUBSCRIPTION_LIST_REQUESTED)
+                    .log("Subscription list requested");
 
-            return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
-        });
+            TelegramChat telegramChat = telegramChatRepository
+                    .findByChatId(chatId)
+                    .orElseThrow(() -> {
+                        log.atWarn()
+                                .addKeyValue("event", LogEvent.SUBSCRIPTION_LIST_FAILED)
+                                .addKeyValue("reason", "telegram_chat_not_found")
+                                .log("Subscription list failed");
 
-        List<LinkResponse> links =
-                subscriptionMapper.toLinkResponses(subscriptionRepository.findAllByTelegramChat(telegramChat));
+                        return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
+                    });
 
-        log.atInfo()
-                .addKeyValue("event", "subscription_list_loaded")
-                .addKeyValue("chatId", chatId)
-                .addKeyValue("subscriptionsCount", links.size())
-                .log("Subscription list loaded");
+            List<LinkResponse> links =
+                    subscriptionMapper.toLinkResponses(subscriptionRepository.findAllByTelegramChat(telegramChat));
 
-        return new ListLinksResponse(links, links.size());
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.SUBSCRIPTION_LIST_LOADED)
+                    .addKeyValue("subscriptionsCount", links.size())
+                    .log("Subscription list loaded");
+
+            return new ListLinksResponse(links, links.size());
+        } finally {
+            MDC.clear();
+        }
     }
 
     private Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
-        synchronized (lock) {
-            if (subscriptionRepository.existsByTrackedLinkAndTelegramChat(trackedLink, telegramChat)) {
-                log.atWarn()
-                        .addKeyValue("event", "subscription_add_rejected")
-                        .addKeyValue("chatId", telegramChat.getId())
-                        .addKeyValue("trackedLinkId", trackedLink.getId())
-                        .addKeyValue("url", trackedLink.getUrl())
-                        .addKeyValue("reason", "subscription_already_exists")
-                        .log("Subscription add rejected");
+        try {
+            MDC.put("chatId", String.valueOf(telegramChat.getId()));
+            MDC.put("url", trackedLink.getUrl());
+            MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
 
-                throw new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
+            synchronized (lock) {
+                if (subscriptionRepository.existsByTrackedLinkAndTelegramChat(trackedLink, telegramChat)) {
+                    log.atWarn()
+                            .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
+                            .addKeyValue("reason", "subscription_already_exists")
+                            .log("Subscription add rejected");
+
+                    throw new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
+                }
+
+                Subscription savedSubscription =
+                        subscriptionRepository.save(new Subscription(null, trackedLink, telegramChat));
+
+                subscriptionTagRepository.addTags(savedSubscription, tags);
+
+                log.atInfo()
+                        .addKeyValue("event", LogEvent.SUBSCRIPTION_PERSISTED)
+                        .addKeyValue("subscriptionId", savedSubscription.getId())
+                        .addKeyValue("tagsCount", tags == null ? 0 : tags.size())
+                        .log("Subscription persisted");
+
+                return savedSubscription;
             }
-
-            Subscription savedSubscription =
-                    subscriptionRepository.save(new Subscription(null, trackedLink, telegramChat));
-
-            subscriptionTagRepository.addTags(savedSubscription, tags);
-
-            log.atInfo()
-                    .addKeyValue("event", "subscription_persisted")
-                    .addKeyValue("chatId", telegramChat.getId())
-                    .addKeyValue("trackedLinkId", trackedLink.getId())
-                    .addKeyValue("url", trackedLink.getUrl())
-                    .addKeyValue("subscriptionId", savedSubscription.getId())
-                    .addKeyValue("tagsCount", tags == null ? 0 : tags.size())
-                    .log("Subscription persisted");
-
-            return savedSubscription;
+        } finally {
+            MDC.clear();
         }
     }
 
@@ -178,46 +190,46 @@ public class SubscriptionService {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
-        synchronized (lock) {
-            Subscription subscription = subscriptionRepository
-                    .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
-                    .orElseThrow(() -> {
-                        log.atWarn()
-                                .addKeyValue("event", "subscription_remove_rejected")
-                                .addKeyValue("chatId", telegramChat.getId())
-                                .addKeyValue("trackedLinkId", trackedLink.getId())
-                                .addKeyValue("url", trackedLink.getUrl())
-                                .addKeyValue("reason", "subscription_not_found")
-                                .log("Subscription remove rejected");
+        try {
+            MDC.put("chatId", String.valueOf(telegramChat.getId()));
+            MDC.put("url", trackedLink.getUrl());
+            MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
 
-                        return new SubscriptionNotFoundException(
-                                "Subscription not found for link: " + trackedLink.getUrl());
-                    });
+            synchronized (lock) {
+                Subscription subscription = subscriptionRepository
+                        .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
+                        .orElseThrow(() -> {
+                            log.atWarn()
+                                    .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_REJECTED)
+                                    .addKeyValue("reason", "subscription_not_found")
+                                    .log("Subscription remove rejected");
 
-            subscriptionTagRepository.deleteAllBySubscription(subscription);
-            subscriptionRepository.deleteByTrackedLinkAndTelegramChat(trackedLink, telegramChat);
+                            return new SubscriptionNotFoundException(
+                                    "Subscription not found for link: " + trackedLink.getUrl());
+                        });
 
-            boolean trackedLinkHasSubscribers = subscriptionRepository.existsByTrackedLink(trackedLink);
-            if (!trackedLinkHasSubscribers) {
-                linkService.deleteTrackedLinkWithState(trackedLink);
+                subscriptionTagRepository.deleteAllBySubscription(subscription);
+                subscriptionRepository.deleteByTrackedLinkAndTelegramChat(trackedLink, telegramChat);
+
+                boolean trackedLinkHasSubscribers = subscriptionRepository.existsByTrackedLink(trackedLink);
+                if (!trackedLinkHasSubscribers) {
+                    linkService.deleteTrackedLinkWithState(trackedLink);
+
+                    log.atInfo()
+                            .addKeyValue("event", LogEvent.ORPHAN_TRACKED_LINK_DELETED)
+                            .log("Orphan tracked link deleted");
+                }
 
                 log.atInfo()
-                        .addKeyValue("event", "orphan_tracked_link_deleted")
-                        .addKeyValue("trackedLinkId", trackedLink.getId())
-                        .addKeyValue("url", trackedLink.getUrl())
-                        .log("Orphan tracked link deleted");
+                        .addKeyValue("event", LogEvent.SUBSCRIPTION_DELETED)
+                        .addKeyValue("subscriptionId", subscription.getId())
+                        .addKeyValue("trackedLinkHasSubscribers", trackedLinkHasSubscribers)
+                        .log("Subscription deleted");
+
+                return subscription;
             }
-
-            log.atInfo()
-                    .addKeyValue("event", "subscription_deleted")
-                    .addKeyValue("chatId", telegramChat.getId())
-                    .addKeyValue("trackedLinkId", trackedLink.getId())
-                    .addKeyValue("url", trackedLink.getUrl())
-                    .addKeyValue("subscriptionId", subscription.getId())
-                    .addKeyValue("trackedLinkHasSubscribers", trackedLinkHasSubscribers)
-                    .log("Subscription deleted");
-
-            return subscription;
+        } finally {
+            MDC.clear();
         }
     }
 }

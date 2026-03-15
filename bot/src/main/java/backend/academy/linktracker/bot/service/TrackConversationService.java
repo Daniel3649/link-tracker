@@ -20,17 +20,13 @@ public class TrackConversationService {
     public void start(long chatId) {
         trackDialogStateRepository.save(chatId, TrackDialogState.waitingLink());
 
-        log.atInfo()
-                .addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED)
-                .log("Track dialog started");
+        log.atInfo().addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED).log("Track dialog started");
     }
 
     public void cancel(long chatId) {
         trackDialogStateRepository.deleteByChatId(chatId);
 
-        log.atInfo()
-                .addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED)
-                .log("Track dialog cancelled");
+        log.atInfo().addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED).log("Track dialog cancelled");
     }
 
     public boolean hasActiveSession(long chatId) {

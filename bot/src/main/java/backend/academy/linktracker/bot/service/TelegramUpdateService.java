@@ -74,9 +74,7 @@ public class TelegramUpdateService {
                 trackConversationService.cancel(chatId);
             }
 
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.COMMAND_RECEIVED)
-                    .log("Command received");
+            log.atInfo().addKeyValue("event", LogEvent.COMMAND_RECEIVED).log("Command received");
 
             commandDispatcher
                     .getCommandByName(commandName)
