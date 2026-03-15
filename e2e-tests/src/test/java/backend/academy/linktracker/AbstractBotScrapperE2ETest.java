@@ -46,7 +46,7 @@ abstract class AbstractBotScrapperE2ETest {
 
     @Container
     protected static final GenericContainer<?> SCRAPPER = new GenericContainer<>(
-                    new ImageFromDockerfile("linktracker-scrapper-e2e:latest", false)
+                    new ImageFromDockerfile("localhost/linktracker-scrapper-e2e:latest", false)
                             .withFileFromPath("app.jar", SCRAPPER_JAR)
                             .withDockerfileFromBuilder(builder -> builder.from("eclipse-temurin:25-jre")
                                     .copy("app.jar", "/app.jar")
@@ -68,7 +68,7 @@ abstract class AbstractBotScrapperE2ETest {
 
     @Container
     protected static final GenericContainer<?> BOT = new GenericContainer<>(
-                    new ImageFromDockerfile("linktracker-bot-e2e:latest", false)
+                    new ImageFromDockerfile("localhost/linktracker-bot-e2e:latest", false)
                             .withFileFromPath("app.jar", BOT_JAR)
                             .withDockerfileFromBuilder(builder -> builder.from("eclipse-temurin:25-jre")
                                     .copy("app.jar", "/app.jar")
