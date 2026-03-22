@@ -11,13 +11,35 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-link_tracker}
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-link_tracker}"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 5s
+    networks:
+      - backend
+
+  liquibase-migrations:
+    container_name: migrations
+    image: liquibase/liquibase:4.29
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - --searchPath=/changelogs
+      - --change-log-file=master.xml
+      - --driver=org.postgresql.Driver
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-link_tracker}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - update
+    volumes:
+      - ./migrations:/changelogs
+    networks:
+      - backend
 
 volumes:
   postgres-data:
+
+networks:
+  backend:

@@ -1,3 +1,6 @@
+--liquibase formatted sql
+--changeset daniel-konenkov:001-init-schema
+
 create table if not exists telegram_chat (
     chat_id bigint primary key
 );
