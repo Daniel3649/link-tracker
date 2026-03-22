@@ -5,7 +5,7 @@ spring:
   application:
     name: scrapper
   config:
-    import: optional:file:scrapper/.env[.properties]
+    import: optional:file:scrapper/.env.properties,optional:file:.env.properties
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/link_tracker}
     username: ${POSTGRES_USER:postgres}

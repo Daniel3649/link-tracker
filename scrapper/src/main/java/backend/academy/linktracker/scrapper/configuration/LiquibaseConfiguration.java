@@ -1,5 +1,7 @@
 package backend.academy.linktracker.scrapper.configuration;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.sql.DataSource;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +21,28 @@ public class LiquibaseConfiguration {
             @Value("${spring.liquibase.change-log}") String changeLog) {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
-        liquibase.setChangeLog(changeLog);
+        liquibase.setChangeLog(resolveChangeLogPath(changeLog));
         return liquibase;
+    }
+
+    private String resolveChangeLogPath(String changeLog) {
+        if (!changeLog.startsWith("file:")) {
+            return changeLog;
+        }
+
+        String configuredPath = changeLog.substring("file:".length());
+        if (Files.exists(Path.of(configuredPath))) {
+            return changeLog;
+        }
+
+        String[] fallbackPaths = {"./migrations/master.xml", "../migrations/master.xml"};
+        for (String fallbackPath : fallbackPaths) {
+            if (Files.exists(Path.of(fallbackPath))) {
+                return "file:" + fallbackPath;
+            }
+        }
+
+        return changeLog;
     }
 
     @Bean

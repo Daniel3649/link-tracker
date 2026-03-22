@@ -1,14 +1,14 @@
 # LinkTracker
 
-`LinkTracker` состоит из двух основных сервисов:
+`LinkTracker` состоит из двух сервисов:
 - `bot` принимает команды из Telegram
-- `scrapper` хранит отслеживаемые ссылки, опрашивает GitHub и StackOverflow и отправляет обновления в `bot`
+- `scrapper` хранит отслеживаемые ссылки, проверяет GitHub и StackOverflow и отправляет обновления в `bot`
 
 Для `scrapper` используются PostgreSQL, Liquibase и два режима доступа к данным:
 - `SQL`
 - `ORM`
 
-`in-memory` репозитории больше не используются.
+`in-memory` репозитории в `scrapper` больше не используются.
 
 ## Структура
 
@@ -23,13 +23,46 @@
 - JDK 25
 - Maven 3.9+
 - Docker Desktop или другой работающий Docker daemon
+- IntelliJ IDEA
+
+## Какие файлы нужно заполнить
+
+Для локального запуска нужны два файла:
+- [scrapper/.env.properties](./scrapper/.env.properties)
+- [bot/.env.properties](./bot/.env.properties)
+
+Пример для `scrapper/.env.properties`:
+
+```properties
+POSTGRES_URL=jdbc:postgresql://localhost:5433/my_link_tracker
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+APP_DATABASE_ACCESS_TYPE=SQL
+GITHUB_TOKEN=your_github_token
+STACKOVERFLOW_KEY=your_stackoverflow_key
+STACKOVERFLOW_ACCESS_KEY=your_stackoverflow_access_token
+```
+
+Пример для `bot/.env.properties`:
+
+```properties
+TELEGRAM_TOKEN=your_telegram_bot_token
+APP_SCRAPPER_BASE_URL=http://localhost:8081
+```
 
 ## PostgreSQL
 
-Локальная база и отдельный контейнер миграций поднимаются через [compose.yaml](./compose.yaml):
+Локальная база и контейнер с миграциями поднимаются через [compose.yaml](./compose.yaml).
+
+Если работаешь только через IntelliJ IDEA, открой встроенный `Terminal` и выполни:
 
 ```bash
-docker compose up -d
+docker compose up -d postgres liquibase-migrations
+```
+
+Проверка:
+
+```bash
 docker compose ps
 docker compose logs postgres
 docker compose logs liquibase-migrations
@@ -47,168 +80,95 @@ docker compose down
 docker compose down -v
 ```
 
-Параметры PostgreSQL по умолчанию:
+Поведение такое:
+- контейнер `postgres` создаёт саму базу данных
+- `liquibase-migrations` создаёт таблицы внутри этой базы
 
-- `POSTGRES_DB=link_tracker`
-- `POSTGRES_USER=postgres`
-- `POSTGRES_PASSWORD=postgres`
-- `POSTGRES_PORT=5432`
+Если volume уже существует, база не создаётся заново. Для полного сброса нужен `docker compose down -v`.
 
 ## Миграции
 
 Liquibase changelog лежит в [migrations/master.xml](./migrations/master.xml).
 
 Первая миграция схемы:
-
 - [migrations/001-init-schema.sql](./migrations/001-init-schema.sql)
 
-По умолчанию `scrapper` использует:
-
-- `spring.liquibase.change-log=file:./migrations/master.xml`
-
-Миграции можно запускать двумя способами:
-
-- отдельным контейнером `liquibase-migrations` из `compose.yaml`
-- автоматически при старте `scrapper`
-
-Если нужно перезапустить только контейнер миграций:
-
-```bash
-docker compose up liquibase-migrations
-```
+`scrapper` умеет применять миграции автоматически при старте. Дополнительно миграции запускаются отдельным контейнером `liquibase-migrations` из [compose.yaml](./compose.yaml).
 
 ## Режимы Доступа К Данным
 
 Для `scrapper` доступны два режима:
-
 - `SQL`
 - `ORM`
 
-Выбор делается через переменную:
+Выбор делается через `APP_DATABASE_ACCESS_TYPE` в [scrapper/.env.properties](./scrapper/.env.properties).
 
-```bash
+Примеры:
+
+```properties
 APP_DATABASE_ACCESS_TYPE=SQL
 ```
 
 или
 
-```bash
+```properties
 APP_DATABASE_ACCESS_TYPE=ORM
 ```
 
 Если переменная не указана, используется `SQL`.
 
-## Запуск Scrapper
+## Запуск В IntelliJ IDEA
 
-Минимальный набор переменных для локального запуска:
+### 1. Открой проект
 
-```bash
-export POSTGRES_URL=jdbc:postgresql://localhost:5432/link_tracker
-export POSTGRES_USER=postgres
-export POSTGRES_PASSWORD=postgres
-export APP_DATABASE_ACCESS_TYPE=SQL
-export GITHUB_TOKEN=your_github_token
-export STACKOVERFLOW_KEY=your_stackoverflow_key
-export STACKOVERFLOW_ACCESS_KEY=your_stackoverflow_access_token
-```
+Открой в IntelliJ IDEA корень проекта:
+- [link-tracker](.)
 
-Запуск:
+Дождись, пока IDEA импортирует Maven-проект.
+
+### 2. Подними PostgreSQL
+
+Открой встроенный `Terminal` в IDEA и выполни:
 
 ```bash
-mvn -pl scrapper -am spring-boot:run
+docker compose up -d postgres liquibase-migrations
 ```
 
-`scrapper` стартует на `http://localhost:8081`.
+### 3. Запусти `scrapper`
 
-## Запуск Bot
+В IntelliJ IDEA открой класс:
+- [ScrapperApplication.java](./scrapper/src/main/java/backend/academy/linktracker/scrapper/ScrapperApplication.java)
 
-Минимальный набор переменных:
+Запусти его через зелёную кнопку `Run`.
 
-```bash
-export TELEGRAM_TOKEN=your_telegram_bot_token
-export APP_SCRAPPER_BASE_URL=http://localhost:8081
-```
+Что важно:
+- рабочая директория должна быть корнем проекта `link-tracker`
+- `scrapper` читает настройки из [scrapper/.env.properties](./scrapper/.env.properties)
+- сервис стартует на `http://localhost:8081`
 
-Запуск:
+### 4. Запусти `bot`
 
-```bash
-mvn -pl bot -am spring-boot:run
-```
+В IntelliJ IDEA открой класс:
+- [BotApplication.java](./bot/src/main/java/backend/academy/linktracker/bot/BotApplication.java)
 
-`bot` стартует на `http://localhost:8080`.
+Запусти его через зелёную кнопку `Run`.
+
+Что важно:
+- рабочая директория должна быть корнем проекта `link-tracker`
+- `bot` читает настройки из [bot/.env.properties](./bot/.env.properties)
+- сервис стартует на `http://localhost:8080`
+
+### 5. Что должно быть в итоге
+
+После запуска:
+- `postgres` поднят в Docker
+- `liquibase-migrations` успешно отработал
+- `scrapper` слушает `8081`
+- `bot` слушает `8080`
 
 ## Полезные Файлы Конфигурации
 
 - [scrapper application.yaml](./scrapper/src/main/resources/application.yaml)
 - [bot application.yaml](./bot/src/main/resources/application.yaml)
+- [compose.yaml](./compose.yaml)
 
-При необходимости можно использовать локальные `.env` файлы:
-
-- `scrapper/.env`
-- `bot/.env`
-
-## Тесты
-
-Полный набор тестов `scrapper`:
-
-```bash
-mvn -pl scrapper -am test
-```
-
-Только `bot`:
-
-```bash
-mvn -pl bot -am test
-```
-
-End-to-end тесты:
-
-```bash
-mvn -pl e2e-tests -am test
-```
-
-Для integration и e2e тестов нужен запущенный Docker daemon, потому что используется Testcontainers.
-
-## Быстрые Команды Проверки
-
-Сборка всего проекта:
-
-```bash
-mvn clean verify
-```
-
-Сборка без тестов:
-
-```bash
-mvn clean package -DskipTests
-```
-
-Только `scrapper`:
-
-```bash
-mvn -pl scrapper -am package
-```
-
-## Что Проверить, Если Scrapper Не Стартует
-
-1. Поднят ли PostgreSQL:
-
-```bash
-docker compose ps
-```
-
-2. Совпадают ли `POSTGRES_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
-
-3. Указан ли корректный `APP_DATABASE_ACCESS_TYPE`
-
-4. Есть ли обязательные токены:
-- `GITHUB_TOKEN`
-- `STACKOVERFLOW_KEY`
-- `STACKOVERFLOW_ACCESS_KEY`
-
-5. Доступен ли changelog:
-- `file:./migrations/master.xml`
-
-## Дополнительно
-
-Полезную справочную информацию по шаблону проекта можно посмотреть в [HELP.md](./HELP.md).
