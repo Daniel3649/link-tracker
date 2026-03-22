@@ -27,7 +27,7 @@ services:
         condition: service_healthy
     command:
       - --searchPath=/changelogs
-      - --change-log-file=master.xml
+      - --changelog-file=master.xml
       - --driver=org.postgresql.Driver
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-link_tracker}
       - --username=${POSTGRES_USER:-postgres}
