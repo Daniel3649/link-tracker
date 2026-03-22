@@ -12,7 +12,6 @@ import backend.academy.linktracker.scrapper.repository.sql.SqlSubscriptionReposi
 import backend.academy.linktracker.scrapper.repository.sql.SqlSubscriptionTagRepository;
 import backend.academy.linktracker.scrapper.repository.sql.SqlTelegramChatRepository;
 import backend.academy.linktracker.scrapper.repository.sql.SqlTrackedLinkRepository;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +19,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "app.database", name = "access-type", havingValue = "SQL")
-@ConditionalOnBean(NamedParameterJdbcTemplate.class)
 public class SqlAccessConfiguration {
     @Bean
     TelegramChatRepository telegramChatRepository(NamedParameterJdbcTemplate jdbcTemplate) {

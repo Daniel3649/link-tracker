@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
@@ -34,8 +35,14 @@ abstract class AbstractBotScrapperE2ETest {
     protected static final Path SCRAPPER_JAR =
             findBootJarUnchecked(Path.of("scrapper/target"), Path.of("../scrapper/target"));
 
+    protected static final Path MIGRATIONS_DIR = findExistingPathUnchecked(Path.of("migrations"), Path.of("../migrations"));
+
     protected static final WireMockServer MOCK =
             new WireMockServer(wireMockConfig().dynamicPort());
+
+    protected static final String POSTGRES_DB = "link_tracker";
+    protected static final String POSTGRES_USER = "postgres";
+    protected static final String POSTGRES_PASSWORD = "postgres";
 
     static {
         MOCK.start();
@@ -45,17 +52,34 @@ abstract class AbstractBotScrapperE2ETest {
     protected static final Network NETWORK = Network.newNetwork();
 
     @Container
+    protected static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18-alpine")
+            .withDatabaseName(POSTGRES_DB)
+            .withUsername(POSTGRES_USER)
+            .withPassword(POSTGRES_PASSWORD)
+            .withNetwork(NETWORK)
+            .withNetworkAliases("postgres");
+
+    @Container
     protected static final GenericContainer<?> SCRAPPER = new GenericContainer<>(
                     new ImageFromDockerfile("localhost/linktracker-scrapper-e2e:latest", false)
                             .withFileFromPath("app.jar", SCRAPPER_JAR)
+                            .withFileFromPath("migrations", MIGRATIONS_DIR)
                             .withDockerfileFromBuilder(builder -> builder.from("eclipse-temurin:25-jre")
                                     .copy("app.jar", "/app.jar")
+                                    .copy("migrations", "/migrations")
                                     .entryPoint("java", "-jar", "/app.jar")
                                     .build()))
+            .dependsOn(POSTGRES)
             .withNetwork(NETWORK)
             .withNetworkAliases("scrapper")
+            .withAccessToHost(true)
             .withExposedPorts(8081)
             .withEnv("SERVER_PORT", "8081")
+            .withEnv("POSTGRES_URL", "jdbc:postgresql://postgres:5432/" + POSTGRES_DB)
+            .withEnv("POSTGRES_USER", POSTGRES_USER)
+            .withEnv("POSTGRES_PASSWORD", POSTGRES_PASSWORD)
+            .withEnv("APP_DATABASE_ACCESS_TYPE", "SQL")
+            .withEnv("APP_LIQUIBASE_CHANGE_LOG", "file:/migrations/master.xml")
             .withEnv("APP_BOT_BASE_URL", "http://bot:8080")
             .withEnv("APP_GITHUB_BASE_URL", "http://host.testcontainers.internal:" + MOCK.port())
             .withEnv("APP_STACKOVERFLOW_BASE_URL", "http://host.testcontainers.internal:" + MOCK.port())
@@ -63,7 +87,7 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("STACKOVERFLOW_KEY", "dummy-stackoverflow-key")
             .withEnv("STACKOVERFLOW_ACCESS_KEY", "dummy-stackoverflow-access-key")
             .withEnv("APP_SCHEDULER_LINK_CHECK_DELAY_MS", "1h")
-            .waitingFor(Wait.forListeningPort())
+            .waitingFor(Wait.forHttp("/actuator/health").forPort(8081).forStatusCode(200))
             .withStartupTimeout(Duration.ofSeconds(60));
 
     @Container
@@ -258,6 +282,15 @@ abstract class AbstractBotScrapperE2ETest {
             }
         }
         throw new IllegalStateException("Boot jar not found. Checked: " + Arrays.toString(candidates));
+    }
+
+    protected static Path findExistingPathUnchecked(Path... candidates) {
+        for (Path candidate : candidates) {
+            if (Files.exists(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("Path not found. Checked: " + Arrays.toString(candidates));
     }
 
     protected static Path findBootJar(Path targetDir) throws IOException {

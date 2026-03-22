@@ -19,15 +19,12 @@ import backend.academy.linktracker.scrapper.repository.orm.jpa.SubscriptionTagJp
 import backend.academy.linktracker.scrapper.repository.orm.jpa.TelegramChatJpaRepository;
 import backend.academy.linktracker.scrapper.repository.orm.jpa.TrackedLinkJpaRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "app.database", name = "access-type", havingValue = "ORM")
-@ConditionalOnBean(EntityManagerFactory.class)
 public class OrmAccessConfiguration {
     @Bean
     TelegramChatRepository telegramChatRepository(
