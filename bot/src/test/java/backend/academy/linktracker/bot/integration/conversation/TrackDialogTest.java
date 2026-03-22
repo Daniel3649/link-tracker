@@ -140,6 +140,57 @@ class TrackDialogTest {
     }
 
     @Test
+    void shouldCancelTrackDialogWhenUserSendsCancelCommand() {
+        long chatId = 334455L;
+
+        updateService.handleEvent(update(1, chatId, "/track"));
+        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isTrue();
+
+        Mockito.clearInvocations(telegramSender);
+
+        updateService.handleEvent(update(2, chatId, "/cancel"));
+
+        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isFalse();
+        assertThat(capturedMessages(chatId)).anySatisfy(text -> assertThat(text.toLowerCase()).contains("cancel"));
+
+        Mockito.clearInvocations(telegramSender);
+        updateService.handleEvent(update(3, chatId, "https://github.com/octocat/Hello-World"));
+
+        wireMock.verify(0, postRequestedFor(urlEqualTo("/links")));
+    }
+
+    @Test
+    void shouldCancelTrackDialogWhenUserSendsAnotherCommand() {
+        long chatId = 445566L;
+
+        wireMock.stubFor(get(urlEqualTo("/links"))
+                .withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId)))
+                .willReturn(okJson("""
+                {
+                  "links": [],
+                  "size": 0
+                }
+                """)));
+
+        updateService.handleEvent(update(1, chatId, "/track"));
+        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isTrue();
+
+        Mockito.clearInvocations(telegramSender);
+
+        updateService.handleEvent(update(2, chatId, "/list"));
+
+        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isFalse();
+        assertThat(capturedMessages(chatId)).anySatisfy(text -> assertThat(text.toLowerCase()).contains("empty"));
+
+        Mockito.clearInvocations(telegramSender);
+        updateService.handleEvent(update(3, chatId, "https://github.com/octocat/Hello-World"));
+
+        wireMock.verify(
+                1, getRequestedFor(urlEqualTo("/links")).withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId))));
+        wireMock.verify(0, postRequestedFor(urlEqualTo("/links")));
+    }
+
+    @Test
     void shouldSendActiveSubscriptionsListWhenUserRequestsList() {
         long chatId = 345678L;
 
