@@ -1,4 +1,16 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+      - org.springframework.boot.data.jdbc.autoconfigure.DataJdbcRepositoriesAutoConfiguration
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
+  liquibase:
+    enabled: false
+
 app:
+  database:
+    access-type: SQL
   stackoverflow:
     base-url: ${wiremock.server.baseUrl}
     key: test-stackoverflow-key

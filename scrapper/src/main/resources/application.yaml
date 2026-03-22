@@ -6,8 +6,25 @@ spring:
     name: scrapper
   config:
     import: optional:file:scrapper/.env[.properties]
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/link_tracker}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  liquibase:
+    enabled: true
+    change-log: ${APP_LIQUIBASE_CHANGE_LOG:file:./migrations/master.xml}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
 
 app:
+  database:
+    access-type: ${APP_DATABASE_ACCESS_TYPE:SQL}
   stackoverflow:
     base-url: https://api.stackexchange.com/2.3
     key: ${STACKOVERFLOW_KEY} # Use env variable. DO NOT KEEP TOKEN HERE

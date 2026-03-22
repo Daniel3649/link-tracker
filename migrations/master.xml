@@ -6,7 +6,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet author="danielkonenkov" id="001-init-schema">
+    <changeSet author="daniel-konenkov" id="001-init-schema">
         <sqlFile
             dbms="postgresql"
             encoding="UTF-8"
