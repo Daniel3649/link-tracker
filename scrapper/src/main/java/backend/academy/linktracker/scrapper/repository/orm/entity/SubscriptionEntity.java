@@ -36,9 +36,9 @@ public class SubscriptionEntity {
     @JoinColumn(name = "chat_id", nullable = false)
     private TelegramChatEntity telegramChat;
 
-    @Column(name = "chat_id", insertable = false, updatable = false)
+    @Column(name = "chat_id", insertable = false, updatable = false, nullable = false)
     private Long chatId;
 
-    @Column(name = "link_id", insertable = false, updatable = false)
+    @Column(name = "link_id", insertable = false, updatable = false, nullable = false)
     private Long linkId;
 }

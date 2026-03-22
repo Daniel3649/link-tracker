@@ -5,11 +5,7 @@ import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@Profile("test")
 public class InMemorySubscriptionTagRepository implements SubscriptionTagRepository {
     private final ConcurrentMap<Subscription, Set<String>> tags = new ConcurrentHashMap<>();
 

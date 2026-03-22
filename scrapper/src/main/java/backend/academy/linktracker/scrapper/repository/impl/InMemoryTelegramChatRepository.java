@@ -5,11 +5,7 @@ import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Repository;
 
-@Repository
-@Profile("test")
 public class InMemoryTelegramChatRepository implements TelegramChatRepository {
     private final ConcurrentMap<Long, TelegramChat> chats = new ConcurrentHashMap<>();
 
