@@ -67,7 +67,7 @@ public class LinkUpdateScheduler {
 
     private void sendUpdate(TrackedLink trackedLink, LinkChange change) {
         List<Long> tgChatIds = subscriptionRepository.findAllByTrackedLink(trackedLink).stream()
-                .map(subscription -> subscription.getTelegramChat().getId())
+                .map(subscription -> subscription.getTelegramChat().id())
                 .toList();
         try {
             MDC.put("linkId", String.valueOf(trackedLink.getId()));

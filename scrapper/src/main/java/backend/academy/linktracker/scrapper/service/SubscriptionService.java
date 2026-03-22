@@ -154,7 +154,7 @@ public class SubscriptionService {
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
         try {
-            MDC.put("chatId", String.valueOf(telegramChat.getId()));
+            MDC.put("chatId", String.valueOf(telegramChat.id()));
             MDC.put("url", trackedLink.getUrl());
             MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
 
@@ -191,7 +191,7 @@ public class SubscriptionService {
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
         try {
-            MDC.put("chatId", String.valueOf(telegramChat.getId()));
+            MDC.put("chatId", String.valueOf(telegramChat.id()));
             MDC.put("url", trackedLink.getUrl());
             MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
 

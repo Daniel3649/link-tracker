@@ -4,9 +4,5 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-@Getter
-@EqualsAndHashCode
-public class TelegramChat {
-    private final Long id;
+public record TelegramChat(Long id) {
 }

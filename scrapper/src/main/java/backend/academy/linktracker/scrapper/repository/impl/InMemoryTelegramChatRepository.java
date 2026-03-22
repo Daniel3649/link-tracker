@@ -18,7 +18,7 @@ public class InMemoryTelegramChatRepository implements TelegramChatRepository {
 
     @Override
     public TelegramChat save(TelegramChat telegramChat) {
-        chats.put(telegramChat.getId(), telegramChat);
+        chats.put(telegramChat.id(), telegramChat);
         return telegramChat;
     }
 

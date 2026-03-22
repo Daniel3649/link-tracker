@@ -59,10 +59,10 @@ class LinkUpdateSchedulerTest {
         when(change.description()).thenReturn("New commit detected");
 
         TelegramChat chat1 = mock(TelegramChat.class);
-        when(chat1.getId()).thenReturn(101L);
+        when(chat1.id()).thenReturn(101L);
 
         TelegramChat chat2 = mock(TelegramChat.class);
-        when(chat2.getId()).thenReturn(202L);
+        when(chat2.id()).thenReturn(202L);
 
         Subscription subscription1 = mock(Subscription.class);
         when(subscription1.getTelegramChat()).thenReturn(chat1);

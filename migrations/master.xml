@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="danielkonenkov" id="001-init-schema">
+        <sqlFile
+            dbms="postgresql"
+            encoding="UTF-8"
+            path="001-init-schema.sql"
+            relativeToChangelogFile="true"
+            splitStatements="true"
+            stripComments="false"/>
+    </changeSet>
+</databaseChangeLog>
