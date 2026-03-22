@@ -24,16 +24,16 @@ public class SubscriptionPersistenceService {
 
     @Transactional
     public Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
-        if (subscriptionRepository.existsByTrackedLinkAndTelegramChat(trackedLink, telegramChat)) {
-            log.atWarn()
-                    .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
-                    .addKeyValue("reason", "subscription_already_exists")
-                    .log("Subscription add rejected");
+        Subscription savedSubscription = subscriptionRepository
+                .saveIfAbsent(new Subscription(null, trackedLink, telegramChat))
+                .orElseThrow(() -> {
+                    log.atWarn()
+                            .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
+                            .addKeyValue("reason", "subscription_already_exists")
+                            .log("Subscription add rejected");
 
-            throw new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
-        }
-
-        Subscription savedSubscription = subscriptionRepository.save(new Subscription(null, trackedLink, telegramChat));
+                    return new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
+                });
         subscriptionTagRepository.addTags(savedSubscription, tags);
 
         log.atInfo()

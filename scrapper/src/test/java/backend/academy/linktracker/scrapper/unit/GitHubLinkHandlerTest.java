@@ -63,9 +63,7 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = mock(GitHubRepositoryFetchResult.class);
-        when(fetchResult.isOk()).thenReturn(false);
-        when(fetchResult.statusCode()).thenReturn(HttpStatusCode.valueOf(401));
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(401), null);
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
                 .thenReturn(fetchResult);
@@ -84,9 +82,7 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = mock(GitHubRepositoryFetchResult.class);
-        when(fetchResult.isOk()).thenReturn(true);
-        when(fetchResult.etag()).thenReturn(null);
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(200), null);
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
                 .thenReturn(fetchResult);
@@ -108,10 +104,7 @@ class GitHubLinkHandlerTest {
         state.setEtag("\"old-etag\"");
         state.setLastActivityId(1L);
 
-        GitHubRepositoryFetchResult fetchResult = mock(GitHubRepositoryFetchResult.class);
-        when(fetchResult.isNotModified()).thenReturn(false);
-        when(fetchResult.isOk()).thenReturn(false);
-        when(fetchResult.statusCode()).thenReturn(HttpStatusCode.valueOf(500));
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(500), null);
 
         when(trackingStateRepository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))

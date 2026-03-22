@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SubscriptionRepository {
+    Optional<Subscription> saveIfAbsent(Subscription subscription);
+
     boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
     Subscription save(Subscription subscription);

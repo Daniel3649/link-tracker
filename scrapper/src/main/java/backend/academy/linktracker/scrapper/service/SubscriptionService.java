@@ -13,8 +13,6 @@ import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -29,10 +27,6 @@ public class SubscriptionService {
     private final LinkService linkService;
     private final SubscriptionPersistenceService subscriptionPersistenceService;
     private final SubscriptionMapper subscriptionMapper;
-
-    private final ConcurrentMap<MapKey, Object> linkOperationLocks = new ConcurrentHashMap<>();
-
-    private record MapKey(TrackedLink trackedLink, TelegramChat telegramChat) {}
 
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
         try {
@@ -147,17 +141,12 @@ public class SubscriptionService {
 
     private backend.academy.linktracker.scrapper.models.subscription.Subscription createSubscription(
             TrackedLink trackedLink, TelegramChat telegramChat, java.util.Set<String> tags) {
-        MapKey mapKey = new MapKey(trackedLink, telegramChat);
-        Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
-
         try {
             MDC.put("chatId", String.valueOf(telegramChat.id()));
             MDC.put("url", trackedLink.getUrl());
             MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
 
-            synchronized (lock) {
-                return subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, tags);
-            }
+            return subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, tags);
         } finally {
             MDC.clear();
         }
@@ -165,17 +154,12 @@ public class SubscriptionService {
 
     private backend.academy.linktracker.scrapper.models.subscription.Subscription deleteSubscription(
             TrackedLink trackedLink, TelegramChat telegramChat) {
-        MapKey mapKey = new MapKey(trackedLink, telegramChat);
-        Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
-
         try {
             MDC.put("chatId", String.valueOf(telegramChat.id()));
             MDC.put("url", trackedLink.getUrl());
             MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
 
-            synchronized (lock) {
-                return subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
-            }
+            return subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
         } finally {
             MDC.clear();
         }

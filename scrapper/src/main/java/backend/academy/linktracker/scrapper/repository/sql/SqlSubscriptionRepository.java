@@ -30,6 +30,28 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     @Override
+    public Optional<Subscription> saveIfAbsent(Subscription subscription) {
+        MapSqlParameterSource parameters = parameters(subscription.getTrackedLink(), subscription.getTelegramChat());
+
+        List<Long> insertedIds = jdbcTemplate.query(
+                """
+                insert into subscription (chat_id, link_id)
+                values (:chatId, :linkId)
+                on conflict (chat_id, link_id) do nothing
+                returning id
+                """,
+                parameters,
+                (resultSet, rowNum) -> resultSet.getLong("id"));
+
+        if (insertedIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new Subscription(
+                insertedIds.getFirst(), subscription.getTrackedLink(), subscription.getTelegramChat()));
+    }
+
+    @Override
     public boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         MapSqlParameterSource parameters = parameters(trackedLink, telegramChat);
 
@@ -62,21 +84,8 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
             return subscription;
         }
 
-        List<Long> insertedIds = jdbcTemplate.query(
-                """
-                insert into subscription (chat_id, link_id)
-                values (:chatId, :linkId)
-                on conflict (chat_id, link_id) do nothing
-                returning id
-                """,
-                parameters,
-                (resultSet, rowNum) -> resultSet.getLong("id"));
-
-        if (!insertedIds.isEmpty()) {
-            return new Subscription(insertedIds.getFirst(), subscription.getTrackedLink(), subscription.getTelegramChat());
-        }
-
-        return findByTrackedLinkAndTelegramChat(subscription.getTrackedLink(), subscription.getTelegramChat())
+        return saveIfAbsent(subscription)
+                .or(() -> findByTrackedLinkAndTelegramChat(subscription.getTrackedLink(), subscription.getTelegramChat()))
                 .orElseThrow();
     }
 
