@@ -16,9 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class LiquibaseConfiguration {
     @Bean
-    SpringLiquibase liquibase(
-            DataSource dataSource,
-            @Value("${spring.liquibase.change-log}") String changeLog) {
+    SpringLiquibase liquibase(DataSource dataSource, @Value("${spring.liquibase.change-log}") String changeLog) {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(resolveChangeLogPath(changeLog));

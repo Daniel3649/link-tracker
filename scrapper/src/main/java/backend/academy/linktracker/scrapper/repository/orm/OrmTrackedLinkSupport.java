@@ -11,10 +11,11 @@ final class OrmTrackedLinkSupport {
     private OrmTrackedLinkSupport() {}
 
     static TrackedLink toDomain(TrackedLinkEntity entity) {
-        ResourceKey resourceKey = switch (entity.getLinkType()) {
-            case GITHUB -> new GitHubRepositoryKey(entity.getGithubOwner(), entity.getGithubRepo());
-            case STACKOVERFLOW -> new StackOverflowQuestionKey(entity.getStackoverflowQuestionId());
-        };
+        ResourceKey resourceKey =
+                switch (entity.getLinkType()) {
+                    case GITHUB -> new GitHubRepositoryKey(entity.getGithubOwner(), entity.getGithubRepo());
+                    case STACKOVERFLOW -> new StackOverflowQuestionKey(entity.getStackoverflowQuestionId());
+                };
 
         return new TrackedLink(entity.getId(), entity.getUrl(), resourceKey);
     }

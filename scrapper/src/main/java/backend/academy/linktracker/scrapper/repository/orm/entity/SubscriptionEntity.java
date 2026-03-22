@@ -18,7 +18,9 @@ import lombok.Setter;
 @Table(
         name = "subscription",
         uniqueConstraints = {
-            @UniqueConstraint(name = "uq_subscription_chat_link", columnNames = {"chat_id", "link_id"})
+            @UniqueConstraint(
+                    name = "uq_subscription_chat_link",
+                    columnNames = {"chat_id", "link_id"})
         })
 @Getter
 @Setter

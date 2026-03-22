@@ -27,8 +27,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = "app.database", name = "access-type", havingValue = "ORM")
 public class OrmAccessConfiguration {
     @Bean
-    TelegramChatRepository telegramChatRepository(
-            TelegramChatJpaRepository repository, EntityManager entityManager) {
+    TelegramChatRepository telegramChatRepository(TelegramChatJpaRepository repository, EntityManager entityManager) {
         return new OrmTelegramChatRepository(repository, entityManager);
     }
 

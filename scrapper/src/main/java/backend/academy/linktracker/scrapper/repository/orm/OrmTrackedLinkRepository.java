@@ -55,7 +55,9 @@ public class OrmTrackedLinkRepository implements TrackedLinkRepository {
 
     @Override
     public List<TrackedLink> findAll() {
-        return repository.findAllByOrderByIdAsc().stream().map(OrmTrackedLinkSupport::toDomain).toList();
+        return repository.findAllByOrderByIdAsc().stream()
+                .map(OrmTrackedLinkSupport::toDomain)
+                .toList();
     }
 
     @Override

@@ -55,7 +55,8 @@ public class SubscriptionPersistenceService {
                             .addKeyValue("reason", "subscription_not_found")
                             .log("Subscription remove rejected");
 
-                    return new SubscriptionNotFoundException("Subscription not found for link: " + trackedLink.getUrl());
+                    return new SubscriptionNotFoundException(
+                            "Subscription not found for link: " + trackedLink.getUrl());
                 });
 
         subscriptionTagRepository.deleteAllBySubscription(subscription);
@@ -65,7 +66,9 @@ public class SubscriptionPersistenceService {
         if (!trackedLinkHasSubscribers) {
             linkService.deleteTrackedLinkWithState(trackedLink);
 
-            log.atInfo().addKeyValue("event", LogEvent.ORPHAN_TRACKED_LINK_DELETED).log("Orphan tracked link deleted");
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.ORPHAN_TRACKED_LINK_DELETED)
+                    .log("Orphan tracked link deleted");
         }
 
         log.atInfo()

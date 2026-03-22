@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-
 @RequiredArgsConstructor
 public class SqlSubscriptionRepository implements SubscriptionRepository {
     private static final String SUBSCRIPTION_SELECT = """
@@ -33,15 +32,12 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
     public Optional<Subscription> saveIfAbsent(Subscription subscription) {
         MapSqlParameterSource parameters = parameters(subscription.getTrackedLink(), subscription.getTelegramChat());
 
-        List<Long> insertedIds = jdbcTemplate.query(
-                """
+        List<Long> insertedIds = jdbcTemplate.query("""
                 insert into subscription (chat_id, link_id)
                 values (:chatId, :linkId)
                 on conflict (chat_id, link_id) do nothing
                 returning id
-                """,
-                parameters,
-                (resultSet, rowNum) -> resultSet.getLong("id"));
+                """, parameters, (resultSet, rowNum) -> resultSet.getLong("id"));
 
         if (insertedIds.isEmpty()) {
             return Optional.empty();
@@ -55,16 +51,13 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
     public boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         MapSqlParameterSource parameters = parameters(trackedLink, telegramChat);
 
-        return Boolean.TRUE.equals(jdbcTemplate.queryForObject(
-                """
+        return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
                 select exists(
                     select 1
                     from subscription
                     where link_id = :linkId and chat_id = :chatId
                 )
-                """,
-                parameters,
-                Boolean.class));
+                """, parameters, Boolean.class));
     }
 
     @Override
@@ -73,19 +66,18 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
         parameters.addValue("id", subscription.getId());
 
         if (subscription.getId() != null) {
-            jdbcTemplate.update(
-                    """
+            jdbcTemplate.update("""
                     update subscription
                     set link_id = :linkId,
                         chat_id = :chatId
                     where id = :id
-                    """,
-                    parameters);
+                    """, parameters);
             return subscription;
         }
 
         return saveIfAbsent(subscription)
-                .or(() -> findByTrackedLinkAndTelegramChat(subscription.getTrackedLink(), subscription.getTelegramChat()))
+                .or(() ->
+                        findByTrackedLinkAndTelegramChat(subscription.getTrackedLink(), subscription.getTelegramChat()))
                 .orElseThrow();
     }
 

@@ -151,7 +151,8 @@ class TrackDialogTest {
         updateService.handleEvent(update(2, chatId, "/cancel"));
 
         assertThat(trackDialogStateRepository.existsByChatId(chatId)).isFalse();
-        assertThat(capturedMessages(chatId)).anySatisfy(text -> assertThat(text.toLowerCase()).contains("cancel"));
+        assertThat(capturedMessages(chatId))
+                .anySatisfy(text -> assertThat(text.toLowerCase()).contains("cancel"));
 
         Mockito.clearInvocations(telegramSender);
         updateService.handleEvent(update(3, chatId, "https://github.com/octocat/Hello-World"));
@@ -180,7 +181,8 @@ class TrackDialogTest {
         updateService.handleEvent(update(2, chatId, "/list"));
 
         assertThat(trackDialogStateRepository.existsByChatId(chatId)).isFalse();
-        assertThat(capturedMessages(chatId)).anySatisfy(text -> assertThat(text.toLowerCase()).contains("empty"));
+        assertThat(capturedMessages(chatId))
+                .anySatisfy(text -> assertThat(text.toLowerCase()).contains("empty"));
 
         Mockito.clearInvocations(telegramSender);
         updateService.handleEvent(update(3, chatId, "https://github.com/octocat/Hello-World"));

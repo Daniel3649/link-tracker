@@ -13,16 +13,13 @@ abstract class DatabaseMigrationsIntegrationTest extends AbstractIntegrationTest
 
     @Test
     void shouldApplyLiquibaseMigrationsOnCleanDatabaseStartup() {
-        Integer trackedLinkTableCount = jdbcTemplate.queryForObject(
-                """
+        Integer trackedLinkTableCount = jdbcTemplate.queryForObject("""
                 select count(*)
                 from information_schema.tables
                 where table_schema = 'public' and table_name = 'tracked_link'
-                """,
-                Integer.class);
+                """, Integer.class);
 
-        Integer changelogEntries = jdbcTemplate.queryForObject(
-                "select count(*) from databasechangelog", Integer.class);
+        Integer changelogEntries = jdbcTemplate.queryForObject("select count(*) from databasechangelog", Integer.class);
 
         assertThat(trackedLinkTableCount).isEqualTo(1);
         assertThat(changelogEntries).isNotNull().isGreaterThan(0);

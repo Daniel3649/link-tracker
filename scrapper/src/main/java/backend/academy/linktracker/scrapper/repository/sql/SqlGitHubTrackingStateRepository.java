@@ -14,27 +14,22 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
 
     @Override
     public boolean saveIfAbsent(GitHubTrackingState gitHubTrackingState) {
-        return jdbcTemplate.update(
-                        """
+        return jdbcTemplate.update("""
                         insert into github_tracking_state (link_id, etag, last_activity_id)
                         values (:linkId, :etag, :lastActivityId)
                         on conflict (link_id) do nothing
-                        """,
-                        parameters(gitHubTrackingState))
-                > 0;
+                        """, parameters(gitHubTrackingState)) > 0;
     }
 
     @Override
     public GitHubTrackingState save(GitHubTrackingState gitHubTrackingState) {
-        jdbcTemplate.update(
-                """
+        jdbcTemplate.update("""
                 insert into github_tracking_state (link_id, etag, last_activity_id)
                 values (:linkId, :etag, :lastActivityId)
                 on conflict (link_id) do update
                 set etag = excluded.etag,
                     last_activity_id = excluded.last_activity_id
-                """,
-                parameters(gitHubTrackingState));
+                """, parameters(gitHubTrackingState));
 
         return gitHubTrackingState;
     }
@@ -73,7 +68,8 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
                 .addValue("lastActivityId", gitHubTrackingState.getLastActivityId());
     }
 
-    private GitHubTrackingState mapState(java.sql.ResultSet resultSet, TrackedLink trackedLink) throws java.sql.SQLException {
+    private GitHubTrackingState mapState(java.sql.ResultSet resultSet, TrackedLink trackedLink)
+            throws java.sql.SQLException {
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
         state.setEtag(resultSet.getString("etag"));
         state.setLastActivityId((Long) resultSet.getObject("last_activity_id"));

@@ -44,12 +44,15 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
 
     @Override
     public void clear() {
-        entityManager.createNativeQuery("truncate table stackoverflow_tracking_state cascade").executeUpdate();
+        entityManager
+                .createNativeQuery("truncate table stackoverflow_tracking_state cascade")
+                .executeUpdate();
     }
 
     private StackOverflowTrackingStateEntity toEntity(StackOverflowTrackingState state) {
         StackOverflowTrackingStateEntity entity = new StackOverflowTrackingStateEntity();
-        entity.setTrackedLink(entityManager.getReference(TrackedLinkEntity.class, state.getTrackedLink().getId()));
+        entity.setTrackedLink(entityManager.getReference(
+                TrackedLinkEntity.class, state.getTrackedLink().getId()));
 
         StackOverflowTimelineCursor cursor = state.getTimelineCursor();
         entity.setLastCreationDateEpochSec(cursor != null ? cursor.lastCreationDateEpochSec() : 0L);
@@ -65,8 +68,8 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
 
     private StackOverflowTrackingState toDomain(StackOverflowTrackingStateEntity entity, TrackedLink trackedLink) {
         StackOverflowTrackingState state = new StackOverflowTrackingState(trackedLink);
-        state.setTimelineCursor(new StackOverflowTimelineCursor(
-                entity.getLastCreationDateEpochSec(), entity.getLastEventKey()));
+        state.setTimelineCursor(
+                new StackOverflowTimelineCursor(entity.getLastCreationDateEpochSec(), entity.getLastEventKey()));
         state.setNextCheckAt(entity.getNextCheckAt());
         state.setLastQuestionActivityDateEpochSec(entity.getLastQuestionActivityDateEpochSec());
         return state;

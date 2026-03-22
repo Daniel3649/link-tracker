@@ -35,7 +35,8 @@ abstract class AbstractBotScrapperE2ETest {
     protected static final Path SCRAPPER_JAR =
             findBootJarUnchecked(Path.of("scrapper/target"), Path.of("../scrapper/target"));
 
-    protected static final Path MIGRATIONS_DIR = findExistingPathUnchecked(Path.of("migrations"), Path.of("../migrations"));
+    protected static final Path MIGRATIONS_DIR =
+            findExistingPathUnchecked(Path.of("migrations"), Path.of("../migrations"));
 
     protected static final WireMockServer MOCK =
             new WireMockServer(wireMockConfig().dynamicPort());

@@ -57,12 +57,15 @@ final class SqlTrackedLinkSupport {
         String url = resultSet.getString("url");
         String linkType = resultSet.getString("link_type");
 
-        ResourceKey resourceKey = switch (linkType) {
-            case "GITHUB" -> new GitHubRepositoryKey(
-                    resultSet.getString("github_owner"), resultSet.getString("github_repo"));
-            case "STACKOVERFLOW" -> new StackOverflowQuestionKey(resultSet.getLong("stackoverflow_question_id"));
-            default -> throw new IllegalStateException("Unsupported link_type: " + linkType);
-        };
+        ResourceKey resourceKey =
+                switch (linkType) {
+                    case "GITHUB" ->
+                        new GitHubRepositoryKey(
+                                resultSet.getString("github_owner"), resultSet.getString("github_repo"));
+                    case "STACKOVERFLOW" ->
+                        new StackOverflowQuestionKey(resultSet.getLong("stackoverflow_question_id"));
+                    default -> throw new IllegalStateException("Unsupported link_type: " + linkType);
+                };
 
         return new TrackedLink(id, url, resourceKey);
     }

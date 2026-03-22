@@ -26,13 +26,11 @@ public class SqlSubscriptionTagRepository implements SubscriptionTagRepository {
                         .addValue("tag", tag))
                 .toArray(SqlParameterSource[]::new);
 
-        jdbcTemplate.batchUpdate(
-                """
+        jdbcTemplate.batchUpdate("""
                 insert into subscription_tag (subscription_id, tag)
                 values (:subscriptionId, :tag)
                 on conflict (subscription_id, tag) do nothing
-                """,
-                batchParameters);
+                """, batchParameters);
     }
 
     @Override

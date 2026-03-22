@@ -34,9 +34,7 @@ public class TelegramChatService {
                 throw new TelegramChatAlreadyExistsException("Telegram chat already exists. Id: " + chatId);
             }
 
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTERED)
-                    .log("Telegram chat registered");
+            log.atInfo().addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTERED).log("Telegram chat registered");
         } finally {
             MDC.clear();
         }

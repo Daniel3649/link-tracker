@@ -6,9 +6,9 @@ import backend.academy.linktracker.scrapper.repository.orm.entity.SubscriptionEn
 import backend.academy.linktracker.scrapper.repository.orm.entity.SubscriptionTagEntity;
 import backend.academy.linktracker.scrapper.repository.orm.jpa.SubscriptionTagJpaRepository;
 import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
@@ -45,6 +45,8 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
 
     @Override
     public void clear() {
-        entityManager.createNativeQuery("truncate table subscription_tag cascade").executeUpdate();
+        entityManager
+                .createNativeQuery("truncate table subscription_tag cascade")
+                .executeUpdate();
     }
 }

@@ -30,8 +30,7 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
         MapSqlParameterSource parameters = SqlTrackedLinkSupport.trackedLinkParams(trackedLink);
 
         if (trackedLink.getId() != null) {
-            jdbcTemplate.update(
-                    """
+            jdbcTemplate.update("""
                     update tracked_link
                     set url = :url,
                         link_type = :linkType,
@@ -39,21 +38,17 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
                         github_repo = :githubRepo,
                         stackoverflow_question_id = :stackoverflowQuestionId
                     where id = :id
-                    """,
-                    parameters);
+                    """, parameters);
 
             return trackedLink;
         }
 
-        List<Long> insertedIds = jdbcTemplate.query(
-                """
+        List<Long> insertedIds = jdbcTemplate.query("""
                 insert into tracked_link (url, link_type, github_owner, github_repo, stackoverflow_question_id)
                 values (:url, :linkType, :githubOwner, :githubRepo, :stackoverflowQuestionId)
                 on conflict do nothing
                 returning id
-                """,
-                parameters,
-                (resultSet, rowNum) -> resultSet.getLong("id"));
+                """, parameters, (resultSet, rowNum) -> resultSet.getLong("id"));
 
         if (!insertedIds.isEmpty()) {
             return new TrackedLink(insertedIds.getFirst(), trackedLink.getUrl(), trackedLink.getResourceKey());
@@ -72,18 +67,9 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
     @Override
     public List<TrackedLink> findNextBatchAfterId(long lastSeenId, int limit) {
         return jdbcTemplate.query(
-                """
-                select
-                    %s
-                from tracked_link
-                where id > :lastSeenId
-                order by id
-                limit :limit
-                """
-                        .formatted(SqlTrackedLinkSupport.TRACKED_LINK_COLUMNS),
-                new MapSqlParameterSource()
-                        .addValue("lastSeenId", lastSeenId)
-                        .addValue("limit", limit),
+                "select " + SqlTrackedLinkSupport.TRACKED_LINK_COLUMNS
+                        + " from tracked_link where id > :lastSeenId order by id limit :limit",
+                new MapSqlParameterSource().addValue("lastSeenId", lastSeenId).addValue("limit", limit),
                 (resultSet, rowNum) -> SqlTrackedLinkSupport.mapTrackedLink(resultSet));
     }
 

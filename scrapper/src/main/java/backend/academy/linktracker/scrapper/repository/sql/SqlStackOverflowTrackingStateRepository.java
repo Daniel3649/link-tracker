@@ -17,8 +17,7 @@ public class SqlStackOverflowTrackingStateRepository implements StackOverflowTra
 
     @Override
     public StackOverflowTrackingState save(StackOverflowTrackingState stackOverflowTrackingState) {
-        jdbcTemplate.update(
-                """
+        jdbcTemplate.update("""
                 insert into stackoverflow_tracking_state (
                     link_id,
                     last_creation_date_epoch_sec,
@@ -38,8 +37,7 @@ public class SqlStackOverflowTrackingStateRepository implements StackOverflowTra
                     last_event_key = excluded.last_event_key,
                     next_check_at = excluded.next_check_at,
                     last_question_activity_date_epoch_sec = excluded.last_question_activity_date_epoch_sec
-                """,
-                parameters(stackOverflowTrackingState));
+                """, parameters(stackOverflowTrackingState));
 
         return stackOverflowTrackingState;
     }
@@ -53,8 +51,7 @@ public class SqlStackOverflowTrackingStateRepository implements StackOverflowTra
 
     @Override
     public boolean saveIfAbsent(StackOverflowTrackingState stackOverflowTrackingState) {
-        return jdbcTemplate.update(
-                        """
+        return jdbcTemplate.update("""
                         insert into stackoverflow_tracking_state (
                             link_id,
                             last_creation_date_epoch_sec,
@@ -70,9 +67,7 @@ public class SqlStackOverflowTrackingStateRepository implements StackOverflowTra
                             :lastQuestionActivityDateEpochSec
                         )
                         on conflict (link_id) do nothing
-                        """,
-                        parameters(stackOverflowTrackingState))
-                > 0;
+                        """, parameters(stackOverflowTrackingState)) > 0;
     }
 
     @Override

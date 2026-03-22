@@ -28,27 +28,22 @@ public class SqlTelegramChatRepository implements TelegramChatRepository {
     public boolean saveIfAbsent(TelegramChat telegramChat) {
         MapSqlParameterSource parameters = new MapSqlParameterSource("chatId", telegramChat.id());
 
-        return jdbcTemplate.update(
-                        """
+        return jdbcTemplate.update("""
                         insert into telegram_chat (chat_id)
                         values (:chatId)
                         on conflict (chat_id) do nothing
-                        """,
-                        parameters)
-                > 0;
+                        """, parameters) > 0;
     }
 
     @Override
     public TelegramChat save(TelegramChat telegramChat) {
         MapSqlParameterSource parameters = new MapSqlParameterSource("chatId", telegramChat.id());
 
-        jdbcTemplate.update(
-                """
+        jdbcTemplate.update("""
                 insert into telegram_chat (chat_id)
                 values (:chatId)
                 on conflict (chat_id) do nothing
-                """,
-                parameters);
+                """, parameters);
 
         return telegramChat;
     }

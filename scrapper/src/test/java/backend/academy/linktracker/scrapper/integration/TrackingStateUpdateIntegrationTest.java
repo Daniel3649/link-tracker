@@ -91,12 +91,12 @@ abstract class TrackingStateUpdateIntegrationTest extends AbstractIntegrationTes
         state.setLastQuestionActivityDateEpochSec(1741683600L);
         stackOverflowTrackingStateRepository.save(state);
 
-        StackOverflowTrackingState persisted =
-                stackOverflowTrackingStateRepository.findByTrackedLink(trackedLink).orElseThrow();
+        StackOverflowTrackingState persisted = stackOverflowTrackingStateRepository
+                .findByTrackedLink(trackedLink)
+                .orElseThrow();
 
         assertThat(persisted.getTrackedLink()).isEqualTo(trackedLink);
-        assertThat(persisted.getTimelineCursor())
-                .isEqualTo(new StackOverflowTimelineCursor(1741683600L, "answer-2"));
+        assertThat(persisted.getTimelineCursor()).isEqualTo(new StackOverflowTimelineCursor(1741683600L, "answer-2"));
         assertThat(persisted.getNextCheckAt()).isEqualTo(Instant.parse("2026-03-22T11:15:30Z"));
         assertThat(persisted.getLastQuestionActivityDateEpochSec()).isEqualTo(1741683600L);
     }

@@ -43,12 +43,15 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
 
     @Override
     public void clear() {
-        entityManager.createNativeQuery("truncate table github_tracking_state cascade").executeUpdate();
+        entityManager
+                .createNativeQuery("truncate table github_tracking_state cascade")
+                .executeUpdate();
     }
 
     private GitHubTrackingStateEntity toEntity(GitHubTrackingState state) {
         GitHubTrackingStateEntity entity = new GitHubTrackingStateEntity();
-        entity.setTrackedLink(entityManager.getReference(TrackedLinkEntity.class, state.getTrackedLink().getId()));
+        entity.setTrackedLink(entityManager.getReference(
+                TrackedLinkEntity.class, state.getTrackedLink().getId()));
         entity.setEtag(state.getEtag());
         entity.setLastActivityId(state.getLastActivityId());
         return entity;
