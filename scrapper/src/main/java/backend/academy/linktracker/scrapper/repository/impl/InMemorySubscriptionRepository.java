@@ -10,9 +10,11 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@Profile("test")
 public class InMemorySubscriptionRepository implements SubscriptionRepository {
     private record MapKey(TrackedLink trackedLink, TelegramChat telegramChat) {}
 
