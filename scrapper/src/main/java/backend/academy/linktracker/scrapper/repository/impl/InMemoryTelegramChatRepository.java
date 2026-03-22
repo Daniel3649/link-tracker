@@ -17,6 +17,11 @@ public class InMemoryTelegramChatRepository implements TelegramChatRepository {
     }
 
     @Override
+    public boolean saveIfAbsent(TelegramChat telegramChat) {
+        return chats.putIfAbsent(telegramChat.id(), telegramChat) == null;
+    }
+
+    @Override
     public TelegramChat save(TelegramChat telegramChat) {
         chats.put(telegramChat.id(), telegramChat);
         return telegramChat;

@@ -6,6 +6,8 @@ import java.util.Optional;
 public interface TelegramChatRepository {
     Optional<TelegramChat> findByChatId(Long chatId);
 
+    boolean saveIfAbsent(TelegramChat telegramChat);
+
     TelegramChat save(TelegramChat telegramChat);
 
     boolean existsByChatId(Long chatId);

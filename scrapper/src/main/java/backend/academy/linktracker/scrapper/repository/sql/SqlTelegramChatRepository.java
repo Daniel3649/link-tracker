@@ -25,6 +25,20 @@ public class SqlTelegramChatRepository implements TelegramChatRepository {
     }
 
     @Override
+    public boolean saveIfAbsent(TelegramChat telegramChat) {
+        MapSqlParameterSource parameters = new MapSqlParameterSource("chatId", telegramChat.id());
+
+        return jdbcTemplate.update(
+                        """
+                        insert into telegram_chat (chat_id)
+                        values (:chatId)
+                        on conflict (chat_id) do nothing
+                        """,
+                        parameters)
+                > 0;
+    }
+
+    @Override
     public TelegramChat save(TelegramChat telegramChat) {
         MapSqlParameterSource parameters = new MapSqlParameterSource("chatId", telegramChat.id());
 
