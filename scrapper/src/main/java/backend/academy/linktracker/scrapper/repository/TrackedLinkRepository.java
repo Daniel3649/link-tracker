@@ -12,6 +12,8 @@ public interface TrackedLinkRepository {
 
     void deleteByResourceKey(ResourceKey resourceKey);
 
+    List<TrackedLink> findNextBatchAfterId(long lastSeenId, int limit);
+
     List<TrackedLink> findAll();
 
     void clear();

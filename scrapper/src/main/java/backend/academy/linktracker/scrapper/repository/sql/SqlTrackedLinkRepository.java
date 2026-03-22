@@ -13,7 +13,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 public class SqlTrackedLinkRepository implements TrackedLinkRepository {
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-
     @Override
     public Optional<TrackedLink> findByResourceKey(ResourceKey resourceKey) {
         return jdbcTemplate
@@ -68,6 +67,24 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
         jdbcTemplate.update(
                 "delete from tracked_link where " + SqlTrackedLinkSupport.resourceKeyPredicate(resourceKey),
                 SqlTrackedLinkSupport.resourceKeyParams(resourceKey));
+    }
+
+    @Override
+    public List<TrackedLink> findNextBatchAfterId(long lastSeenId, int limit) {
+        return jdbcTemplate.query(
+                """
+                select
+                    %s
+                from tracked_link
+                where id > :lastSeenId
+                order by id
+                limit :limit
+                """
+                        .formatted(SqlTrackedLinkSupport.TRACKED_LINK_COLUMNS),
+                new MapSqlParameterSource()
+                        .addValue("lastSeenId", lastSeenId)
+                        .addValue("limit", limit),
+                (resultSet, rowNum) -> SqlTrackedLinkSupport.mapTrackedLink(resultSet));
     }
 
     @Override

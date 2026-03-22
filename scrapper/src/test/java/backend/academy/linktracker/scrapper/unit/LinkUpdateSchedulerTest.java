@@ -11,6 +11,7 @@ import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistr
 import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.properties.SchedulerProperties;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import backend.academy.linktracker.scrapper.schedule.LinkUpdateScheduler;
@@ -43,6 +44,9 @@ class LinkUpdateSchedulerTest {
     @Mock
     private LinkHandler linkHandler;
 
+    @Mock
+    private SchedulerProperties schedulerProperties;
+
     @InjectMocks
     private LinkUpdateScheduler scheduler;
 
@@ -55,22 +59,17 @@ class LinkUpdateSchedulerTest {
         when(trackedLink.getId()).thenReturn(10L);
         when(trackedLink.getUrl()).thenReturn(url);
 
-        LinkChange change = mock(LinkChange.class);
-        when(change.description()).thenReturn("New commit detected");
+        LinkChange change = new LinkChange("New commit detected");
 
-        TelegramChat chat1 = mock(TelegramChat.class);
-        when(chat1.id()).thenReturn(101L);
+        TelegramChat chat1 = new TelegramChat(101L);
+        TelegramChat chat2 = new TelegramChat(202L);
 
-        TelegramChat chat2 = mock(TelegramChat.class);
-        when(chat2.id()).thenReturn(202L);
+        Subscription subscription1 = new Subscription(1L, trackedLink, chat1);
+        Subscription subscription2 = new Subscription(2L, trackedLink, chat2);
 
-        Subscription subscription1 = mock(Subscription.class);
-        when(subscription1.getTelegramChat()).thenReturn(chat1);
-
-        Subscription subscription2 = mock(Subscription.class);
-        when(subscription2.getTelegramChat()).thenReturn(chat2);
-
-        when(trackedLinkRepository.findAll()).thenReturn(List.of(trackedLink));
+        when(schedulerProperties.getLinkCheckBatchSize()).thenReturn(100);
+        when(trackedLinkRepository.findNextBatchAfterId(0L, 100)).thenReturn(List.of(trackedLink));
+        when(trackedLinkRepository.findNextBatchAfterId(10L, 100)).thenReturn(List.of());
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(linkHandler);
         when(linkHandler.checkForUpdate(trackedLink)).thenReturn(Optional.of(change));
         when(subscriptionRepository.findAllByTrackedLink(trackedLink))
@@ -96,17 +95,52 @@ class LinkUpdateSchedulerTest {
         URI uri = URI.create(url);
 
         TrackedLink trackedLink = mock(TrackedLink.class);
+        when(trackedLink.getId()).thenReturn(10L);
         when(trackedLink.getUrl()).thenReturn(url);
 
-        LinkChange change = mock(LinkChange.class);
+        LinkChange change = new LinkChange("New commit detected");
 
-        when(trackedLinkRepository.findAll()).thenReturn(List.of(trackedLink));
+        when(schedulerProperties.getLinkCheckBatchSize()).thenReturn(100);
+        when(trackedLinkRepository.findNextBatchAfterId(0L, 100)).thenReturn(List.of(trackedLink));
+        when(trackedLinkRepository.findNextBatchAfterId(10L, 100)).thenReturn(List.of());
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(linkHandler);
         when(linkHandler.checkForUpdate(trackedLink)).thenReturn(Optional.of(change));
         when(subscriptionRepository.findAllByTrackedLink(trackedLink)).thenReturn(List.of());
 
         scheduler.checkUpdates();
 
+        verify(linkUpdateSender, never()).send(any(LinkUpdate.class));
+    }
+
+    @Test
+    void shouldProcessAllTrackedLinksAcrossMultipleBatches() {
+        String firstUrl = "https://github.com/octocat/Hello-World";
+        String secondUrl = "https://github.com/octocat/Spoon-Knife";
+
+        TrackedLink firstTrackedLink = mock(TrackedLink.class);
+        when(firstTrackedLink.getId()).thenReturn(10L);
+        when(firstTrackedLink.getUrl()).thenReturn(firstUrl);
+
+        TrackedLink secondTrackedLink = mock(TrackedLink.class);
+        when(secondTrackedLink.getId()).thenReturn(20L);
+        when(secondTrackedLink.getUrl()).thenReturn(secondUrl);
+
+        LinkHandler firstHandler = mock(LinkHandler.class);
+        LinkHandler secondHandler = mock(LinkHandler.class);
+
+        when(schedulerProperties.getLinkCheckBatchSize()).thenReturn(1);
+        when(trackedLinkRepository.findNextBatchAfterId(0L, 1)).thenReturn(List.of(firstTrackedLink));
+        when(trackedLinkRepository.findNextBatchAfterId(10L, 1)).thenReturn(List.of(secondTrackedLink));
+        when(trackedLinkRepository.findNextBatchAfterId(20L, 1)).thenReturn(List.of());
+        when(linkHandlerRegistry.getHandler(URI.create(firstUrl))).thenReturn(firstHandler);
+        when(linkHandlerRegistry.getHandler(URI.create(secondUrl))).thenReturn(secondHandler);
+        when(firstHandler.checkForUpdate(firstTrackedLink)).thenReturn(Optional.empty());
+        when(secondHandler.checkForUpdate(secondTrackedLink)).thenReturn(Optional.empty());
+
+        scheduler.checkUpdates();
+
+        verify(firstHandler).checkForUpdate(firstTrackedLink);
+        verify(secondHandler).checkForUpdate(secondTrackedLink);
         verify(linkUpdateSender, never()).send(any(LinkUpdate.class));
     }
 }

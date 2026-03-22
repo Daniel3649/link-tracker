@@ -9,9 +9,10 @@ import backend.academy.linktracker.scrapper.repository.orm.entity.LinkTypeEntity
 import backend.academy.linktracker.scrapper.repository.orm.entity.TrackedLinkEntity;
 import backend.academy.linktracker.scrapper.repository.orm.jpa.TrackedLinkJpaRepository;
 import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 
 @RequiredArgsConstructor
 public class OrmTrackedLinkRepository implements TrackedLinkRepository {
@@ -43,6 +44,13 @@ public class OrmTrackedLinkRepository implements TrackedLinkRepository {
     @Override
     public void deleteByResourceKey(ResourceKey resourceKey) {
         findEntityByResourceKey(resourceKey).ifPresent(repository::delete);
+    }
+
+    @Override
+    public List<TrackedLink> findNextBatchAfterId(long lastSeenId, int limit) {
+        return repository.findByIdGreaterThanOrderByIdAsc(lastSeenId, PageRequest.of(0, limit)).stream()
+                .map(OrmTrackedLinkSupport::toDomain)
+                .toList();
     }
 
     @Override

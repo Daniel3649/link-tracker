@@ -35,6 +35,7 @@ app:
     base-url: https://api.github.com
   scheduler:
     link-check-delay-ms: 60s
+    link-check-batch-size: 100
   bot:
     base-url: http://localhost:8080
 

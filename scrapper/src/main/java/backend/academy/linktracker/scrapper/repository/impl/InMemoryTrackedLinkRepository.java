@@ -38,6 +38,15 @@ public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
     }
 
     @Override
+    public List<TrackedLink> findNextBatchAfterId(long lastSeenId, int limit) {
+        return trackedLinks.values().stream()
+                .filter(trackedLink -> trackedLink.getId() > lastSeenId)
+                .sorted((left, right) -> Long.compare(left.getId(), right.getId()))
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
     public List<TrackedLink> findAll() {
         return trackedLinks.values().stream().toList();
     }
