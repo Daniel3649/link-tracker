@@ -53,8 +53,7 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
     @Override
     public boolean updateTag(Subscription subscription, String currentTag, String newTag) {
         return entityManager
-                        .createNativeQuery(
-                                """
+                        .createNativeQuery("""
                                 update subscription_tag
                                 set tag = :newTag
                                 where subscription_id = :subscriptionId and tag = :currentTag

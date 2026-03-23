@@ -66,8 +66,7 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
-    public Optional<Subscription> findByTrackedLinkAndTelegramChat(
-            TrackedLink trackedLink, TelegramChat telegramChat) {
+    public Optional<Subscription> findByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         return repository
                 .findByTrackedLink_IdAndTelegramChat_Id(trackedLink.getId(), telegramChat.id())
                 .map(this::toDomain);
