@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.TelegramChatEntity;
 import backend.academy.linktracker.scrapper.repository.orm.jpa.TelegramChatJpaRepository;
@@ -16,7 +16,7 @@ public class OrmTelegramChatRepository implements TelegramChatRepository {
 
     @Override
     public Optional<TelegramChat> findByChatId(Long chatId) {
-        return repository.findById(chatId).map(entity -> new TelegramChat(entity.getId()));
+        return repository.findById(chatId).map(ignored -> new TelegramChat(chatId));
     }
 
     @Override

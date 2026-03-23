@@ -9,9 +9,9 @@ import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundE
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.exception.tag.TagAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.tag.TagNotFoundException;
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;

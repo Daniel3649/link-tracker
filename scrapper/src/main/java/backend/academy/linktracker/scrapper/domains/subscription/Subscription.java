@@ -1,7 +1,7 @@
-package backend.academy.linktracker.scrapper.models.subscription;
+package backend.academy.linktracker.scrapper.domains.subscription;
 
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

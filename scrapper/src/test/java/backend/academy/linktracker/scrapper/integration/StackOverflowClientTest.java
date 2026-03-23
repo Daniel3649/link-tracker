@@ -7,7 +7,7 @@ import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.*;

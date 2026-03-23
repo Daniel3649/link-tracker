@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.handlers.github;
 
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

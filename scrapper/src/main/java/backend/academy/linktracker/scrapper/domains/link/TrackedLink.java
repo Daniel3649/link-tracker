@@ -1,6 +1,6 @@
-package backend.academy.linktracker.scrapper.models.link;
+package backend.academy.linktracker.scrapper.domains.link;
 
-import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

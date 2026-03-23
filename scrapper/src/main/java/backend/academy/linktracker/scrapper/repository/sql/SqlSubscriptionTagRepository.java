@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.repository.sql;
 
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import java.util.LinkedHashSet;
 import java.util.Set;

@@ -1,6 +1,6 @@
-package backend.academy.linktracker.scrapper.models.link.trackingstate;
+package backend.academy.linktracker.scrapper.domains.link.trackingstate;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

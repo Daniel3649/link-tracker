@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.repository;
 
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import java.util.Set;
 
 public interface SubscriptionTagRepository {

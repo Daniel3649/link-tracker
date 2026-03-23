@@ -1,14 +1,17 @@
 package backend.academy.linktracker.scrapper.repository.sql;
 
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
+import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
 @RequiredArgsConstructor
 public class SqlSubscriptionRepository implements SubscriptionRepository {
@@ -62,23 +65,51 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
 
     @Override
     public Subscription save(Subscription subscription) {
-        MapSqlParameterSource parameters = parameters(subscription.getTrackedLink(), subscription.getTelegramChat());
-        parameters.addValue("id", subscription.getId());
-
         if (subscription.getId() != null) {
-            jdbcTemplate.update("""
-                    update subscription
-                    set link_id = :linkId,
-                        chat_id = :chatId
-                    where id = :id
-                    """, parameters);
+            MapSqlParameterSource parameters =
+                parameters(subscription.getTrackedLink(), subscription.getTelegramChat())
+                    .addValue("id", subscription.getId());
+
+            int updated = jdbcTemplate.update("""
+                update subscription
+                set link_id = :linkId,
+                    chat_id = :chatId
+                where id = :id
+                """, parameters);
+
+            if (updated == 0) {
+                throw new SubscriptionNotFoundException(
+                    "Subscription not found with id: " + subscription.getId());
+            }
+
             return subscription;
         }
 
-        return saveIfAbsent(subscription)
-                .or(() ->
-                        findByTrackedLinkAndTelegramChat(subscription.getTrackedLink(), subscription.getTelegramChat()))
-                .orElseThrow();
+        return findByTrackedLinkAndTelegramChat(
+            subscription.getTrackedLink(),
+            subscription.getTelegramChat()
+        ).orElseGet(() -> {
+            MapSqlParameterSource parameters =
+                parameters(subscription.getTrackedLink(), subscription.getTelegramChat());
+
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+
+            jdbcTemplate.update("""
+                insert into subscription (link_id, chat_id)
+                values (:linkId, :chatId)
+                """, parameters, keyHolder, new String[] {"id"});
+
+            Number key = keyHolder.getKey();
+            if (key == null) {
+                throw new IllegalStateException("Failed to generate id for subscription");
+            }
+
+            return new Subscription(
+                key.longValue(),
+                subscription.getTrackedLink(),
+                subscription.getTelegramChat()
+            );
+        });
     }
 
     @Override
@@ -110,10 +141,10 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
-    public List<Subscription> findAllByTelegramChat(TelegramChat telegramChat) {
+    public List<Subscription> findAllByTelegramChatId(Long chatId) {
         return jdbcTemplate.query(
                 SUBSCRIPTION_SELECT + " where s.chat_id = :chatId order by s.id",
-                new MapSqlParameterSource("chatId", telegramChat.id()),
+                new MapSqlParameterSource("chatId", chatId),
                 (resultSet, rowNum) -> mapSubscription(resultSet));
     }
 

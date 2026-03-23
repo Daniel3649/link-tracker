@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.repository.sql;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.StackOverflowTimelineCursor;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -43,10 +43,10 @@ public class SqlStackOverflowTrackingStateRepository implements StackOverflowTra
     }
 
     @Override
-    public void deleteByTrackedLink(TrackedLink trackedLink) {
+    public void deleteByTrackedLinkId(Long id) {
         jdbcTemplate.update(
                 "delete from stackoverflow_tracking_state where link_id = :linkId",
-                new MapSqlParameterSource("linkId", trackedLink.getId()));
+                new MapSqlParameterSource("linkId", id));
     }
 
     @Override

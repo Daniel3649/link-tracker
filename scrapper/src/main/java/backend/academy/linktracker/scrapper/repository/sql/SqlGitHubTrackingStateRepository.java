@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.repository.sql;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +35,10 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     }
 
     @Override
-    public void deleteByTrackedLink(TrackedLink trackedLink) {
+    public void deleteByTrackedLinkId(Long id) {
         jdbcTemplate.update(
                 "delete from github_tracking_state where link_id = :linkId",
-                new MapSqlParameterSource("linkId", trackedLink.getId()));
+                new MapSqlParameterSource("linkId", id));
     }
 
     @Override

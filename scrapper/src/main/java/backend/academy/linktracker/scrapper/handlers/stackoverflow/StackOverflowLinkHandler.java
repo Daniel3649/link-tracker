@@ -12,11 +12,11 @@ import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.StackOverflowTimelineCursor;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import java.net.URI;
 import java.time.Instant;
@@ -66,16 +66,12 @@ public class StackOverflowLinkHandler implements LinkHandler {
                 timelineSupport.calculateNextCheckAt(questionResult.backoffSeconds(), timelineResult.backoffSeconds()));
         state.setLastQuestionActivityDateEpochSec(questionResult.question().lastActivityDateEpochSec());
 
-        boolean saved = repository.saveIfAbsent(state);
-        if (!saved) {
-            throw new TrackingStateAlreadyExistsException(
-                    "Tracking state already exists for link: " + trackedLink.getUrl());
-        }
+        repository.saveIfAbsent(state);
     }
 
     @Override
-    public void deleteTrackingState(TrackedLink trackedLink) {
-        repository.deleteByTrackedLink(trackedLink);
+    public void deleteTrackingStateIfExists(TrackedLink trackedLink) {
+        repository.deleteByTrackedLinkId(trackedLink.getId());
     }
 
     @Override

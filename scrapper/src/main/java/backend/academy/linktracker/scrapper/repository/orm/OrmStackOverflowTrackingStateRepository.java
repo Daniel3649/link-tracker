@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.StackOverflowTimelineCursor;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.StackOverflowTrackingStateEntity;
 import backend.academy.linktracker.scrapper.repository.orm.entity.TrackedLinkEntity;
@@ -23,8 +23,8 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
     }
 
     @Override
-    public void deleteByTrackedLink(TrackedLink trackedLink) {
-        repository.deleteById(trackedLink.getId());
+    public void deleteByTrackedLinkId(Long id) {
+        repository.deleteByTrackedLink_Id(id);
     }
 
     @Override

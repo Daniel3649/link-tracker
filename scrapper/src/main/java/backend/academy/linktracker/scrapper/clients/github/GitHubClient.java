@@ -3,7 +3,7 @@ package backend.academy.linktracker.scrapper.clients.github;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;

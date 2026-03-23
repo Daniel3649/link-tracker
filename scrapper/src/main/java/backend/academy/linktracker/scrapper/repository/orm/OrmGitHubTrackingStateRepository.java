@@ -1,7 +1,8 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.GitHubTrackingStateEntity;
 import backend.academy.linktracker.scrapper.repository.orm.entity.TrackedLinkEntity;
@@ -19,7 +20,7 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     @Override
     public boolean saveIfAbsent(GitHubTrackingState gitHubTrackingState) {
         try {
-            repository.saveAndFlush(toEntity(gitHubTrackingState));
+            repository.save(toEntity(gitHubTrackingState));
             return true;
         } catch (DataIntegrityViolationException e) {
             return false;
@@ -28,12 +29,12 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
 
     @Override
     public GitHubTrackingState save(GitHubTrackingState gitHubTrackingState) {
-        return toDomain(repository.saveAndFlush(toEntity(gitHubTrackingState)));
+        return toDomain(repository.save(toEntity(gitHubTrackingState)));
     }
 
     @Override
-    public void deleteByTrackedLink(TrackedLink trackedLink) {
-        repository.deleteById(trackedLink.getId());
+    public void deleteByTrackedLinkId(Long id){
+        repository.deleteByTrackedLink_Id(id);
     }
 
     @Override

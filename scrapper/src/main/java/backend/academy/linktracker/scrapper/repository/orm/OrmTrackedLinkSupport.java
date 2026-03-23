@@ -1,9 +1,9 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
 import backend.academy.linktracker.scrapper.repository.orm.entity.LinkTypeEntity;
 import backend.academy.linktracker.scrapper.repository.orm.entity.TrackedLinkEntity;
 

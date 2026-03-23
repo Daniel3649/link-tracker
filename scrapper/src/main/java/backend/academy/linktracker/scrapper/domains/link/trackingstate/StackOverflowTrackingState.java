@@ -1,7 +1,7 @@
-package backend.academy.linktracker.scrapper.models.link.trackingstate;
+package backend.academy.linktracker.scrapper.domains.link.trackingstate;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.StackOverflowTimelineCursor;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import java.time.Instant;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -6,7 +6,7 @@ import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingEx
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.properties.SchedulerProperties;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;

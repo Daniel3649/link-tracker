@@ -16,9 +16,9 @@ import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingEx
 import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityDescriptionBuilder;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityExtractor;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubLinkHandler;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;

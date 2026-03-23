@@ -1,9 +1,10 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.exception.link.NotFoundTrackedLinkException;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.LinkTypeEntity;
 import backend.academy.linktracker.scrapper.repository.orm.entity.TrackedLinkEntity;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class OrmTrackedLinkRepository implements TrackedLinkRepository {
@@ -25,25 +27,28 @@ public class OrmTrackedLinkRepository implements TrackedLinkRepository {
     }
 
     @Override
+    @Transactional
     public TrackedLink save(TrackedLink trackedLink) {
         if (trackedLink.getId() != null) {
-            TrackedLinkEntity entity = repository.findById(trackedLink.getId()).orElseThrow();
+            TrackedLinkEntity entity = repository.findById(trackedLink.getId())
+                .orElseThrow(() -> new NotFoundTrackedLinkException("TrackedLink with id " + trackedLink.getId() + " not found"));
+
             OrmTrackedLinkSupport.fillEntity(entity, trackedLink);
-            return OrmTrackedLinkSupport.toDomain(repository.saveAndFlush(entity));
+            return OrmTrackedLinkSupport.toDomain(repository.save(entity));
         }
 
-        Optional<TrackedLinkEntity> existing = findEntityByResourceKey(trackedLink.getResourceKey());
-        if (existing.isPresent()) {
-            return OrmTrackedLinkSupport.toDomain(existing.get());
-        }
-
-        TrackedLinkEntity saved = repository.saveAndFlush(OrmTrackedLinkSupport.toNewEntity(trackedLink));
-        return OrmTrackedLinkSupport.toDomain(saved);
+        return findEntityByResourceKey(trackedLink.getResourceKey())
+                .map(OrmTrackedLinkSupport::toDomain)
+                .orElseGet(() -> {
+                    TrackedLinkEntity entity = OrmTrackedLinkSupport.toNewEntity(trackedLink);
+                    TrackedLinkEntity saved = repository.save(entity);
+                    return OrmTrackedLinkSupport.toDomain(saved);
+                });
     }
 
     @Override
-    public void deleteByResourceKey(ResourceKey resourceKey) {
-        findEntityByResourceKey(resourceKey).ifPresent(repository::delete);
+    public void delete(TrackedLink trackedLink) {
+        repository.deleteById(trackedLink.getId());
     }
 
     @Override

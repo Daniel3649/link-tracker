@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionTimelineEventResponse;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.StackOverflowTimelineCursor;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

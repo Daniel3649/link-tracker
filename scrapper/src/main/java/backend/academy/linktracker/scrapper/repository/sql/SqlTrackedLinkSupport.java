@@ -1,9 +1,9 @@
 package backend.academy.linktracker.scrapper.repository.sql;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;

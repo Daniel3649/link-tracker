@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.repository;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import java.util.Optional;
 
 public interface GitHubTrackingStateRepository {
@@ -9,7 +9,7 @@ public interface GitHubTrackingStateRepository {
 
     GitHubTrackingState save(GitHubTrackingState gitHubTrackingState);
 
-    void deleteByTrackedLink(TrackedLink trackedLink);
+    void deleteByTrackedLinkId(Long id);
 
     Optional<GitHubTrackingState> findByTrackedLink(TrackedLink trackedLink);
 

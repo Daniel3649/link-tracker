@@ -4,19 +4,22 @@ import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
 import backend.academy.linktracker.scrapper.mapper.SubscriptionMapper;
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import java.util.List;
+import backend.academy.linktracker.scrapper.service.persistence.SubscriptionPersistenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -48,8 +51,12 @@ public class SubscriptionService {
                         return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
                     });
 
+            // так как getOrCreateTrackedLink может ходить во внешний API,
+            // то я не помечаю addSubscription аннотацией Transactional
             TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
-            var savedSubscription = createSubscription(trackedLink, telegramChat, request.tags());
+
+            var savedSubscription = subscriptionPersistenceService
+                .createSubscription(trackedLink, telegramChat, request.tags());
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_ADDED)
@@ -92,7 +99,8 @@ public class SubscriptionService {
                         return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
                     });
 
-            var removedSubscription = deleteSubscription(trackedLink, telegramChat);
+            var removedSubscription = subscriptionPersistenceService
+                .deleteSubscription(trackedLink, telegramChat);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVED)
@@ -106,6 +114,7 @@ public class SubscriptionService {
         }
     }
 
+    @Transactional(readOnly = true)
     public ListLinksResponse getAllSubscriptions(long chatId) {
         try {
             MDC.put("chatId", String.valueOf(chatId));
@@ -125,8 +134,9 @@ public class SubscriptionService {
                         return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
                     });
 
-            List<LinkResponse> links =
-                    subscriptionMapper.toLinkResponses(subscriptionRepository.findAllByTelegramChat(telegramChat));
+            List<Subscription> subscriptions = subscriptionRepository
+                .findAllByTelegramChatId(telegramChat.id());
+            List<LinkResponse> links = subscriptionMapper.toLinkResponses(subscriptions);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_LIST_LOADED)
@@ -134,32 +144,6 @@ public class SubscriptionService {
                     .log("Subscription list loaded");
 
             return new ListLinksResponse(links, links.size());
-        } finally {
-            MDC.clear();
-        }
-    }
-
-    private backend.academy.linktracker.scrapper.models.subscription.Subscription createSubscription(
-            TrackedLink trackedLink, TelegramChat telegramChat, java.util.Set<String> tags) {
-        try {
-            MDC.put("chatId", String.valueOf(telegramChat.id()));
-            MDC.put("url", trackedLink.getUrl());
-            MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
-
-            return subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, tags);
-        } finally {
-            MDC.clear();
-        }
-    }
-
-    private backend.academy.linktracker.scrapper.models.subscription.Subscription deleteSubscription(
-            TrackedLink trackedLink, TelegramChat telegramChat) {
-        try {
-            MDC.put("chatId", String.valueOf(telegramChat.id()));
-            MDC.put("url", trackedLink.getUrl());
-            MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
-
-            return subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
         } finally {
             MDC.clear();
         }

@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.SubscriptionEntity;
 import backend.academy.linktracker.scrapper.repository.orm.entity.SubscriptionTagEntity;
@@ -28,8 +28,6 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
         subscriptionTags.stream()
                 .distinct()
                 .forEach(tag -> repository.save(new SubscriptionTagEntity(subscriptionEntity, tag)));
-
-        repository.flush();
     }
 
     @Override
@@ -38,7 +36,7 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
                 entityManager.getReference(SubscriptionEntity.class, subscription.getId());
 
         try {
-            repository.saveAndFlush(new SubscriptionTagEntity(subscriptionEntity, tag));
+            repository.save(new SubscriptionTagEntity(subscriptionEntity, tag));
             return true;
         } catch (DataIntegrityViolationException ignored) {
             return false;

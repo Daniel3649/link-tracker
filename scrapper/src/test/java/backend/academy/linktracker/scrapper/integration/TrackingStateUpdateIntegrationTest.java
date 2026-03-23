@@ -2,12 +2,12 @@ package backend.academy.linktracker.scrapper.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrackingState;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.StackOverflowTrackingState;
-import backend.academy.linktracker.scrapper.models.link.trackingstate.cursor.StackOverflowTimelineCursor;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;

@@ -3,7 +3,7 @@ package backend.academy.linktracker.scrapper.service;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

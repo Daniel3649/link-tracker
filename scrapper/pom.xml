@@ -211,6 +211,13 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/../migrations</directory>
+                <filtering>false</filtering>
+                <targetPath>migrations</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <!-- .proto gRPC compilation: -->
             <!-- <plugin> -->

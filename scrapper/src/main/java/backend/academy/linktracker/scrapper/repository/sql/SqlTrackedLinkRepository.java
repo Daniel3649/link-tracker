@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.repository.sql;
 
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import java.util.List;
 import java.util.Optional;
@@ -58,10 +58,12 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
     }
 
     @Override
-    public void deleteByResourceKey(ResourceKey resourceKey) {
+    public void delete(TrackedLink trackedLink) {
         jdbcTemplate.update(
-                "delete from tracked_link where " + SqlTrackedLinkSupport.resourceKeyPredicate(resourceKey),
-                SqlTrackedLinkSupport.resourceKeyParams(resourceKey));
+            """
+                delete from tracked_link
+                where id = :id
+                """, new MapSqlParameterSource("id", trackedLink.getId()));
     }
 
     @Override

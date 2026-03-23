@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.models.link.trackingstate.cursor;
+package backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor;
 
 public record StackOverflowTimelineCursor(long lastCreationDateEpochSec, String lastEventKey) {
     public static StackOverflowTimelineCursor empty() {

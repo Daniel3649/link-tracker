@@ -1,8 +1,9 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
+import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.SubscriptionEntity;
 import backend.academy.linktracker.scrapper.repository.orm.entity.TelegramChatEntity;
@@ -20,21 +21,6 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
     private final EntityManager entityManager;
 
     @Override
-    public Optional<Subscription> saveIfAbsent(Subscription subscription) {
-        SubscriptionEntity entity = new SubscriptionEntity();
-        entity.setTrackedLink(entityManager.getReference(
-                TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
-        entity.setTelegramChat(entityManager.getReference(
-                TelegramChatEntity.class, subscription.getTelegramChat().id()));
-
-        try {
-            return Optional.of(toDomain(repository.saveAndFlush(entity)));
-        } catch (DataIntegrityViolationException ignored) {
-            return Optional.empty();
-        }
-    }
-
-    @Override
     public boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         return repository.existsByTrackedLink_IdAndTelegramChat_Id(trackedLink.getId(), telegramChat.id());
     }
@@ -42,22 +28,31 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
     @Override
     public Subscription save(Subscription subscription) {
         if (subscription.getId() != null) {
-            SubscriptionEntity entity =
-                    repository.findById(subscription.getId()).orElseThrow();
+            SubscriptionEntity entity = repository.findById(subscription.getId())
+                .orElseThrow(() -> new SubscriptionNotFoundException("Subscription not found with id: " +
+                    subscription.getId()));
+
             entity.setTrackedLink(entityManager.getReference(
-                    TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
+                TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
             entity.setTelegramChat(entityManager.getReference(
-                    TelegramChatEntity.class, subscription.getTelegramChat().id()));
-            return toDomain(repository.saveAndFlush(entity));
+                TelegramChatEntity.class, subscription.getTelegramChat().id()));
+
+            return toDomain(entity);
         }
 
-        return saveIfAbsent(subscription)
-                .or(() -> repository
-                        .findByTrackedLink_IdAndTelegramChat_Id(
-                                subscription.getTrackedLink().getId(),
-                                subscription.getTelegramChat().id())
-                        .map(this::toDomain))
-                .orElseThrow();
+        return repository.findByTrackedLink_IdAndTelegramChat_Id(
+                subscription.getTrackedLink().getId(),
+                subscription.getTelegramChat().id())
+            .map(this::toDomain)
+            .orElseGet(() -> {
+                SubscriptionEntity entity = new SubscriptionEntity();
+                entity.setTrackedLink(entityManager.getReference(
+                    TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
+                entity.setTelegramChat(entityManager.getReference(
+                    TelegramChatEntity.class, subscription.getTelegramChat().id()));
+                SubscriptionEntity subscriptionEntity = repository.save(entity);
+                return toDomain(subscriptionEntity);
+            });
     }
 
     @Override
@@ -78,8 +73,8 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
-    public List<Subscription> findAllByTelegramChat(TelegramChat telegramChat) {
-        return repository.findAllByTelegramChat_IdOrderByIdAsc(telegramChat.id()).stream()
+    public List<Subscription> findAllByTelegramChatId(Long chatId) {
+        return repository.findAllByTelegramChat_IdOrderByIdAsc(chatId).stream()
                 .map(this::toDomain)
                 .toList();
     }

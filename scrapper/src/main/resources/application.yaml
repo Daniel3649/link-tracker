@@ -12,7 +12,7 @@ spring:
     password: ${POSTGRES_PASSWORD:postgres}
   liquibase:
     enabled: true
-    change-log: ${APP_LIQUIBASE_CHANGE_LOG:file:./migrations/master.xml}
+    change-log: ${APP_LIQUIBASE_CHANGE_LOG:classpath:/migrations/master.xml}
   jpa:
     hibernate:
       ddl-auto: validate

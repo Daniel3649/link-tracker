@@ -1,14 +1,16 @@
-package backend.academy.linktracker.scrapper.service;
+package backend.academy.linktracker.scrapper.service.persistence;
 
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import java.util.Set;
+
+import backend.academy.linktracker.scrapper.service.LinkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,16 +26,19 @@ public class SubscriptionPersistenceService {
 
     @Transactional
     public Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
-        Subscription savedSubscription = subscriptionRepository
-                .saveIfAbsent(new Subscription(null, trackedLink, telegramChat))
-                .orElseThrow(() -> {
-                    log.atWarn()
-                            .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
-                            .addKeyValue("reason", "subscription_already_exists")
-                            .log("Subscription add rejected");
+        Subscription savedSubscription;
+        try {
+            Subscription subscription = new Subscription(null, trackedLink, telegramChat);
+            savedSubscription = subscriptionRepository.save(subscription);
+        } catch (RuntimeException e) {
+            log.atWarn()
+                .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
+                .addKeyValue("reason", "subscription_already_exists")
+                .log("Subscription add rejected");
 
-                    return new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
-                });
+            throw e;
+        }
+
         subscriptionTagRepository.addTags(savedSubscription, tags);
 
         log.atInfo()
