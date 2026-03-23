@@ -7,13 +7,12 @@ import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryA
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
-import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
-import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
+import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
+import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
 import java.net.URI;
 import java.util.List;

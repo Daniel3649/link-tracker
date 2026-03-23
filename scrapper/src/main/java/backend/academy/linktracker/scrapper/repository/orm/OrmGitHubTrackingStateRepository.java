@@ -1,7 +1,6 @@
 package backend.academy.linktracker.scrapper.repository.orm;
 
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
-import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.GitHubTrackingStateEntity;
@@ -11,6 +10,7 @@ import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepository {
@@ -18,9 +18,10 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     private final EntityManager entityManager;
 
     @Override
+    @Transactional
     public boolean saveIfAbsent(GitHubTrackingState gitHubTrackingState) {
         try {
-            repository.save(toEntity(gitHubTrackingState));
+            repository.saveAndFlush(toEntity(gitHubTrackingState));
             return true;
         } catch (DataIntegrityViolationException e) {
             return false;
@@ -33,7 +34,7 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     }
 
     @Override
-    public void deleteByTrackedLinkId(Long id){
+    public void deleteByTrackedLinkId(Long id) {
         repository.deleteByTrackedLink_Id(id);
     }
 

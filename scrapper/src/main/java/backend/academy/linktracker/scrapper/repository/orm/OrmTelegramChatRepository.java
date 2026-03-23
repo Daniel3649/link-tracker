@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class OrmTelegramChatRepository implements TelegramChatRepository {
@@ -20,6 +21,7 @@ public class OrmTelegramChatRepository implements TelegramChatRepository {
     }
 
     @Override
+    @Transactional
     public boolean saveIfAbsent(TelegramChat telegramChat) {
         try {
             repository.saveAndFlush(new TelegramChatEntity(telegramChat.id()));
@@ -31,7 +33,7 @@ public class OrmTelegramChatRepository implements TelegramChatRepository {
 
     @Override
     public TelegramChat save(TelegramChat telegramChat) {
-        TelegramChatEntity entity = repository.saveAndFlush(new TelegramChatEntity(telegramChat.id()));
+        TelegramChatEntity entity = repository.save(new TelegramChatEntity(telegramChat.id()));
         return new TelegramChat(entity.getId());
     }
 

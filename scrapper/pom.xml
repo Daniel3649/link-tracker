@@ -213,12 +213,25 @@
     <build>
         <resources>
             <resource>
-                <directory>${project.basedir}/../migrations</directory>
-                <filtering>false</filtering>
                 <targetPath>migrations</targetPath>
+                <filtering>false</filtering>
+                <directory>${project.basedir}/../migrations</directory>
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>jar-for-e2e-tests</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- .proto gRPC compilation: -->
             <!-- <plugin> -->
             <!--     <groupId>io.github.ascopes</groupId> -->
@@ -235,6 +248,15 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>repackage-for-e2e-tests</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

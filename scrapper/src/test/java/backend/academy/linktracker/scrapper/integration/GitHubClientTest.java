@@ -5,8 +5,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.assertj.core.api.Assertions.*;
 
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
-import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.*;
 import org.springframework.web.client.RestClient;

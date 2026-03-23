@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class OrmStackOverflowTrackingStateRepository implements StackOverflowTrackingStateRepository {
@@ -19,7 +20,7 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
 
     @Override
     public StackOverflowTrackingState save(StackOverflowTrackingState stackOverflowTrackingState) {
-        return toDomain(repository.saveAndFlush(toEntity(stackOverflowTrackingState)));
+        return toDomain(repository.save(toEntity(stackOverflowTrackingState)));
     }
 
     @Override
@@ -28,6 +29,7 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
     }
 
     @Override
+    @Transactional
     public boolean saveIfAbsent(StackOverflowTrackingState stackOverflowTrackingState) {
         try {
             repository.saveAndFlush(toEntity(stackOverflowTrackingState));

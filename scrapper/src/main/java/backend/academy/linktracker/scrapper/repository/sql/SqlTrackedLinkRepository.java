@@ -59,8 +59,7 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
 
     @Override
     public void delete(TrackedLink trackedLink) {
-        jdbcTemplate.update(
-            """
+        jdbcTemplate.update("""
                 delete from tracked_link
                 where id = :id
                 """, new MapSqlParameterSource("id", trackedLink.getId()));

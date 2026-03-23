@@ -2,11 +2,11 @@ package backend.academy.linktracker.scrapper.schedule;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
-import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.properties.SchedulerProperties;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;

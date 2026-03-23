@@ -17,4 +17,6 @@ public interface TrackedLinkJpaRepository extends JpaRepository<TrackedLinkEntit
     List<TrackedLinkEntity> findByIdGreaterThanOrderByIdAsc(Long id, Pageable pageable);
 
     List<TrackedLinkEntity> findAllByOrderByIdAsc();
+
+    long removeById(Long id);
 }

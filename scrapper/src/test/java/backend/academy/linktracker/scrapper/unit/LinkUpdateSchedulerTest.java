@@ -6,11 +6,11 @@ import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.common.LinkChange;
-import backend.academy.linktracker.scrapper.handlers.LinkHandler;
-import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
 import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
+import backend.academy.linktracker.scrapper.handlers.LinkHandler;
+import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
 import backend.academy.linktracker.scrapper.properties.SchedulerProperties;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;

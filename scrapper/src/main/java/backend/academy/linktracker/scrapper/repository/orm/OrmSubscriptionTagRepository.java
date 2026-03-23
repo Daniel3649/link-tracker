@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
@@ -17,6 +18,7 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
     private final EntityManager entityManager;
 
     @Override
+    @Transactional
     public void addTags(Subscription subscription, Set<String> subscriptionTags) {
         if (subscriptionTags == null || subscriptionTags.isEmpty()) {
             return;
@@ -25,18 +27,21 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
         SubscriptionEntity subscriptionEntity =
                 entityManager.getReference(SubscriptionEntity.class, subscription.getId());
 
-        subscriptionTags.stream()
+        repository.saveAll(subscriptionTags.stream()
                 .distinct()
-                .forEach(tag -> repository.save(new SubscriptionTagEntity(subscriptionEntity, tag)));
+                .map(tag -> new SubscriptionTagEntity(subscriptionEntity, tag))
+                .toList());
+        repository.flush();
     }
 
     @Override
+    @Transactional
     public boolean addTag(Subscription subscription, String tag) {
         SubscriptionEntity subscriptionEntity =
                 entityManager.getReference(SubscriptionEntity.class, subscription.getId());
 
         try {
-            repository.save(new SubscriptionTagEntity(subscriptionEntity, tag));
+            repository.saveAndFlush(new SubscriptionTagEntity(subscriptionEntity, tag));
             return true;
         } catch (DataIntegrityViolationException ignored) {
             return false;

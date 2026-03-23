@@ -13,6 +13,7 @@ import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,25 +31,34 @@ public class OrmTrackedLinkRepository implements TrackedLinkRepository {
     @Transactional
     public TrackedLink save(TrackedLink trackedLink) {
         if (trackedLink.getId() != null) {
-            TrackedLinkEntity entity = repository.findById(trackedLink.getId())
-                .orElseThrow(() -> new NotFoundTrackedLinkException("TrackedLink with id " + trackedLink.getId() + " not found"));
+            TrackedLinkEntity entity = repository
+                    .findById(trackedLink.getId())
+                    .orElseThrow(() -> new NotFoundTrackedLinkException(
+                            "TrackedLink with id " + trackedLink.getId() + " not found"));
 
             OrmTrackedLinkSupport.fillEntity(entity, trackedLink);
-            return OrmTrackedLinkSupport.toDomain(repository.save(entity));
+            return OrmTrackedLinkSupport.toDomain(entity);
         }
 
         return findEntityByResourceKey(trackedLink.getResourceKey())
                 .map(OrmTrackedLinkSupport::toDomain)
                 .orElseGet(() -> {
                     TrackedLinkEntity entity = OrmTrackedLinkSupport.toNewEntity(trackedLink);
-                    TrackedLinkEntity saved = repository.save(entity);
-                    return OrmTrackedLinkSupport.toDomain(saved);
+
+                    try {
+                        repository.saveAndFlush(entity);
+                        return OrmTrackedLinkSupport.toDomain(entity);
+                    } catch (DataIntegrityViolationException e) {
+                        return findEntityByResourceKey(trackedLink.getResourceKey())
+                                .map(OrmTrackedLinkSupport::toDomain)
+                                .orElseThrow(() -> e);
+                    }
                 });
     }
 
     @Override
     public void delete(TrackedLink trackedLink) {
-        repository.deleteById(trackedLink.getId());
+        repository.removeById(trackedLink.getId());
     }
 
     @Override

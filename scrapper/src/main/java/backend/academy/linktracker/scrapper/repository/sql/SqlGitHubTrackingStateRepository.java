@@ -37,8 +37,7 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     @Override
     public void deleteByTrackedLinkId(Long id) {
         jdbcTemplate.update(
-                "delete from github_tracking_state where link_id = :linkId",
-                new MapSqlParameterSource("linkId", id));
+                "delete from github_tracking_state where link_id = :linkId", new MapSqlParameterSource("linkId", id));
     }
 
     @Override

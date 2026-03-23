@@ -1,16 +1,14 @@
 package backend.academy.linktracker.scrapper.service;
 
 import backend.academy.linktracker.scrapper.common.ParsedLink;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
-import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
-import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import java.net.URI;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -112,28 +110,22 @@ public class LinkService {
             handler.deleteTrackingStateIfExists(trackedLink);
             trackedLinkRepository.delete(trackedLink);
 
-            log.atInfo()
-                .addKeyValue("event", LogEvent.TRACKED_LINK_DELETED)
-                .log("Tracked link deleted");
+            log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_DELETED).log("Tracked link deleted");
         } finally {
             MDC.clear();
         }
     }
 
-
     private TrackedLink createTrackedLink(LinkHandler handler, ParsedLink parsedLink) {
         try {
-            TrackedLink newTrackedLink = new TrackedLink(null, parsedLink.url(),
-                parsedLink.resourceKey());
+            TrackedLink newTrackedLink = new TrackedLink(null, parsedLink.url(), parsedLink.resourceKey());
             TrackedLink savedTrackedLink = trackedLinkRepository.save(newTrackedLink);
 
             MDC.put("trackedLinkId", savedTrackedLink.getId().toString());
             MDC.put("url", savedTrackedLink.getUrl());
             MDC.put("resourceKey", savedTrackedLink.getResourceKey().toString());
 
-            log.atInfo()
-                .addKeyValue("event", LogEvent.TRACKED_LINK_SAVED)
-                .log("Tracked link saved");
+            log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_SAVED).log("Tracked link saved");
 
             handler.createTrackingState(savedTrackedLink);
 

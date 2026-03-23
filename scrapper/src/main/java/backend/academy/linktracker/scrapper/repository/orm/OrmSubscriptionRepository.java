@@ -14,11 +14,29 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class OrmSubscriptionRepository implements SubscriptionRepository {
     private final SubscriptionJpaRepository repository;
     private final EntityManager entityManager;
+
+    @Override
+    @Transactional
+    public Optional<Subscription> saveIfAbsent(Subscription subscription) {
+        SubscriptionEntity entity = new SubscriptionEntity();
+        entity.setTrackedLink(entityManager.getReference(
+                TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
+        entity.setTelegramChat(entityManager.getReference(
+                TelegramChatEntity.class, subscription.getTelegramChat().id()));
+
+        try {
+            repository.saveAndFlush(entity);
+            return Optional.of(toDomain(entity));
+        } catch (DataIntegrityViolationException e) {
+            return Optional.empty();
+        }
+    }
 
     @Override
     public boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
@@ -28,31 +46,26 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
     @Override
     public Subscription save(Subscription subscription) {
         if (subscription.getId() != null) {
-            SubscriptionEntity entity = repository.findById(subscription.getId())
-                .orElseThrow(() -> new SubscriptionNotFoundException("Subscription not found with id: " +
-                    subscription.getId()));
+            SubscriptionEntity entity = repository
+                    .findById(subscription.getId())
+                    .orElseThrow(() -> new SubscriptionNotFoundException(
+                            "Subscription not found with id: " + subscription.getId()));
 
             entity.setTrackedLink(entityManager.getReference(
-                TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
+                    TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
             entity.setTelegramChat(entityManager.getReference(
-                TelegramChatEntity.class, subscription.getTelegramChat().id()));
+                    TelegramChatEntity.class, subscription.getTelegramChat().id()));
 
             return toDomain(entity);
         }
 
-        return repository.findByTrackedLink_IdAndTelegramChat_Id(
-                subscription.getTrackedLink().getId(),
-                subscription.getTelegramChat().id())
-            .map(this::toDomain)
-            .orElseGet(() -> {
-                SubscriptionEntity entity = new SubscriptionEntity();
-                entity.setTrackedLink(entityManager.getReference(
-                    TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
-                entity.setTelegramChat(entityManager.getReference(
-                    TelegramChatEntity.class, subscription.getTelegramChat().id()));
-                SubscriptionEntity subscriptionEntity = repository.save(entity);
-                return toDomain(subscriptionEntity);
-            });
+        SubscriptionEntity entity = new SubscriptionEntity();
+        entity.setTrackedLink(entityManager.getReference(
+                TrackedLinkEntity.class, subscription.getTrackedLink().getId()));
+        entity.setTelegramChat(entityManager.getReference(
+                TelegramChatEntity.class, subscription.getTelegramChat().id()));
+        repository.save(entity);
+        return toDomain(entity);
     }
 
     @Override

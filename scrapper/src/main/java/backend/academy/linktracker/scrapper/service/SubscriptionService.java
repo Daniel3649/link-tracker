@@ -4,17 +4,17 @@ import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
 import backend.academy.linktracker.scrapper.mapper.SubscriptionMapper;
-import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
-import java.util.List;
 import backend.academy.linktracker.scrapper.service.persistence.SubscriptionPersistenceService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -55,8 +55,8 @@ public class SubscriptionService {
             // то я не помечаю addSubscription аннотацией Transactional
             TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
 
-            var savedSubscription = subscriptionPersistenceService
-                .createSubscription(trackedLink, telegramChat, request.tags());
+            var savedSubscription =
+                    subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, request.tags());
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_ADDED)
@@ -99,8 +99,7 @@ public class SubscriptionService {
                         return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
                     });
 
-            var removedSubscription = subscriptionPersistenceService
-                .deleteSubscription(trackedLink, telegramChat);
+            var removedSubscription = subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVED)
@@ -134,8 +133,7 @@ public class SubscriptionService {
                         return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
                     });
 
-            List<Subscription> subscriptions = subscriptionRepository
-                .findAllByTelegramChatId(telegramChat.id());
+            List<Subscription> subscriptions = subscriptionRepository.findAllByTelegramChatId(telegramChat.id());
             List<LinkResponse> links = subscriptionMapper.toLinkResponses(subscriptions);
 
             log.atInfo()

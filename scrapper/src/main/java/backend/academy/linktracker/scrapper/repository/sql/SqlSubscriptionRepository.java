@@ -66,8 +66,7 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
     @Override
     public Subscription save(Subscription subscription) {
         if (subscription.getId() != null) {
-            MapSqlParameterSource parameters =
-                parameters(subscription.getTrackedLink(), subscription.getTelegramChat())
+            MapSqlParameterSource parameters = parameters(subscription.getTrackedLink(), subscription.getTelegramChat())
                     .addValue("id", subscription.getId());
 
             int updated = jdbcTemplate.update("""
@@ -78,38 +77,32 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
                 """, parameters);
 
             if (updated == 0) {
-                throw new SubscriptionNotFoundException(
-                    "Subscription not found with id: " + subscription.getId());
+                throw new SubscriptionNotFoundException("Subscription not found with id: " + subscription.getId());
             }
 
             return subscription;
         }
 
-        return findByTrackedLinkAndTelegramChat(
-            subscription.getTrackedLink(),
-            subscription.getTelegramChat()
-        ).orElseGet(() -> {
-            MapSqlParameterSource parameters =
-                parameters(subscription.getTrackedLink(), subscription.getTelegramChat());
+        return findByTrackedLinkAndTelegramChat(subscription.getTrackedLink(), subscription.getTelegramChat())
+                .orElseGet(() -> {
+                    MapSqlParameterSource parameters =
+                            parameters(subscription.getTrackedLink(), subscription.getTelegramChat());
 
-            KeyHolder keyHolder = new GeneratedKeyHolder();
+                    KeyHolder keyHolder = new GeneratedKeyHolder();
 
-            jdbcTemplate.update("""
+                    jdbcTemplate.update("""
                 insert into subscription (link_id, chat_id)
                 values (:linkId, :chatId)
                 """, parameters, keyHolder, new String[] {"id"});
 
-            Number key = keyHolder.getKey();
-            if (key == null) {
-                throw new IllegalStateException("Failed to generate id for subscription");
-            }
+                    Number key = keyHolder.getKey();
+                    if (key == null) {
+                        throw new IllegalStateException("Failed to generate id for subscription");
+                    }
 
-            return new Subscription(
-                key.longValue(),
-                subscription.getTrackedLink(),
-                subscription.getTelegramChat()
-            );
-        });
+                    return new Subscription(
+                            key.longValue(), subscription.getTrackedLink(), subscription.getTelegramChat());
+                });
     }
 
     @Override
