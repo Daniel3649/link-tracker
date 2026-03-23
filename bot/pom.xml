@@ -211,11 +211,11 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>jar-for-e2e-tests</id>
+                        <id>default-jar</id>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <phase>process-classes</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -237,11 +237,11 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>repackage-for-e2e-tests</id>
+                        <id>repackage</id>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
-                        <phase>process-classes</phase>
                     </execution>
                 </executions>
             </plugin>

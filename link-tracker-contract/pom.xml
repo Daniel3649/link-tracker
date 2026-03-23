@@ -35,11 +35,11 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>jar-for-reactor-dependents</id>
+                        <id>default-jar</id>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <phase>process-classes</phase>
                     </execution>
                 </executions>
             </plugin>
