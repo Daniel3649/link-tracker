@@ -8,5 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SubscriptionTagJpaRepository extends JpaRepository<SubscriptionTagEntity, SubscriptionTagId> {
     List<SubscriptionTagEntity> findAllBySubscription_IdOrderById_TagAsc(Long subscriptionId);
 
+    boolean existsBySubscription_IdAndId_Tag(Long subscriptionId, String tag);
+
+    int deleteBySubscription_IdAndId_Tag(Long subscriptionId, String tag);
+
     void deleteAllBySubscription_Id(Long subscriptionId);
 }

@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManager;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RequiredArgsConstructor
 public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
@@ -29,6 +30,45 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
                 .forEach(tag -> repository.save(new SubscriptionTagEntity(subscriptionEntity, tag)));
 
         repository.flush();
+    }
+
+    @Override
+    public boolean addTag(Subscription subscription, String tag) {
+        SubscriptionEntity subscriptionEntity =
+                entityManager.getReference(SubscriptionEntity.class, subscription.getId());
+
+        try {
+            repository.saveAndFlush(new SubscriptionTagEntity(subscriptionEntity, tag));
+            return true;
+        } catch (DataIntegrityViolationException ignored) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean existsBySubscriptionAndTag(Subscription subscription, String tag) {
+        return repository.existsBySubscription_IdAndId_Tag(subscription.getId(), tag);
+    }
+
+    @Override
+    public boolean updateTag(Subscription subscription, String currentTag, String newTag) {
+        return entityManager
+                        .createNativeQuery(
+                                """
+                                update subscription_tag
+                                set tag = :newTag
+                                where subscription_id = :subscriptionId and tag = :currentTag
+                                """)
+                        .setParameter("subscriptionId", subscription.getId())
+                        .setParameter("currentTag", currentTag)
+                        .setParameter("newTag", newTag)
+                        .executeUpdate()
+                > 0;
+    }
+
+    @Override
+    public boolean deleteTag(Subscription subscription, String tag) {
+        return repository.deleteBySubscription_IdAndId_Tag(subscription.getId(), tag) > 0;
     }
 
     @Override

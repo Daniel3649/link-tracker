@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -93,6 +94,81 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
 
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
+    }
+
+    @Test
+    void shouldManageTagsSeparatelyFromLinks() throws Exception {
+        stubGitHubEndpoints();
+
+        mockMvc.perform(post("/tg-chat/{id}", 1L)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/links")
+                        .header("Tg-Chat-Id", 1L)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                    {
+                      "link": "https://github.com/octocat/Hello-World",
+                      "tags": ["java", "spring"],
+                      "filters": []
+                    }
+                    """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/tags")
+                        .header("Tg-Chat-Id", 1L)
+                        .param("link", "https://github.com/octocat/Hello-World"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.tags", containsInAnyOrder("java", "spring")));
+
+        mockMvc.perform(post("/tags")
+                        .header("Tg-Chat-Id", 1L)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                    {
+                      "link": "https://github.com/octocat/Hello-World",
+                      "tag": "backend"
+                    }
+                    """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tag").value("backend"));
+
+        mockMvc.perform(put("/tags")
+                        .header("Tg-Chat-Id", 1L)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                    {
+                      "link": "https://github.com/octocat/Hello-World",
+                      "currentTag": "spring",
+                      "newTag": "spring-boot"
+                    }
+                    """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tag").value("spring-boot"));
+
+        mockMvc.perform(delete("/tags")
+                        .header("Tg-Chat-Id", 1L)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                    {
+                      "link": "https://github.com/octocat/Hello-World",
+                      "tag": "java"
+                    }
+                    """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tag").value("java"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/tags")
+                        .header("Tg-Chat-Id", 1L)
+                        .param("link", "https://github.com/octocat/Hello-World"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.tags", containsInAnyOrder("backend", "spring-boot")));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/links")
+                        .header("Tg-Chat-Id", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.links[0].tags", containsInAnyOrder("backend", "spring-boot")));
     }
 
     @Test

@@ -9,6 +9,8 @@ import backend.academy.linktracker.scrapper.exception.link.TrackingStateNotFound
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
+import backend.academy.linktracker.scrapper.exception.tag.TagAlreadyExistsException;
+import backend.academy.linktracker.scrapper.exception.tag.TagNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +46,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
         TelegramChatNotFoundException.class,
         SubscriptionNotFoundException.class,
-        TrackingStateNotFoundException.class
+        TrackingStateNotFoundException.class,
+        TagNotFoundException.class
     })
     public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException ex) {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
@@ -53,7 +56,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
         TelegramChatAlreadyExistsException.class,
         SubscriptionAlreadyExistsException.class,
-        TrackingStateAlreadyExistsException.class
+        TrackingStateAlreadyExistsException.class,
+        TagAlreadyExistsException.class
     })
     public ResponseEntity<ApiErrorResponse> handleConflict(RuntimeException ex) {
         return build(HttpStatus.CONFLICT, "Конфликт состояния ресурса", ex);

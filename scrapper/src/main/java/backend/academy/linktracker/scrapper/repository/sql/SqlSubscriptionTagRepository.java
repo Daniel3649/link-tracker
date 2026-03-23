@@ -34,6 +34,65 @@ public class SqlSubscriptionTagRepository implements SubscriptionTagRepository {
     }
 
     @Override
+    public boolean addTag(Subscription subscription, String tag) {
+        return jdbcTemplate.update(
+                        """
+                        insert into subscription_tag (subscription_id, tag)
+                        values (:subscriptionId, :tag)
+                        on conflict (subscription_id, tag) do nothing
+                        """,
+                        new MapSqlParameterSource()
+                                .addValue("subscriptionId", subscription.getId())
+                                .addValue("tag", tag))
+                > 0;
+    }
+
+    @Override
+    public boolean existsBySubscriptionAndTag(Subscription subscription, String tag) {
+        Boolean exists = jdbcTemplate.queryForObject(
+                """
+                select exists(
+                    select 1
+                    from subscription_tag
+                    where subscription_id = :subscriptionId and tag = :tag
+                )
+                """,
+                new MapSqlParameterSource()
+                        .addValue("subscriptionId", subscription.getId())
+                        .addValue("tag", tag),
+                Boolean.class);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    @Override
+    public boolean updateTag(Subscription subscription, String currentTag, String newTag) {
+        return jdbcTemplate.update(
+                        """
+                        update subscription_tag
+                        set tag = :newTag
+                        where subscription_id = :subscriptionId and tag = :currentTag
+                        """,
+                        new MapSqlParameterSource()
+                                .addValue("subscriptionId", subscription.getId())
+                                .addValue("currentTag", currentTag)
+                                .addValue("newTag", newTag))
+                > 0;
+    }
+
+    @Override
+    public boolean deleteTag(Subscription subscription, String tag) {
+        return jdbcTemplate.update(
+                        """
+                        delete from subscription_tag
+                        where subscription_id = :subscriptionId and tag = :tag
+                        """,
+                        new MapSqlParameterSource()
+                                .addValue("subscriptionId", subscription.getId())
+                                .addValue("tag", tag))
+                > 0;
+    }
+
+    @Override
     public void deleteAllBySubscription(Subscription subscription) {
         jdbcTemplate.update(
                 "delete from subscription_tag where subscription_id = :subscriptionId",
