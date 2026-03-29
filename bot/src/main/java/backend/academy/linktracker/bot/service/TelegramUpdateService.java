@@ -1,6 +1,7 @@
 package backend.academy.linktracker.bot.service;
 
 import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
+import backend.academy.linktracker.bot.exception.command.dispatcher.ExceptionHandlerDispatcher;
 import backend.academy.linktracker.bot.logging.LogEvent;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import com.pengrad.telegrambot.model.Message;
@@ -18,6 +19,7 @@ public class TelegramUpdateService {
     private final MessageService messageService;
     private final TelegramSender sender;
     private final TrackConversationService trackConversationService;
+    private final ExceptionHandlerDispatcher exceptionHandlerDispatcher;
 
     public void handleEvent(Update update) {
         if (update == null) {
@@ -86,7 +88,11 @@ public class TelegramUpdateService {
                                                 "handler", command.getClass().getSimpleName())
                                         .log("Dispatching command");
 
-                                command.execute(update);
+                                try {
+                                    command.execute(update);
+                                } catch (Exception e) {
+                                    exceptionHandlerDispatcher.handle(e, chatId);
+                                }
 
                                 log.atInfo()
                                         .addKeyValue("event", LogEvent.COMMAND_HANDLED)

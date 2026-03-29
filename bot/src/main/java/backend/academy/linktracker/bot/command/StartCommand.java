@@ -24,16 +24,8 @@ public class StartCommand implements Command {
         Objects.requireNonNull(update);
         long chatId = update.message().chat().id();
 
-        try {
-            scrapperClient.registerChat(chatId);
-            sender.sendPlain(chatId, messageService.get("command.start"));
-        } catch (ChatAlreadyRegisteredException e) {
-            sender.sendPlain(chatId, messageService.get("command.track.chart-already-registered"));
-        } catch (ScrapperUnavailableException e) {
-            sender.sendPlain(chatId, messageService.get("command.track.scrapper-is-unavailable"));
-        } catch (ScrapperClientException e) {
-            sender.sendPlain(chatId, messageService.get("command.track.client-error"));
-        }
+        scrapperClient.registerChat(chatId);
+        sender.sendPlain(chatId, messageService.get("command.start"));
     }
 
     @Override

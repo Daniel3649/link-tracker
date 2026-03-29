@@ -39,31 +39,21 @@ public class ListCommand implements Command {
         String rawText = update.message().text();
         String tagFilter = normalizeTagFilter(commandArgSupport.extractFirstArgument(rawText));
 
-        try {
-            ListLinksResponse response = scrapperClient.getLinks(chatId);
-            List<LinkResponse> links = response.links() == null ? Collections.emptyList() : response.links();
+        ListLinksResponse response = scrapperClient.getLinks(chatId);
+        List<LinkResponse> links = response.links() == null ? Collections.emptyList() : response.links();
 
-            List<LinkResponse> filteredLinks = filterByTag(links, tagFilter);
+        List<LinkResponse> filteredLinks = filterByTag(links, tagFilter);
 
-            if (filteredLinks.isEmpty()) {
-                telegramSender.sendPlain(
-                        chatId,
-                        tagFilter == null
-                                ? messageService.get("command.list.empty")
-                                : messageService.get("command.list.empty.by-tag", tagFilter));
-                return;
-            }
-
-            telegramSender.sendPlain(chatId, buildListMessage(filteredLinks, tagFilter));
-        } catch (ChatNotRegisteredException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.chat-not-registered"));
-        } catch (InvalidScrapperRequestException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.invalid-request"));
-        } catch (ScrapperUnavailableException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.scrapper-unavailable"));
-        } catch (ScrapperClientException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.client-error"));
+        if (filteredLinks.isEmpty()) {
+            telegramSender.sendPlain(
+                    chatId,
+                    tagFilter == null
+                            ? messageService.get("command.list.empty")
+                            : messageService.get("command.list.empty.by-tag", tagFilter));
+            return;
         }
+
+        telegramSender.sendPlain(chatId, buildListMessage(filteredLinks, tagFilter));
     }
 
     private String normalizeTagFilter(String tagFilter) {

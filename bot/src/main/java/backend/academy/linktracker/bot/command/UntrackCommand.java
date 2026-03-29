@@ -50,18 +50,8 @@ public class UntrackCommand implements Command {
 
         RemoveLinkRequest request = new RemoveLinkRequest(parsedLink.uri());
 
-        try {
-            scrapperClient.removeLink(chatId, request);
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.success"));
-        } catch (LinkNotTrackedException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.not-found"));
-        } catch (InvalidScrapperRequestException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.invalid-scrapper-request"));
-        } catch (ScrapperUnavailableException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.scrapper-unavailable"));
-        } catch (ScrapperClientException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.client-error"));
-        }
+        scrapperClient.removeLink(chatId, request);
+        telegramSender.sendPlain(chatId, messageService.get("command.untrack.success"));
     }
 
     @Override
