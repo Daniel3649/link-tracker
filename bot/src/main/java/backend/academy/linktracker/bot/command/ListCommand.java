@@ -3,10 +3,6 @@ package backend.academy.linktracker.bot.command;
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.command.meta.CommandName;
 import backend.academy.linktracker.bot.command.support.CommandArgSupport;
-import backend.academy.linktracker.bot.exception.chat.ChatNotRegisteredException;
-import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
-import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
-import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
@@ -14,7 +10,6 @@ import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
 import com.pengrad.telegrambot.model.Update;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,8 +24,6 @@ public class ListCommand implements Command {
 
     @Override
     public void execute(Update update) {
-        Objects.requireNonNull(update, "update cannot be null");
-
         if (update.message() == null || update.message().chat() == null) {
             return;
         }

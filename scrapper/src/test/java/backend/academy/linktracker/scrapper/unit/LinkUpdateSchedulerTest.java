@@ -55,8 +55,7 @@ class LinkUpdateSchedulerTest {
         when(trackedLink.getId()).thenReturn(10L);
         when(trackedLink.getUrl()).thenReturn(url);
 
-        LinkChange change = mock(LinkChange.class);
-        when(change.description()).thenReturn("New commit detected");
+        LinkChange change = new LinkChange("New commit detected");
 
         TelegramChat chat1 = mock(TelegramChat.class);
         when(chat1.getId()).thenReturn(101L);
@@ -98,7 +97,7 @@ class LinkUpdateSchedulerTest {
         TrackedLink trackedLink = mock(TrackedLink.class);
         when(trackedLink.getUrl()).thenReturn(url);
 
-        LinkChange change = mock(LinkChange.class);
+        LinkChange change = new LinkChange("New commit detected");
 
         when(trackedLinkRepository.findAll()).thenReturn(List.of(trackedLink));
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(linkHandler);

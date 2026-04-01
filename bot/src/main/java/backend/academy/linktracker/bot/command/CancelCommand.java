@@ -6,21 +6,18 @@ import backend.academy.linktracker.bot.tracksession.CancelTrackResult;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.bot.service.TrackConversationService;
 import com.pengrad.telegrambot.model.Update;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 
 @Component
 @RequiredArgsConstructor
-@Validated
 public class CancelCommand implements Command {
     private final MessageService messageService;
     private final TrackConversationService trackConversationService;
     private final TelegramSender telegramSender;
 
     @Override
-    public void execute(@NotNull Update update) {
+    public void execute(Update update) {
         long chatId = update.message().chat().id();
 
         CancelTrackResult result = trackConversationService.cancel(chatId);

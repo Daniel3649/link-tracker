@@ -134,7 +134,7 @@ public class TelegramBotCommandsTest {
 
         assertTrue(latch.await(10, SECONDS));
 
-        String expectedText = messageService.get("command.unknown");
+        String expectedText = messageService.get("exception.unknown-command");
 
         await().atMost(10, SECONDS)
                 .untilAsserted(() -> verify(

@@ -3,38 +3,26 @@ package backend.academy.linktracker.bot.command;
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.command.meta.CommandName;
 import backend.academy.linktracker.bot.command.support.CommandArgSupport;
-import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
-import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
-import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
 import backend.academy.linktracker.bot.exception.command.NoArgumentUntrackCommandException;
-import backend.academy.linktracker.bot.exception.link.LinkNotTrackedException;
 import backend.academy.linktracker.bot.exception.link.LinkParsingException;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
-import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
-import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
-import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
 import com.pengrad.telegrambot.model.Update;
 import java.net.URI;
-import java.util.Objects;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 
 @Component
 @RequiredArgsConstructor
-@Validated
 public class UntrackCommand implements Command {
     private final MessageService messageService;
-    private final SupportedLinkParser supportedLinkParser;
     private final ScrapperClient scrapperClient;
     private final TelegramSender telegramSender;
     private final CommandArgSupport commandArgSupport;
 
     @Override
-    public void execute(@NotNull Update update) {
+    public void execute(Update update) {
         long chatId = update.message().chat().id();
         String rawText = update.message().text();
 

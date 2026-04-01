@@ -31,7 +31,7 @@ public class CommandDispatcher {
             .orElseThrow(() -> new UnknownCommandException("Unknown command: " + commandName));
 
         if (trackConversationService.getDialogueState(chatId) != DialogueState.IDLE
-            && !matchedCommand.name().equals("/cancel")) {
+            && !matchedCommand.name().equals("cancel")) {
             trackConversationService.cancel(chatId);
         }
 

@@ -63,7 +63,7 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("STACKOVERFLOW_KEY", "dummy-stackoverflow-key")
             .withEnv("STACKOVERFLOW_ACCESS_KEY", "dummy-stackoverflow-access-key")
             .withEnv("APP_SCHEDULER_LINK_CHECK_DELAY_MS", "1h")
-            .waitingFor(Wait.forListeningPort())
+            .waitingFor(Wait.forHttp("/actuator/health").forPort(8081).forStatusCode(200))
             .withStartupTimeout(Duration.ofSeconds(60));
 
     @Container
@@ -85,7 +85,7 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("APP_TELEGRAM_INIT_COMMANDS_ON_STARTUP", "false")
             .withEnv("APP_TELEGRAM_DEBUG", "true")
             .withEnv("APP_SCRAPPER_BASE_URL", "http://scrapper:8081")
-            .waitingFor(Wait.forListeningPort())
+            .waitingFor(Wait.forHttp("/actuator/health").forPort(8080).forStatusCode(200))
             .withStartupTimeout(Duration.ofSeconds(60));
 
     protected String scrapperBaseUrl() {

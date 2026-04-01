@@ -1,15 +1,11 @@
 package backend.academy.linktracker.bot.service;
 
-import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
-import backend.academy.linktracker.bot.exception.handler.dispatcher.ExceptionHandlerDispatcher;
 import backend.academy.linktracker.bot.logging.LogEvent;
-import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.update.TelegramUpdateDispatcher;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service

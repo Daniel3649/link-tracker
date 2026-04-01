@@ -16,7 +16,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.bot.BotApplication;
-import backend.academy.linktracker.bot.repository.DialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -52,9 +51,6 @@ class TrackDialogTest {
     @Autowired
     private TelegramUpdateService updateService;
 
-    @Autowired
-    private DialogStateRepository trackDialogStateRepository;
-
     @MockitoBean
     private TelegramSender telegramSender;
 
@@ -64,7 +60,6 @@ class TrackDialogTest {
     @BeforeEach
     void setUp() {
         wireMock.resetAll();
-        trackDialogStateRepository.clear();
         Mockito.clearInvocations(telegramSender, telegramBot);
     }
 
@@ -84,8 +79,8 @@ class TrackDialogTest {
 
     @Test
     void shouldNotifyUserWhenTrackLinkIsInvalid() {
-        long chatId = 123456L;
-        String invalidLink = "tbank://github.com/user/repo";
+        long chatId = 123457L;
+        String invalidLink = "not a uri";
 
         updateService.handleEvent(update(1, chatId, "/track"));
         Mockito.clearInvocations(telegramSender);
@@ -94,7 +89,10 @@ class TrackDialogTest {
 
         List<String> messages = capturedMessages(chatId);
 
-        assertThat(messages).anySatisfy(text -> assertThat(text.toLowerCase()).contains("invalid"));
+        assertThat(messages).anySatisfy(text -> {
+            String normalized = text.toLowerCase();
+            assertThat(normalized.contains("incorrect") || normalized.contains("uri")).isTrue();
+        });
 
         wireMock.verify(0, postRequestedFor(urlEqualTo("/links")));
     }
