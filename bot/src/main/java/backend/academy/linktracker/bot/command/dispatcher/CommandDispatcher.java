@@ -7,27 +7,34 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import backend.academy.linktracker.bot.exception.command.UnknownCommandException;
+import backend.academy.linktracker.bot.service.TrackConversationService;
+import backend.academy.linktracker.bot.tracksession.DialogueState;
+import com.pengrad.telegrambot.model.Update;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @Getter
+@RequiredArgsConstructor
 public class CommandDispatcher {
-    private final Map<String, Command> commandsByName;
+    private final TrackConversationService trackConversationService;
     private final List<Command> commands;
 
-    public CommandDispatcher(List<Command> commands) {
-        commandsByName = commands.stream().collect(Collectors.toUnmodifiableMap(Command::name, Function.identity()));
-        this.commands = List.copyOf(commands);
-    }
+    public void dispatch(String commandName, Update update) {
+        long chatId = update.message().chat().id();
 
-    public Optional<Command> getCommandByName(String name) {
-        Objects.requireNonNull(name);
-        var command = commandsByName.get(name);
-        return Optional.ofNullable(command);
-    }
+        Command matchedCommand = commands.stream()
+            .filter(command -> command.name().equals(commandName))
+            .findFirst()
+            .orElseThrow(() -> new UnknownCommandException("Unknown command: " + commandName));
 
-    public final List<Command> getCommands() {
-        return commands;
+        if (trackConversationService.getDialogueState(chatId) != DialogueState.IDLE
+            && !matchedCommand.name().equals("/cancel")) {
+            trackConversationService.cancel(chatId);
+        }
+
+        matchedCommand.execute(update);
     }
 }

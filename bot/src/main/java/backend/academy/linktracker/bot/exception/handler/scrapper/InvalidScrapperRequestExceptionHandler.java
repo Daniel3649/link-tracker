@@ -1,6 +1,7 @@
-package backend.academy.linktracker.bot.exception.command.handler;
+package backend.academy.linktracker.bot.exception.handler.scrapper;
 
 import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
+import backend.academy.linktracker.bot.exception.handler.ExceptionHandler;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class InvalidScrapperRequestExceptionHandler implements CommandExceptionHandler {
+public class InvalidScrapperRequestExceptionHandler implements ExceptionHandler {
     private final TelegramSender telegramSender;
     private final MessageService messageService;
 
@@ -19,6 +20,6 @@ public class InvalidScrapperRequestExceptionHandler implements CommandExceptionH
 
     @Override
     public void handle(Exception ex, long chatId) {
-        telegramSender.sendPlain(chatId, messageService.get("command.exception.invalid-request"));
+        telegramSender.sendPlain(chatId, messageService.get("exception.invalid-request"));
     }
 }

@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
@@ -121,6 +122,7 @@ public class ScrapperClient {
         ApiErrorResponse error = readError(response);
         int status = response.getStatusCode().value();
         String message = extractMessage(error, status);
+
 
         return switch (status) {
             case 400 -> new InvalidScrapperRequestException(message);

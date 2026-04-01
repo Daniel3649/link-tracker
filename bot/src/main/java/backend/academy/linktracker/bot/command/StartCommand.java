@@ -9,21 +9,22 @@ import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import com.pengrad.telegrambot.model.Update;
 import java.util.Objects;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 @Component
 @RequiredArgsConstructor
+@Validated
 public class StartCommand implements Command {
     private final MessageService messageService;
     private final ScrapperClient scrapperClient;
     private final TelegramSender sender;
 
     @Override
-    public void execute(Update update) {
-        Objects.requireNonNull(update);
+    public void execute(@NotNull Update update) {
         long chatId = update.message().chat().id();
-
         scrapperClient.registerChat(chatId);
         sender.sendPlain(chatId, messageService.get("command.start"));
     }

@@ -16,7 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.bot.BotApplication;
-import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
+import backend.academy.linktracker.bot.repository.DialogStateRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -53,7 +53,7 @@ class TrackDialogTest {
     private TelegramUpdateService updateService;
 
     @Autowired
-    private TrackDialogStateRepository trackDialogStateRepository;
+    private DialogStateRepository trackDialogStateRepository;
 
     @MockitoBean
     private TelegramSender telegramSender;

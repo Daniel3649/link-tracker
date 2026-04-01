@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot.exception.handler;
+package backend.academy.linktracker.bot.exception.api;
 
 import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
 import jakarta.validation.ConstraintViolationException;
