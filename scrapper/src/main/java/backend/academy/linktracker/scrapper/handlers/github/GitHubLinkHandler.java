@@ -1,7 +1,5 @@
 package backend.academy.linktracker.scrapper.handlers.github;
 
-import backend.academy.linktracker.contract.link.common.ParsedGitHubRepositoryLink;
-import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
@@ -10,6 +8,7 @@ import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
+import backend.academy.linktracker.scrapper.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
@@ -40,9 +39,7 @@ public class GitHubLinkHandler implements LinkHandler {
 
     @Override
     public ParsedLink parse(URI uri) {
-        ParsedGitHubRepositoryLink parsed = gitHubRepositoryLinkParser.parse(uri);
-
-        return new ParsedLink(parsed.uri().toString(), new GitHubRepositoryKey(parsed.owner(), parsed.repo()));
+        return gitHubRepositoryLinkParser.parse(uri);
     }
 
     @Override

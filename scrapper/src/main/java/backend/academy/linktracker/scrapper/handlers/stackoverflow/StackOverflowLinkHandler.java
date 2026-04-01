@@ -1,7 +1,5 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
-import backend.academy.linktracker.contract.link.common.ParsedStackOverflowQuestionLink;
-import backend.academy.linktracker.contract.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionFetchResult;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionResponse;
@@ -12,6 +10,7 @@ import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
+import backend.academy.linktracker.scrapper.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
@@ -43,8 +42,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
     @Override
     public ParsedLink parse(URI uri) {
-        ParsedStackOverflowQuestionLink parsed = stackOverflowQuestionLinkParser.parse(uri);
-        return new ParsedLink(parsed.uri().toString(), new StackOverflowQuestionKey(parsed.questionId()));
+        return stackOverflowQuestionLinkParser.parse(uri);
     }
 
     @Override

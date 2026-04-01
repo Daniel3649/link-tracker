@@ -8,13 +8,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityDescriptionBuilder;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityExtractor;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubLinkHandler;
+import backend.academy.linktracker.scrapper.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
 import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.models.link.trackingstate.GitHubTrackingState;
