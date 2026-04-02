@@ -34,6 +34,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.wiremock.spring.ConfigureWireMock;
@@ -112,9 +113,12 @@ class TrackDialogTest {
                 .inScenario("duplicate-track")
                 .whenScenarioStateIs("already-tracked")
                 .willReturn(aResponse()
-                        .withStatus(409)
+                        .withStatus(HttpStatus.CONFLICT.value())
                         .withHeader("Content-Type", "application/json")
-                        .withBody(apiErrorJson("Link is already tracked", "Link is already tracked", "409"))));
+                        .withBody(apiErrorJson(
+                                "Link is already tracked",
+                                "Link is already tracked",
+                                String.valueOf(HttpStatus.CONFLICT.value())))));
 
         updateService.handleEvent(update(1, chatId, "/track"));
         updateService.handleEvent(update(2, chatId, link.toString()));

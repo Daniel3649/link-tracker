@@ -120,52 +120,69 @@ public class ScrapperClient {
 
     private RuntimeException mapRegisterChatException(ClientHttpResponse response) throws IOException {
         ApiErrorResponse error = readError(response);
-        int status = response.getStatusCode().value();
-        String message = extractMessage(error, status);
+        HttpStatusCode statusCode = response.getStatusCode();
+        HttpStatus status = HttpStatus.resolve(statusCode.value());
+        String message = extractMessage(error, statusCode);
 
+        if (status == HttpStatus.BAD_REQUEST) {
+            return new InvalidScrapperRequestException(message);
+        }
+        if (status == HttpStatus.CONFLICT) {
+            return new ChatAlreadyRegisteredException(message);
+        }
 
-        return switch (status) {
-            case 400 -> new InvalidScrapperRequestException(message);
-            case 409 -> new ChatAlreadyRegisteredException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
-        };
+        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
     }
 
     private RuntimeException mapAddLinkException(ClientHttpResponse response) throws IOException {
         ApiErrorResponse error = readError(response);
-        int status = response.getStatusCode().value();
-        String message = extractMessage(error, status);
+        HttpStatusCode statusCode = response.getStatusCode();
+        HttpStatus status = HttpStatus.resolve(statusCode.value());
+        String message = extractMessage(error, statusCode);
 
-        return switch (status) {
-            case 400 -> new InvalidScrapperRequestException(message);
-            case 404 -> new ChatNotRegisteredException(message);
-            case 409 -> new LinkAlreadyTrackedException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
-        };
+        if (status == HttpStatus.BAD_REQUEST) {
+            return new InvalidScrapperRequestException(message);
+        }
+        if (status == HttpStatus.NOT_FOUND) {
+            return new ChatNotRegisteredException(message);
+        }
+        if (status == HttpStatus.CONFLICT) {
+            return new LinkAlreadyTrackedException(message);
+        }
+
+        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
     }
 
     private RuntimeException mapRemoveLinkException(ClientHttpResponse response) throws IOException {
         ApiErrorResponse error = readError(response);
-        int status = response.getStatusCode().value();
-        String message = extractMessage(error, status);
+        HttpStatusCode statusCode = response.getStatusCode();
+        HttpStatus status = HttpStatus.resolve(statusCode.value());
+        String message = extractMessage(error, statusCode);
 
-        return switch (status) {
-            case 400 -> new InvalidScrapperRequestException(message);
-            case 404 -> new LinkNotTrackedException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
-        };
+        if (status == HttpStatus.BAD_REQUEST) {
+            return new InvalidScrapperRequestException(message);
+        }
+        if (status == HttpStatus.NOT_FOUND) {
+            return new LinkNotTrackedException(message);
+        }
+
+        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
     }
 
     private RuntimeException mapGetLinksException(ClientHttpResponse response) throws IOException {
         ApiErrorResponse error = readError(response);
-        int status = response.getStatusCode().value();
-        String message = extractMessage(error, status);
+        HttpStatusCode statusCode = response.getStatusCode();
+        HttpStatus status = HttpStatus.resolve(statusCode.value());
+        String message = extractMessage(error, statusCode);
 
-        return switch (status) {
-            case 400 -> new InvalidScrapperRequestException(message);
-            case 404 -> new ChatNotRegisteredException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + status);
-        };
+        if (status == HttpStatus.BAD_REQUEST) {
+            return new InvalidScrapperRequestException(message);
+        }
+        if (status == HttpStatus.NOT_FOUND) {
+            return new ChatNotRegisteredException(message);
+        }
+
+        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
     }
 
     private ApiErrorResponse readError(ClientHttpResponse response) throws IOException {
@@ -174,7 +191,7 @@ public class ScrapperClient {
         }
     }
 
-    private String extractMessage(ApiErrorResponse error, int status) {
+    private String extractMessage(ApiErrorResponse error, HttpStatusCode statusCode) {
         if (error != null
                 && error.exceptionMessage() != null
                 && !error.exceptionMessage().isBlank()) {
@@ -183,6 +200,6 @@ public class ScrapperClient {
         if (error != null && error.description() != null && !error.description().isBlank()) {
             return error.description();
         }
-        return "Scrapper request failed. HTTP status: " + status;
+        return "Scrapper request failed. HTTP status: " + statusCode.value();
     }
 }

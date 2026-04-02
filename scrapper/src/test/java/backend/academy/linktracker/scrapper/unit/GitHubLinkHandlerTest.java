@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class GitHubLinkHandlerTest {
@@ -62,7 +62,7 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(401), null);
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.UNAUTHORIZED, null);
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
                 .thenReturn(fetchResult);
@@ -81,7 +81,7 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(200), null);
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.OK, null);
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
                 .thenReturn(fetchResult);
@@ -103,7 +103,8 @@ class GitHubLinkHandlerTest {
         state.setEtag("\"old-etag\"");
         state.setLastActivityId(1L);
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(500), null);
+        GitHubRepositoryFetchResult fetchResult =
+                new GitHubRepositoryFetchResult(HttpStatus.INTERNAL_SERVER_ERROR, null);
 
         when(trackingStateRepository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))

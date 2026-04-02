@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 
 class BotStartCommandE2ETest extends AbstractBotScrapperE2ETest {
 
@@ -30,7 +31,7 @@ class BotStartCommandE2ETest extends AbstractBotScrapperE2ETest {
                 .untilAsserted(() -> {
                     HttpResponse<String> response = getLinks(chatId);
 
-                    assertThat(response.statusCode()).isEqualTo(200);
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
 
                     JsonNode json = OBJECT_MAPPER.readTree(response.body());
                     assertThat(json.get("size").asInt()).isZero();

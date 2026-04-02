@@ -6,6 +6,8 @@ import backend.academy.linktracker.scrapper.exception.client.BotClientException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -23,22 +25,22 @@ public class BotUpdatesClient {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(update)
                 .exchange((request, response) -> {
-                    int status = response.getStatusCode().value();
+                    HttpStatusCode status = response.getStatusCode();
 
-                    if (status == 200) {
+                    if (HttpStatus.OK.equals(status)) {
                         return null;
                     }
 
-                    if (status == 400) {
+                    if (HttpStatus.BAD_REQUEST.equals(status)) {
                         ApiErrorResponse error = readError(response);
                         throw new BotClientException("Bot rejected update: " + error.exceptionMessage());
                     }
 
-                    if (status >= 500) {
-                        throw new BotClientException("Bot service error. HTTP status: " + status);
+                    if (status.is5xxServerError()) {
+                        throw new BotClientException("Bot service error. HTTP status: " + status.value());
                     }
 
-                    throw new BotClientException("Unexpected bot response. HTTP status: " + status);
+                    throw new BotClientException("Unexpected bot response. HTTP status: " + status.value());
                 });
     }
 

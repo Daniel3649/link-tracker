@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.wiremock.spring.EnableWireMock;
@@ -395,7 +396,9 @@ class ScrapperFullChainIntegrationTest {
 
     private void stubGitHubEndpoints() {
         wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World"))
-                .willReturn(aResponse().withStatus(200).withHeader("ETag", "\"test-etag-123\"")));
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.OK.value())
+                        .withHeader("ETag", "\"test-etag-123\"")));
 
         wireMock.stubFor(
                 get(urlPathEqualTo("/repos/octocat/Hello-World/activity")).willReturn(okJson("""

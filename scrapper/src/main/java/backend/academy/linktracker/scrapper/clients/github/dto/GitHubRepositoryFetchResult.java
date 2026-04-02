@@ -1,13 +1,14 @@
 package backend.academy.linktracker.scrapper.clients.github.dto;
 
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 
 public record GitHubRepositoryFetchResult(HttpStatusCode statusCode, String etag) {
     public boolean isOk() {
-        return statusCode.value() == 200;
+        return HttpStatus.OK.equals(statusCode);
     }
 
     public boolean isNotModified() {
-        return statusCode.value() == 304;
+        return HttpStatus.NOT_MODIFIED.equals(statusCode);
     }
 }

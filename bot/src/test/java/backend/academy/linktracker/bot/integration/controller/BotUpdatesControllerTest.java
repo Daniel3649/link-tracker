@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.wiremock.spring.EnableWireMock;
@@ -83,7 +84,7 @@ class BotUpdatesControllerTest {
                       "tgChatIds": "wrong"
                     }
                     """))
-                .andExpect(result -> assertNotEquals(200, result.getResponse().getStatus()));
+                .andExpect(result -> assertNotEquals(HttpStatus.OK.value(), result.getResponse().getStatus()));
 
         wireMock.verify(0, postRequestedFor(urlPathMatching(".*/sendMessage")));
     }
