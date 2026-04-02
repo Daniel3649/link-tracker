@@ -20,11 +20,6 @@ public class TelegramChatService {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             boolean created = telegramChatRepository.saveIfAbsent(new TelegramChat(chatId));
             if (!created) {
-                log.atWarn()
-                        .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTER_FAILED)
-                        .addKeyValue("reason", "chat_already_exists")
-                        .log("Telegram chat registration rejected");
-
                 throw new TelegramChatAlreadyExistsException("Telegram chat already exists. Id: " + chatId);
             }
 
@@ -37,11 +32,6 @@ public class TelegramChatService {
     public void unregisterChat(long chatId) {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             if (telegramChatRepository.removeByChatId(chatId).isEmpty()) {
-                log.atWarn()
-                        .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_FAILED)
-                        .addKeyValue("reason", "chat_not_found")
-                        .log("Telegram chat unregistration rejected");
-
                 throw new TelegramChatNotFoundException("Telegram chat not found. Id: " + chatId);
             }
 

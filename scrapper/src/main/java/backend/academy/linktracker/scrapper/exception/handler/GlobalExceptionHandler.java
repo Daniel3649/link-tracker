@@ -7,9 +7,12 @@ import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingEx
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
+import backend.academy.linktracker.scrapper.logging.LogEvent;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -22,6 +25,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({
@@ -40,18 +44,44 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
-        TelegramChatNotFoundException.class,
         SubscriptionNotFoundException.class
     })
     public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException ex) {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
     }
 
+    @ExceptionHandler(TelegramChatNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleTelegramChatNotFound(
+            TelegramChatNotFoundException ex, HttpServletRequest request) {
+        if (isTelegramChatEndpoint(request)) {
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_FAILED)
+                    .addKeyValue("reason", "chat_not_found")
+                    .addKeyValue("exception", ex.getClass().getSimpleName())
+                    .addKeyValue("path", request.getRequestURI())
+                    .log("Telegram chat unregistration rejected");
+        }
+        return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
+    }
+
     @ExceptionHandler({
-        TelegramChatAlreadyExistsException.class,
         SubscriptionAlreadyExistsException.class
     })
     public ResponseEntity<ApiErrorResponse> handleConflict(RuntimeException ex) {
+        return build(HttpStatus.CONFLICT, "Конфликт состояния ресурса", ex);
+    }
+
+    @ExceptionHandler(TelegramChatAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleTelegramChatAlreadyExists(
+            TelegramChatAlreadyExistsException ex, HttpServletRequest request) {
+        if (isTelegramChatEndpoint(request)) {
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTER_FAILED)
+                    .addKeyValue("reason", "chat_already_exists")
+                    .addKeyValue("exception", ex.getClass().getSimpleName())
+                    .addKeyValue("path", request.getRequestURI())
+                    .log("Telegram chat registration rejected");
+        }
         return build(HttpStatus.CONFLICT, "Конфликт состояния ресурса", ex);
     }
 
@@ -83,5 +113,9 @@ public class GlobalExceptionHandler {
                         .toList());
 
         return ResponseEntity.status(status).body(response);
+    }
+
+    private boolean isTelegramChatEndpoint(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/tg-chat/");
     }
 }

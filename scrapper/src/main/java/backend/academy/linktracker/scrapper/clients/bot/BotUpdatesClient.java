@@ -27,7 +27,7 @@ public class BotUpdatesClient {
                 .exchange((request, response) -> {
                     HttpStatusCode status = response.getStatusCode();
 
-                    if (HttpStatus.OK.equals(status)) {
+                    if (status.is2xxSuccessful()) {
                         return null;
                     }
 

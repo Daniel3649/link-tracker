@@ -25,7 +25,9 @@ public class LinkUpdateNotificationService {
             String message = updateMessageBuilder.buildMessage(update);
 
             for (Long chatId : update.tgChatIds()) {
-                telegramSender.sendPlain(chatId, message);
+                try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
+                    telegramSender.sendPlain(chatId, message);
+                }
             }
 
             log.atInfo()

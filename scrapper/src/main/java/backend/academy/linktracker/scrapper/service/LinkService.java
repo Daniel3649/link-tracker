@@ -11,7 +11,6 @@ import java.net.URI;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,33 +32,29 @@ public class LinkService {
 
         ResourceKey resourceKey = parsedLink.resourceKey();
 
-        try (var urlMdc = MDC.putCloseable("url", parsedLink.url());
-            var resourceKeyMdc = MDC.putCloseable("resourceKey", resourceKey.toString())) {
-            Optional<TrackedLink> existingTrackedLink = trackedLinkRepository.findByResourceKey(resourceKey);
-            if (existingTrackedLink.isPresent()) {
-                TrackedLink trackedLink = existingTrackedLink.orElseThrow();
-
-                log.atDebug()
-                        .addKeyValue("event", LogEvent.TRACKED_LINK_RESOLVED)
-                        .addKeyValue("trackedLinkId", trackedLink.getId())
-                        .log("Tracked link resolved");
-
-                return trackedLink;
-            }
-
-            TrackedLink trackedLinkCandidate = new TrackedLink(null, parsedLink.url(), parsedLink.resourceKey());
-            initializeTrackingState(handler, trackedLinkCandidate);
-
-            TrackedLink trackedLink = trackedLinkRepository.saveIfAbsent(trackedLinkCandidate);
-
+        Optional<TrackedLink> existingTrackedLink = trackedLinkRepository.findByResourceKey(resourceKey);
+        if (existingTrackedLink.isPresent()) {
+            TrackedLink trackedLink = existingTrackedLink.orElseThrow();
             log.atDebug()
                     .addKeyValue("event", LogEvent.TRACKED_LINK_RESOLVED)
                     .addKeyValue("trackedLinkId", trackedLink.getId())
-                    .addKeyValue("handler", handler.getClass().getSimpleName())
                     .log("Tracked link resolved");
 
             return trackedLink;
         }
+
+        TrackedLink trackedLinkCandidate = new TrackedLink(null, parsedLink.url(), parsedLink.resourceKey());
+        initializeTrackingState(handler, trackedLinkCandidate);
+
+        TrackedLink trackedLink = trackedLinkRepository.saveIfAbsent(trackedLinkCandidate);
+
+        log.atDebug()
+                .addKeyValue("event", LogEvent.TRACKED_LINK_RESOLVED)
+                .addKeyValue("trackedLinkId", trackedLink.getId())
+                .addKeyValue("handler", handler.getClass().getSimpleName())
+                .log("Tracked link resolved");
+
+        return trackedLink;
     }
 
     public void deleteTrackedLinkWithState(TrackedLink trackedLink) {
@@ -68,17 +63,15 @@ public class LinkService {
 
         ResourceKey resourceKey = trackedLink.getResourceKey();
 
-        try (var urlMdc = MDC.putCloseable("url", uri.toString());
-            var resourceKeyMdc = MDC.putCloseable("resourceKey", resourceKey.toString());
-            var trackedLinkIdMdc = MDC.putCloseable("trackedLinkId", trackedLink.getId().toString())) {
-            handler.deleteTrackingState(trackedLink);
-            trackedLinkRepository.deleteByResourceKey(resourceKey);
+        handler.deleteTrackingState(trackedLink);
+        trackedLinkRepository.deleteByResourceKey(resourceKey);
 
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TRACKED_LINK_DELETED)
-                    .addKeyValue("handler", handler.getClass().getSimpleName())
-                    .log("Tracked link deleted");
-        }
+        log.atInfo()
+                .addKeyValue("event", LogEvent.TRACKED_LINK_DELETED)
+                .addKeyValue("trackedLinkId", trackedLink.getId())
+                .addKeyValue("resourceKey", resourceKey)
+                .addKeyValue("handler", handler.getClass().getSimpleName())
+                .log("Tracked link deleted");
     }
 
     private void initializeTrackingState(LinkHandler handler, TrackedLink trackedLink) {

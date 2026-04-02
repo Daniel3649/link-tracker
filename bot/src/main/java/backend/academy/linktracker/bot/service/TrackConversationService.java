@@ -29,8 +29,7 @@ public class TrackConversationService {
     private final ScrapperClient scrapperClient;
 
     public void acceptLink(long chatId, @NotNull URI link) {
-        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId));
-            var urlMdc = MDC.putCloseable("url", link.toString())) {
+        try (var urlMdc = MDC.putCloseable("url", link.toString())) {
             TrackSession session = trackSessionRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> new TrackSessionNotFoundException("No track session found for chat id " + chatId));
@@ -49,32 +48,30 @@ public class TrackConversationService {
     }
 
     public void acceptTags(long chatId, Set<String> tags) {
-        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
-            TrackSession session = trackSessionRepository
-                    .findByChatId(chatId)
-                    .orElseThrow(() -> new TrackSessionNotFoundException("No track session found for chat id " + chatId));
+        TrackSession session = trackSessionRepository
+                .findByChatId(chatId)
+                .orElseThrow(() -> new TrackSessionNotFoundException("No track session found for chat id " + chatId));
 
-            if (session.state() != DialogueState.WAITING_TAGS) {
-                throw new IllegalTrackStateException("Chat " + chatId + " is not waiting for tags");
-            }
+        if (session.state() != DialogueState.WAITING_TAGS) {
+            throw new IllegalTrackStateException("Chat " + chatId + " is not waiting for tags");
+        }
 
-            URI link = session.link();
-            if (link == null) {
-                trackSessionRepository.deleteByChatId(chatId);
-                throw new IllegalTrackStateException("Pending link is missing for chat id " + chatId);
-            }
+        URI link = session.link();
+        if (link == null) {
+            trackSessionRepository.deleteByChatId(chatId);
+            throw new IllegalTrackStateException("Pending link is missing for chat id " + chatId);
+        }
 
-            try (var urlMdc = MDC.putCloseable("url", link.toString())) {
-                AddLinkRequest request = new AddLinkRequest(link, tags, List.of());
-                scrapperClient.addLink(chatId, request);
-                trackSessionRepository.deleteByChatId(chatId);
+        try (var urlMdc = MDC.putCloseable("url", link.toString())) {
+            AddLinkRequest request = new AddLinkRequest(link, tags, List.of());
+            scrapperClient.addLink(chatId, request);
+            trackSessionRepository.deleteByChatId(chatId);
 
-                log.atInfo()
-                        .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
-                        .addKeyValue("stage", "tags_accepted")
-                        .addKeyValue("tagsCount", tags.size())
-                        .log("Track dialog message processed");
-            }
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
+                    .addKeyValue("stage", "tags_accepted")
+                    .addKeyValue("tagsCount", tags.size())
+                    .log("Track dialog message processed");
         }
     }
 
@@ -85,31 +82,27 @@ public class TrackConversationService {
     }
 
     public void start(long chatId) {
-        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
-            trackSessionRepository.save(chatId, TrackSession.waitingLink());
+        trackSessionRepository.save(chatId, TrackSession.waitingLink());
 
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED)
-                    .log("Track dialog started");
-        }
+        log.atInfo()
+                .addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED)
+                .log("Track dialog started");
     }
 
     public CancelTrackResult cancel(long chatId) {
-        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
-            Optional<TrackSession> session = trackSessionRepository.findByChatId(chatId);
+        Optional<TrackSession> session = trackSessionRepository.findByChatId(chatId);
 
-            if (session.isEmpty()) {
-                return CancelTrackResult.NO_ACTIVE_SESSION;
-            }
-
-            trackSessionRepository.deleteByChatId(chatId);
-
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED)
-                    .addKeyValue("state", session.get().state())
-                    .log("Track dialog cancelled");
-
-            return CancelTrackResult.CANCELLED;
+        if (session.isEmpty()) {
+            return CancelTrackResult.NO_ACTIVE_SESSION;
         }
+
+        trackSessionRepository.deleteByChatId(chatId);
+
+        log.atInfo()
+                .addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED)
+                .addKeyValue("state", session.get().state())
+                .log("Track dialog cancelled");
+
+        return CancelTrackResult.CANCELLED;
     }
 }

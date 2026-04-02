@@ -6,7 +6,6 @@ import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,28 +15,26 @@ public class TelegramSender {
     private final TelegramBot bot;
 
     public void sendPlain(long chatId, String message) {
-        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
-            if (message == null || message.isBlank()) {
-                log.atWarn()
-                        .addKeyValue("event", LogEvent.TELEGRAM_SEND_SKIPPED)
-                        .addKeyValue("reason", "message_null_or_blank")
-                        .log("Send skipped");
-                return;
-            }
+        if (message == null || message.isBlank()) {
+            log.atWarn()
+                    .addKeyValue("event", LogEvent.TELEGRAM_SEND_SKIPPED)
+                    .addKeyValue("reason", "message_null_or_blank")
+                    .log("Send skipped");
+            return;
+        }
 
-            var sendMessage = new SendMessage(chatId, message);
-            BaseResponse response = bot.execute(sendMessage);
+        var sendMessage = new SendMessage(chatId, message);
+        BaseResponse response = bot.execute(sendMessage);
 
-            if (!response.isOk()) {
-                int errorCode = response.errorCode();
-                String description = response.description();
+        if (!response.isOk()) {
+            int errorCode = response.errorCode();
+            String description = response.description();
 
-                log.atWarn()
-                        .addKeyValue("event", LogEvent.ERROR_SENDING_RESPONSE)
-                        .addKeyValue("errorCode", errorCode)
-                        .addKeyValue("description", description)
-                        .log("Error sending response");
-            }
+            log.atWarn()
+                    .addKeyValue("event", LogEvent.ERROR_SENDING_RESPONSE)
+                    .addKeyValue("errorCode", errorCode)
+                    .addKeyValue("description", description)
+                    .log("Error sending response");
         }
     }
 }
