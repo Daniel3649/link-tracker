@@ -6,7 +6,6 @@ import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryF
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
@@ -61,11 +60,7 @@ public class GitHubLinkHandler implements LinkHandler {
         state.setLastActivityId(
                 recentActivities.isEmpty() ? null : recentActivities.getFirst().id());
 
-        boolean saved = trackingStateRepository.saveIfAbsent(state);
-        if (!saved) {
-            throw new TrackingStateAlreadyExistsException(
-                    "Tracking state already exists for link: " + trackedLink.getUrl());
-        }
+        trackingStateRepository.saveIfAbsent(state);
     }
 
     @Override

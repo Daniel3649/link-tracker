@@ -26,6 +26,16 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
+    public Optional<Subscription> saveIfAbsent(Subscription subscription) {
+        MapKey key = new MapKey(subscription.getTrackedLink(), subscription.getTelegramChat());
+        Subscription newSubscription = new Subscription(
+                idSequence.incrementAndGet(), subscription.getTrackedLink(), subscription.getTelegramChat());
+
+        Subscription existing = subscriptions.putIfAbsent(key, newSubscription);
+        return existing == null ? Optional.of(newSubscription) : Optional.empty();
+    }
+
+    @Override
     public Subscription save(Subscription subscription) {
         MapKey key = new MapKey(subscription.getTrackedLink(), subscription.getTelegramChat());
 
@@ -34,16 +44,7 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
             return subscription;
         }
 
-        Subscription newSubscription = new Subscription(
-                idSequence.incrementAndGet(), subscription.getTrackedLink(), subscription.getTelegramChat());
-
-        Subscription existing = subscriptions.putIfAbsent(key, newSubscription);
-        return existing != null ? existing : newSubscription;
-    }
-
-    @Override
-    public boolean existsByTrackedLink(TrackedLink trackedLink) {
-        return subscriptions.keySet().stream().anyMatch(key -> key.trackedLink().equals(trackedLink));
+        return saveIfAbsent(subscription).orElseGet(() -> subscriptions.get(key));
     }
 
     @Override
@@ -53,9 +54,14 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
-    public void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
+    public Optional<Subscription> removeByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
-        subscriptions.remove(mapKey);
+        return Optional.ofNullable(subscriptions.remove(mapKey));
+    }
+
+    @Override
+    public void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
+        removeByTrackedLinkAndTelegramChat(trackedLink, telegramChat);
     }
 
     @Override

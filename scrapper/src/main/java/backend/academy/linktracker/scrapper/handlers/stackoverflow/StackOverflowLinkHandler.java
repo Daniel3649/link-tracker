@@ -8,7 +8,6 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.models.link.TrackedLink;
@@ -64,11 +63,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
                 timelineSupport.calculateNextCheckAt(questionResult.backoffSeconds(), timelineResult.backoffSeconds()));
         state.setLastQuestionActivityDateEpochSec(questionResult.question().lastActivityDateEpochSec());
 
-        boolean saved = repository.saveIfAbsent(state);
-        if (!saved) {
-            throw new TrackingStateAlreadyExistsException(
-                    "Tracking state already exists for link: " + trackedLink.getUrl());
-        }
+        repository.saveIfAbsent(state);
     }
 
     @Override

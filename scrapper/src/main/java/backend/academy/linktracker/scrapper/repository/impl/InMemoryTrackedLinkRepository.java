@@ -21,17 +21,27 @@ public class InMemoryTrackedLinkRepository implements TrackedLinkRepository {
     }
 
     @Override
+    public TrackedLink saveIfAbsent(TrackedLink trackedLink) {
+        TrackedLink candidate = trackedLink.getId() != null
+                ? trackedLink
+                : new TrackedLink(idSequence.incrementAndGet(), trackedLink.getUrl(), trackedLink.getResourceKey());
+
+        TrackedLink existing = trackedLinks.putIfAbsent(candidate.getResourceKey(), candidate);
+        if (existing != null) {
+            return existing;
+        }
+
+        return candidate;
+    }
+
+    @Override
     public TrackedLink save(TrackedLink trackedLink) {
         if (trackedLink.getId() != null) {
             trackedLinks.put(trackedLink.getResourceKey(), trackedLink);
             return trackedLink;
         }
 
-        TrackedLink newTrackedLink =
-                new TrackedLink(idSequence.incrementAndGet(), trackedLink.getUrl(), trackedLink.getResourceKey());
-
-        TrackedLink existing = trackedLinks.putIfAbsent(newTrackedLink.getResourceKey(), newTrackedLink);
-        return existing != null ? existing : newTrackedLink;
+        return saveIfAbsent(trackedLink);
     }
 
     @Override

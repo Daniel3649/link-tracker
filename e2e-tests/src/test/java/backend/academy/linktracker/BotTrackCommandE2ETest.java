@@ -24,12 +24,12 @@ class BotTrackCommandE2ETest extends AbstractBotScrapperE2ETest {
         stubTelegramSetMyCommandsOk();
         stubGitHubEndpoints();
 
-        await().atMost(Duration.ofSeconds(20))
+        await().atMost(ASSERTION_TIMEOUT)
                 .pollInterval(Duration.ofMillis(300))
                 .untilAsserted(() ->
                         MOCK.verify(moreThanOrExactly(1), postRequestedFor(urlPathMatching("/bot[^/]+/getUpdates"))));
 
-        await().atMost(Duration.ofSeconds(20))
+        await().atMost(ASSERTION_TIMEOUT)
                 .pollInterval(Duration.ofMillis(300))
                 .untilAsserted(() -> {
                     HttpResponse<String> response = getLinks(chatId);

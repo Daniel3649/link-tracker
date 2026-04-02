@@ -4,7 +4,6 @@ import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.exception.link.TrackingStateAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
@@ -50,8 +49,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
         TelegramChatAlreadyExistsException.class,
-        SubscriptionAlreadyExistsException.class,
-        TrackingStateAlreadyExistsException.class
+        SubscriptionAlreadyExistsException.class
     })
     public ResponseEntity<ApiErrorResponse> handleConflict(RuntimeException ex) {
         return build(HttpStatus.CONFLICT, "Конфликт состояния ресурса", ex);

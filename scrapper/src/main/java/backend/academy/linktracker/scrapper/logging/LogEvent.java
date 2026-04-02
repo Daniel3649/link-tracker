@@ -1,8 +1,7 @@
 package backend.academy.linktracker.scrapper.logging;
 
 public enum LogEvent {
-    TRACKED_LINK_REUSED,
-    TRACKED_LINK_CREATED,
+    TRACKED_LINK_RESOLVED,
     TRACKED_LINK_DELETED,
     TRACKED_LINK_CREATION_FAILED,
     SUBSCRIPTION_ADD_FAILED,

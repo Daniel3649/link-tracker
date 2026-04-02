@@ -25,6 +25,7 @@ import org.testcontainers.junit.jupiter.Container;
 
 @org.testcontainers.junit.jupiter.Testcontainers
 abstract class AbstractBotScrapperE2ETest {
+    protected static final Duration ASSERTION_TIMEOUT = Duration.ofSeconds(30);
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     protected static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();

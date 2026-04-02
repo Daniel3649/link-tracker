@@ -17,19 +17,19 @@ public class InMemoryTelegramChatRepository implements TelegramChatRepository {
     }
 
     @Override
+    public boolean saveIfAbsent(TelegramChat telegramChat) {
+        return chats.putIfAbsent(telegramChat.getId(), telegramChat) == null;
+    }
+
+    @Override
     public TelegramChat save(TelegramChat telegramChat) {
         chats.put(telegramChat.getId(), telegramChat);
         return telegramChat;
     }
 
     @Override
-    public boolean existsByChatId(Long chatId) {
-        return chats.containsKey(chatId);
-    }
-
-    @Override
-    public void deleteByChatId(Long chatId) {
-        chats.remove(chatId);
+    public Optional<TelegramChat> removeByChatId(Long chatId) {
+        return Optional.ofNullable(chats.remove(chatId));
     }
 
     @Override

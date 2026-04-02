@@ -17,8 +17,6 @@ import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -33,11 +31,6 @@ public class SubscriptionService {
     private final SubscriptionTagRepository subscriptionTagRepository;
     private final LinkService linkService;
     private final SubscriptionMapper subscriptionMapper;
-
-    private final ConcurrentMap<MapKey, Object> linkOperationLocks = new ConcurrentHashMap<>();
-
-    private record MapKey(TrackedLink trackedLink, TelegramChat telegramChat) {}
-    private record SubscriptionRemovalResult(Subscription subscription, boolean trackedLinkDeleted) {}
 
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId));
@@ -90,16 +83,15 @@ public class SubscriptionService {
                         return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
                     });
 
-            SubscriptionRemovalResult removalResult = deleteSubscription(trackedLink, telegramChat);
+            Subscription removedSubscription = deleteSubscription(trackedLink, telegramChat);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVED)
                     .addKeyValue("trackedLinkId", trackedLink.getId())
-                    .addKeyValue("subscriptionId", removalResult.subscription().getId())
-                    .addKeyValue("trackedLinkDeleted", removalResult.trackedLinkDeleted())
+                    .addKeyValue("subscriptionId", removedSubscription.getId())
                     .log("Subscription removed");
 
-            return subscriptionMapper.toLinkResponse(removalResult.subscription());
+            return subscriptionMapper.toLinkResponse(removedSubscription);
         }
     }
 
@@ -129,59 +121,40 @@ public class SubscriptionService {
     }
 
     private Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
-        MapKey mapKey = new MapKey(trackedLink, telegramChat);
-        Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
-
         try (var trackedLinkIdMdc = MDC.putCloseable("trackedLinkId", String.valueOf(trackedLink.getId()))) {
-            synchronized (lock) {
-                if (subscriptionRepository.existsByTrackedLinkAndTelegramChat(trackedLink, telegramChat)) {
-                    log.atWarn()
-                            .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
-                            .addKeyValue("reason", "subscription_already_exists")
-                            .log("Subscription add rejected");
+            Subscription savedSubscription = subscriptionRepository
+                    .saveIfAbsent(new Subscription(null, trackedLink, telegramChat))
+                    .orElseThrow(() -> {
+                        log.atWarn()
+                                .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
+                                .addKeyValue("reason", "subscription_already_exists")
+                                .log("Subscription add rejected");
 
-                    throw new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
-                }
+                        return new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
+                    });
 
-                Subscription savedSubscription =
-                        subscriptionRepository.save(new Subscription(null, trackedLink, telegramChat));
+            subscriptionTagRepository.addTags(savedSubscription, tags);
 
-                subscriptionTagRepository.addTags(savedSubscription, tags);
-
-                return savedSubscription;
-            }
+            return savedSubscription;
         }
     }
 
-    private SubscriptionRemovalResult deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
-        MapKey mapKey = new MapKey(trackedLink, telegramChat);
-        Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
-
+    private Subscription deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
         try (var trackedLinkIdMdc = MDC.putCloseable("trackedLinkId", String.valueOf(trackedLink.getId()))) {
-            synchronized (lock) {
-                Subscription subscription = subscriptionRepository
-                        .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
-                        .orElseThrow(() -> {
-                            log.atWarn()
-                                    .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_REJECTED)
-                                    .addKeyValue("reason", "subscription_not_found")
-                                    .log("Subscription remove rejected");
+            Subscription removedSubscription = subscriptionRepository
+                    .removeByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
+                    .orElseThrow(() -> {
+                        log.atWarn()
+                                .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_REJECTED)
+                                .addKeyValue("reason", "subscription_not_found")
+                                .log("Subscription remove rejected");
 
-                            return new SubscriptionNotFoundException(
-                                    "Subscription not found for link: " + trackedLink.getUrl());
-                        });
+                        return new SubscriptionNotFoundException(
+                                "Subscription not found for link: " + trackedLink.getUrl());
+                    });
 
-                subscriptionTagRepository.deleteAllBySubscription(subscription);
-                subscriptionRepository.deleteByTrackedLinkAndTelegramChat(trackedLink, telegramChat);
-
-                boolean trackedLinkDeleted = false;
-                if (!subscriptionRepository.existsByTrackedLink(trackedLink)) {
-                    linkService.deleteTrackedLinkWithState(trackedLink);
-                    trackedLinkDeleted = true;
-                }
-
-                return new SubscriptionRemovalResult(subscription, trackedLinkDeleted);
-            }
+            subscriptionTagRepository.deleteAllBySubscription(removedSubscription);
+            return removedSubscription;
         }
     }
 }

@@ -7,13 +7,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SubscriptionRepository {
+    Optional<Subscription> saveIfAbsent(Subscription subscription);
+
     boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
     Subscription save(Subscription subscription);
 
-    boolean existsByTrackedLink(TrackedLink trackedLink);
-
     Optional<Subscription> findByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
+
+    Optional<Subscription> removeByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
     void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
