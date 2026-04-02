@@ -6,6 +6,7 @@ import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,24 +24,29 @@ public class TelegramUpdateService {
             return;
         }
 
-        Message message = update.message();
-        if (message == null) {
-            log.atWarn()
-                    .addKeyValue("event", LogEvent.UPDATE_IGNORED)
-                    .addKeyValue("reason", "message_null")
-                    .log("Update ignored");
-            return;
-        }
+        try (var updateIdMdc = MDC.putCloseable("updateId", String.valueOf(update.updateId()))) {
+            Message message = update.message();
+            if (message == null) {
+                log.atWarn()
+                        .addKeyValue("event", LogEvent.UPDATE_IGNORED)
+                        .addKeyValue("reason", "message_null")
+                        .log("Update ignored");
+                return;
+            }
 
-        String messageText = message.text();
-        if (messageText == null) {
-            log.atWarn()
-                    .addKeyValue("event", LogEvent.UPDATE_IGNORED)
-                    .addKeyValue("reason", "text_null")
-                    .log("Update ignored");
-            return;
-        }
+            try (var chatIdMdc =
+                    MDC.putCloseable("chatId", String.valueOf(message.chat().id()))) {
+                String messageText = message.text();
+                if (messageText == null) {
+                    log.atWarn()
+                            .addKeyValue("event", LogEvent.UPDATE_IGNORED)
+                            .addKeyValue("reason", "text_null")
+                            .log("Update ignored");
+                    return;
+                }
 
-        telegramUpdateDispatcher.dispatch(update);
+                telegramUpdateDispatcher.dispatch(update);
+            }
+        }
     }
 }

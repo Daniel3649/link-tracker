@@ -39,6 +39,7 @@ abstract class AbstractBotScrapperE2ETest {
 
     static {
         MOCK.start();
+        stubTelegramGetUpdatesEmptyByDefault();
         Testcontainers.exposeHostPorts(MOCK.port());
     }
 
@@ -75,6 +76,7 @@ abstract class AbstractBotScrapperE2ETest {
                                     .copy("app.jar", "/app.jar")
                                     .entryPoint("java", "-jar", "/app.jar")
                                     .build()))
+            .dependsOn(SCRAPPER)
             .withNetwork(NETWORK)
             .withNetworkAliases("bot")
             .withAccessToHost(true)
@@ -96,6 +98,15 @@ abstract class AbstractBotScrapperE2ETest {
 
     protected void resetMocks() {
         MOCK.resetAll();
+        stubTelegramGetUpdatesEmptyByDefault();
+    }
+
+    private static void stubTelegramGetUpdatesEmptyByDefault() {
+        MOCK.stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
+                .atPriority(10)
+                .willReturn(okJson("""
+                { "ok": true, "result": [] }
+                """)));
     }
 
     protected void stubTelegramGetUpdatesOnceThenEmpty(String text, long chatId) {

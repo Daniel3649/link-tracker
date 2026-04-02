@@ -37,16 +37,11 @@ public class SubscriptionService {
     private final ConcurrentMap<MapKey, Object> linkOperationLocks = new ConcurrentHashMap<>();
 
     private record MapKey(TrackedLink trackedLink, TelegramChat telegramChat) {}
+    private record SubscriptionRemovalResult(Subscription subscription, boolean trackedLinkDeleted) {}
 
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
-            MDC.put("url", request.link().toString());
-            MDC.put(
-                    "tagsCount",
-                    request.tags() == null ? "0" : String.valueOf(request.tags().size()));
-
-            log.atInfo().addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_STARTED).log("Subscription add started");
+        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId));
+            var urlMdc = MDC.putCloseable("url", request.link().toString())) {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
@@ -65,23 +60,16 @@ public class SubscriptionService {
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_ADDED)
                     .addKeyValue("trackedLinkId", trackedLink.getId())
                     .addKeyValue("subscriptionId", savedSubscription.getId())
+                    .addKeyValue("tagsCount", request.tags() == null ? 0 : request.tags().size())
                     .log("Subscription added");
 
             return subscriptionMapper.toLinkResponse(savedSubscription);
-        } finally {
-            MDC.clear();
         }
     }
 
     public LinkResponse removeSubscription(long chatId, RemoveLinkRequest request) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
-            MDC.put("url", request.link().toString());
-
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_STARTED)
-                    .log("Subscription remove started");
-
+        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId));
+            var urlMdc = MDC.putCloseable("url", request.link().toString())) {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
@@ -102,28 +90,21 @@ public class SubscriptionService {
                         return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
                     });
 
-            Subscription removedSubscription = deleteSubscription(trackedLink, telegramChat);
+            SubscriptionRemovalResult removalResult = deleteSubscription(trackedLink, telegramChat);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVED)
                     .addKeyValue("trackedLinkId", trackedLink.getId())
-                    .addKeyValue("subscriptionId", removedSubscription.getId())
+                    .addKeyValue("subscriptionId", removalResult.subscription().getId())
+                    .addKeyValue("trackedLinkDeleted", removalResult.trackedLinkDeleted())
                     .log("Subscription removed");
 
-            return subscriptionMapper.toLinkResponse(removedSubscription);
-        } finally {
-            MDC.clear();
+            return subscriptionMapper.toLinkResponse(removalResult.subscription());
         }
     }
 
     public ListLinksResponse getAllSubscriptions(long chatId) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
-
-            log.atDebug()
-                    .addKeyValue("event", LogEvent.SUBSCRIPTION_LIST_REQUESTED)
-                    .log("Subscription list requested");
-
+        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
@@ -144,8 +125,6 @@ public class SubscriptionService {
                     .log("Subscription list loaded");
 
             return new ListLinksResponse(links, links.size());
-        } finally {
-            MDC.clear();
         }
     }
 
@@ -153,11 +132,7 @@ public class SubscriptionService {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
-        try {
-            MDC.put("chatId", String.valueOf(telegramChat.getId()));
-            MDC.put("url", trackedLink.getUrl());
-            MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
-
+        try (var trackedLinkIdMdc = MDC.putCloseable("trackedLinkId", String.valueOf(trackedLink.getId()))) {
             synchronized (lock) {
                 if (subscriptionRepository.existsByTrackedLinkAndTelegramChat(trackedLink, telegramChat)) {
                     log.atWarn()
@@ -173,28 +148,16 @@ public class SubscriptionService {
 
                 subscriptionTagRepository.addTags(savedSubscription, tags);
 
-                log.atInfo()
-                        .addKeyValue("event", LogEvent.SUBSCRIPTION_PERSISTED)
-                        .addKeyValue("subscriptionId", savedSubscription.getId())
-                        .addKeyValue("tagsCount", tags == null ? 0 : tags.size())
-                        .log("Subscription persisted");
-
                 return savedSubscription;
             }
-        } finally {
-            MDC.clear();
         }
     }
 
-    private Subscription deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
+    private SubscriptionRemovalResult deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         Object lock = linkOperationLocks.computeIfAbsent(mapKey, ignored -> new Object());
 
-        try {
-            MDC.put("chatId", String.valueOf(telegramChat.getId()));
-            MDC.put("url", trackedLink.getUrl());
-            MDC.put("trackedLinkId", String.valueOf(trackedLink.getId()));
-
+        try (var trackedLinkIdMdc = MDC.putCloseable("trackedLinkId", String.valueOf(trackedLink.getId()))) {
             synchronized (lock) {
                 Subscription subscription = subscriptionRepository
                         .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
@@ -211,25 +174,14 @@ public class SubscriptionService {
                 subscriptionTagRepository.deleteAllBySubscription(subscription);
                 subscriptionRepository.deleteByTrackedLinkAndTelegramChat(trackedLink, telegramChat);
 
-                boolean trackedLinkHasSubscribers = subscriptionRepository.existsByTrackedLink(trackedLink);
-                if (!trackedLinkHasSubscribers) {
+                boolean trackedLinkDeleted = false;
+                if (!subscriptionRepository.existsByTrackedLink(trackedLink)) {
                     linkService.deleteTrackedLinkWithState(trackedLink);
-
-                    log.atInfo()
-                            .addKeyValue("event", LogEvent.ORPHAN_TRACKED_LINK_DELETED)
-                            .log("Orphan tracked link deleted");
+                    trackedLinkDeleted = true;
                 }
 
-                log.atInfo()
-                        .addKeyValue("event", LogEvent.SUBSCRIPTION_DELETED)
-                        .addKeyValue("subscriptionId", subscription.getId())
-                        .addKeyValue("trackedLinkHasSubscribers", trackedLinkHasSubscribers)
-                        .log("Subscription deleted");
-
-                return subscription;
+                return new SubscriptionRemovalResult(subscription, trackedLinkDeleted);
             }
-        } finally {
-            MDC.clear();
         }
     }
 }

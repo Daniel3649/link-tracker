@@ -34,7 +34,6 @@ public class TelegramCommandsConfig {
                 log.atError()
                         .addKeyValue("event", LogEvent.TELEGRAM_SET_MY_COMMANDS_FAILED)
                         .addKeyValue("command_count", commands.length)
-                        .addKeyValue("commands", commands)
                         .addKeyValue("telegram_error_code", resp.errorCode())
                         .addKeyValue("telegram_description", resp.description())
                         .log("Failed to set Telegram bot menu commands");
@@ -44,7 +43,6 @@ public class TelegramCommandsConfig {
             log.atInfo()
                     .addKeyValue("event", LogEvent.TELEGRAM_SET_MY_COMMANDS_OK)
                     .addKeyValue("command_count", commands.length)
-                    .addKeyValue("commands", commands)
                     .log("Telegram bot menu commands set");
         };
     }

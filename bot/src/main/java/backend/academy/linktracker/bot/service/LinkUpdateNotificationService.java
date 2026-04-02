@@ -7,6 +7,7 @@ import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,17 +20,18 @@ public class LinkUpdateNotificationService {
     public void sendNotification(LinkUpdate update) {
         Objects.requireNonNull(update, "update cannot be null");
 
-        String message = updateMessageBuilder.buildMessage(update);
+        try (var linkIdMdc = MDC.putCloseable("linkId", String.valueOf(update.id()));
+            var urlMdc = MDC.putCloseable("url", update.url().toString())) {
+            String message = updateMessageBuilder.buildMessage(update);
 
-        for (Long chatId : update.tgChatIds()) {
-            telegramSender.sendPlain(chatId, message);
+            for (Long chatId : update.tgChatIds()) {
+                telegramSender.sendPlain(chatId, message);
+            }
+
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.LINK_UPDATE_NOTIFICATION)
+                    .addKeyValue("recipientsCount", update.tgChatIds().size())
+                    .log("Link update processed");
         }
-
-        log.atInfo()
-                .addKeyValue("event", LogEvent.LINK_UPDATE_NOTIFICATION)
-                .addKeyValue("linkId", update.id())
-                .addKeyValue("url", update.url())
-                .addKeyValue("recipientsCount", update.tgChatIds().size())
-                .log("Link update processed");
     }
 }

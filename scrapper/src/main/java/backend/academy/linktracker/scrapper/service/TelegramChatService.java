@@ -23,13 +23,7 @@ public class TelegramChatService {
     public void registerChat(long chatId) {
         Object lock = chatRegistrationLocks.computeIfAbsent(chatId, ignored -> new Object());
 
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
-
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTER_STARTED)
-                    .log("Telegram chat registration started");
-
+        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             synchronized (lock) {
                 if (telegramChatRepository.existsByChatId(chatId)) {
                     log.atWarn()
@@ -46,21 +40,13 @@ public class TelegramChatService {
                         .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTERED)
                         .log("Telegram chat registered");
             }
-        } finally {
-            MDC.clear();
         }
     }
 
     public void unregisterChat(long chatId) {
         Object lock = chatRegistrationLocks.computeIfAbsent(chatId, ignored -> new Object());
 
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
-
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_STARTED)
-                    .log("Telegram chat unregistration started");
-
+        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             synchronized (lock) {
                 if (!telegramChatRepository.existsByChatId(chatId)) {
                     log.atWarn()
@@ -77,8 +63,6 @@ public class TelegramChatService {
                         .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTERED)
                         .log("Telegram chat unregistered");
             }
-        } finally {
-            MDC.clear();
         }
     }
 }

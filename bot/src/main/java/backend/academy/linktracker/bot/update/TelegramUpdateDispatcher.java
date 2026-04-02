@@ -22,19 +22,19 @@ public class TelegramUpdateDispatcher {
 
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId));
             var updateIdMdc = MDC.putCloseable("updateId", String.valueOf(updateId))) {
-
-            if (!message.startsWith("/")) {
-                messageDispatcher.dispatch(message, chatId);
-            } else {
-                String command = extractCommandName(message);
-                commandDispatcher.dispatch(command, update);
+            try {
+                if (!message.startsWith("/")) {
+                    messageDispatcher.dispatch(message, chatId);
+                } else {
+                    String command = extractCommandName(message);
+                    commandDispatcher.dispatch(command, update);
+                }
+            } catch (Exception ex) {
+                exceptionHandlerDispatcher.handle(ex, chatId);
             }
-
-        } catch (Exception ex) {
-            exceptionHandlerDispatcher.handle(ex, chatId);
         }
-
     }
+
     private String extractCommandName(String raw) {
         String commandToken = raw.split("\\s+", 2)[0];
         String withoutSlash = commandToken.substring(1);
