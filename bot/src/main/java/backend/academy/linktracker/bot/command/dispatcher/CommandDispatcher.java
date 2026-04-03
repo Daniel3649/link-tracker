@@ -5,8 +5,8 @@ import backend.academy.linktracker.bot.exception.command.UnknownCommandException
 import backend.academy.linktracker.bot.logging.LogEvent;
 import backend.academy.linktracker.bot.service.TrackConversationService;
 import backend.academy.linktracker.bot.tracksession.DialogueState;
-import java.util.List;
 import com.pengrad.telegrambot.model.Update;
+import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,14 +27,7 @@ public class CommandDispatcher {
         Command matchedCommand = commands.stream()
                 .filter(command -> command.name().equals(commandName))
                 .findFirst()
-                .orElseThrow(() -> {
-                    log.atWarn()
-                            .addKeyValue("event", LogEvent.UNKNOWN_COMMAND)
-                            .addKeyValue("command", commandName)
-                            .log("Unknown command received");
-
-                    return new UnknownCommandException("Unknown command: " + commandName);
-                });
+                .orElseThrow(() -> new UnknownCommandException("Unknown command: " + commandName));
 
         boolean interruptedDialogue = dialogueState != DialogueState.IDLE && !matchedCommand.name().equals("cancel");
         if (interruptedDialogue) {

@@ -31,7 +31,7 @@ public class LinkUpdateScheduler {
     public void checkUpdates() {
         List<TrackedLink> trackedLinks = trackedLinkRepository.findAll();
 
-        log.atInfo()
+        log.atDebug()
                 .addKeyValue("event", LogEvent.LINK_UPDATE_CHECK_STARTED)
                 .addKeyValue("trackedLinksCount", trackedLinks.size())
                 .log("Link update check started");
@@ -64,7 +64,7 @@ public class LinkUpdateScheduler {
                 .map(subscription -> subscription.getTelegramChat().getId())
                 .toList();
         if (tgChatIds.isEmpty()) {
-            log.atWarn()
+            log.atDebug()
                     .addKeyValue("event", LogEvent.LINK_UPDATE_SKIPPED)
                     .addKeyValue("reason", "no_recipients")
                     .log("Link update skipped");

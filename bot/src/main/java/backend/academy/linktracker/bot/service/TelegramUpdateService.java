@@ -27,7 +27,7 @@ public class TelegramUpdateService {
         try (var updateIdMdc = MDC.putCloseable("updateId", String.valueOf(update.updateId()))) {
             Message message = update.message();
             if (message == null) {
-                log.atWarn()
+                log.atDebug()
                         .addKeyValue("event", LogEvent.UPDATE_IGNORED)
                         .addKeyValue("reason", "message_null")
                         .log("Update ignored");
@@ -38,7 +38,7 @@ public class TelegramUpdateService {
                     MDC.putCloseable("chatId", String.valueOf(message.chat().id()))) {
                 String messageText = message.text();
                 if (messageText == null) {
-                    log.atWarn()
+                    log.atDebug()
                             .addKeyValue("event", LogEvent.UPDATE_IGNORED)
                             .addKeyValue("reason", "text_null")
                             .log("Update ignored");

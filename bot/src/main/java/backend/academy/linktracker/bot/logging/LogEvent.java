@@ -3,7 +3,6 @@ package backend.academy.linktracker.bot.logging;
 public enum LogEvent {
     UPDATE_IGNORED,
     COMMAND_DISPATCH,
-    UNKNOWN_COMMAND,
     ERROR_SENDING_RESPONSE,
     TELEGRAM_SEND_SKIPPED,
     TELEGRAM_SET_MY_COMMANDS_FAILED,

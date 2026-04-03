@@ -38,7 +38,7 @@ public class SubscriptionService {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
-                        log.atWarn()
+                        log.atInfo()
                                 .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_FAILED)
                                 .addKeyValue("reason", "telegram_chat_not_found")
                                 .log("Subscription add failed");
@@ -66,7 +66,7 @@ public class SubscriptionService {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
-                        log.atWarn()
+                        log.atInfo()
                                 .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_CHAT_NOT_FOUND)
                                 .log("Cannot remove subscription because chat was not found");
 
@@ -76,7 +76,7 @@ public class SubscriptionService {
             TrackedLink trackedLink = linkService
                     .findTrackedLink(request.link())
                     .orElseThrow(() -> {
-                        log.atWarn()
+                        log.atInfo()
                                 .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_TRACKED_LINK_NOT_FOUND)
                                 .log("Cannot remove subscription because tracked link was not found");
 
@@ -100,7 +100,7 @@ public class SubscriptionService {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
-                        log.atWarn()
+                        log.atInfo()
                                 .addKeyValue("event", LogEvent.SUBSCRIPTION_LIST_FAILED)
                                 .addKeyValue("reason", "telegram_chat_not_found")
                                 .log("Subscription list failed");
@@ -125,7 +125,7 @@ public class SubscriptionService {
             Subscription savedSubscription = subscriptionRepository
                     .saveIfAbsent(new Subscription(null, trackedLink, telegramChat))
                     .orElseThrow(() -> {
-                        log.atWarn()
+                        log.atInfo()
                                 .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_REJECTED)
                                 .addKeyValue("reason", "subscription_already_exists")
                                 .log("Subscription add rejected");
@@ -144,7 +144,7 @@ public class SubscriptionService {
             Subscription removedSubscription = subscriptionRepository
                     .removeByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
                     .orElseThrow(() -> {
-                        log.atWarn()
+                        log.atInfo()
                                 .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_REJECTED)
                                 .addKeyValue("reason", "subscription_not_found")
                                 .log("Subscription remove rejected");

@@ -21,6 +21,8 @@ import org.springframework.web.client.RestClient;
 @RequiredArgsConstructor
 @Slf4j
 public class BotUpdatesClient {
+    private static final int BODY_PREVIEW_LIMIT = 200;
+
     private final RestClient botRestClient;
     private final ObjectMapper objectMapper;
 
@@ -38,11 +40,11 @@ public class BotUpdatesClient {
                     }
 
                     String responseBody = readBodySafely(response);
-                    logErrorResponse(request, response, responseBody);
+                    ApiErrorResponse error = readError(responseBody);
+                    logErrorResponse(request, response, responseBody, error);
 
                     if (HttpStatus.BAD_REQUEST.equals(status)) {
-                        ApiErrorResponse error = readError(response);
-                        throw new BotClientException("Bot rejected update: " + error.exceptionMessage());
+                        throw new BotClientException("Bot rejected update: " + extractMessage(error, status, responseBody));
                     }
 
                     if (status.is5xxServerError()) {
@@ -53,16 +55,29 @@ public class BotUpdatesClient {
                 });
     }
 
-    private void logErrorResponse(HttpRequest request, ClientHttpResponse response, String body) throws IOException {
-        log.atError()
-            .addKeyValue("event", LogEvent.BOT_EXCEPTION)
-            .addKeyValue("method", request.getMethod())
-            .addKeyValue("url", request.getURI().toString())
-            .addKeyValue("statusCode", response.getStatusCode().value())
-            .addKeyValue("statusText", response.getStatusText())
-            .addKeyValue("headers", response.getHeaders())
-            .addKeyValue("body", body)
-            .log("Bot returned error response");
+    private void logErrorResponse(
+            HttpRequest request, ClientHttpResponse response, String body, ApiErrorResponse error) throws IOException {
+        var logEntry = log.atError()
+                .addKeyValue("event", LogEvent.BOT_RESPONSE_FAILED)
+                .addKeyValue("method", request.getMethod())
+                .addKeyValue("url", request.getURI().toString())
+                .addKeyValue("statusCode", response.getStatusCode().value())
+                .addKeyValue("statusText", response.getStatusText());
+
+        if (error != null) {
+            if (hasText(error.exceptionName())) {
+                logEntry.addKeyValue("remoteException", error.exceptionName());
+            }
+            if (hasText(error.exceptionMessage())) {
+                logEntry.addKeyValue("remoteMessage", abbreviate(error.exceptionMessage()));
+            } else if (hasText(error.description())) {
+                logEntry.addKeyValue("remoteDescription", abbreviate(error.description()));
+            }
+        } else if (hasText(body)) {
+            logEntry.addKeyValue("bodyPreview", abbreviate(body));
+        }
+
+        logEntry.log("Bot returned error response");
     }
 
     private String readBodySafely(ClientHttpResponse response) {
@@ -73,11 +88,45 @@ public class BotUpdatesClient {
         }
     }
 
-    private ApiErrorResponse readError(RestClient.RequestHeadersSpec.ConvertibleClientHttpResponse response) {
-        try {
-            return objectMapper.readValue(response.getBody(), ApiErrorResponse.class);
-        } catch (IOException e) {
-            throw new BotClientException("Failed to read bot error response", e);
+    private ApiErrorResponse readError(String responseBody) {
+        if (!hasText(responseBody)) {
+            return null;
         }
+
+        try {
+            return objectMapper.readValue(responseBody, ApiErrorResponse.class);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private String extractMessage(ApiErrorResponse error, HttpStatusCode status, String responseBody) {
+        if (error != null) {
+            if (hasText(error.exceptionMessage())) {
+                return error.exceptionMessage();
+            }
+            if (hasText(error.description())) {
+                return error.description();
+            }
+        }
+
+        if (hasText(responseBody)) {
+            return abbreviate(responseBody);
+        }
+
+        return "Bot request failed. HTTP status: " + status.value();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String abbreviate(String value) {
+        String normalized = value.replaceAll("\\s+", " ").trim();
+        if (normalized.length() <= BODY_PREVIEW_LIMIT) {
+            return normalized;
+        }
+
+        return normalized.substring(0, BODY_PREVIEW_LIMIT) + "...";
     }
 }

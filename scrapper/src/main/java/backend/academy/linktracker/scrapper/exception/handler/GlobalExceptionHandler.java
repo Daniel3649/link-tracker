@@ -86,7 +86,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RepositoryPollingException.class)
-    public ResponseEntity<ApiErrorResponse> handleRepositoryPollingException(RepositoryPollingException ex) {
+    public ResponseEntity<ApiErrorResponse> handleRepositoryPollingException(
+            RepositoryPollingException ex, HttpServletRequest request) {
+        log.atWarn()
+                .setCause(ex)
+                .addKeyValue("event", LogEvent.REPOSITORY_POLLING_FAILED)
+                .addKeyValue("method", request.getMethod())
+                .addKeyValue("path", request.getRequestURI())
+                .addKeyValue("status", HttpStatus.BAD_GATEWAY.value())
+                .addKeyValue("exception", ex.getClass().getSimpleName())
+                .log("Repository polling failed while handling request");
+
         ApiErrorResponse response = new ApiErrorResponse(
                 "Repository polling failed",
                 "Failed to poll external repository",
@@ -98,7 +108,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleUnexpected(Exception ex) {
+    public ResponseEntity<ApiErrorResponse> handleUnexpected(Exception ex, HttpServletRequest request) {
+        log.atError()
+                .setCause(ex)
+                .addKeyValue("event", LogEvent.REQUEST_PROCESSING_FAILED)
+                .addKeyValue("method", request.getMethod())
+                .addKeyValue("path", request.getRequestURI())
+                .addKeyValue("status", HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .addKeyValue("exception", ex.getClass().getSimpleName())
+                .log("Unexpected error while handling request");
+
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервиса", ex);
     }
 

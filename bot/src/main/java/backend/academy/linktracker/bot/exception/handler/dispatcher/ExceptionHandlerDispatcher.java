@@ -51,7 +51,7 @@ public class ExceptionHandlerDispatcher {
 
     private void logHandledException(Exception ex, ExceptionHandler handler) {
         if (isExpectedUserError(ex)) {
-            log.atInfo()
+            log.atDebug()
                     .addKeyValue("event", LogEvent.HANDLED_EXCEPTION)
                     .addKeyValue("exception", ex.getClass().getSimpleName())
                     .addKeyValue("handler", handler.getClass().getSimpleName())
