@@ -18,11 +18,11 @@ public class TelegramUpdateDispatcher {
         String message = update.message().text().strip();
         long chatId = update.message().chat().id();
         try {
-            if (!message.startsWith("/")) {
-                messageDispatcher.dispatch(message, chatId);
-            } else {
+            if (message.startsWith("/")) {
                 String command = extractCommandName(message);
                 commandDispatcher.dispatch(command, update);
+            } else {
+                messageDispatcher.dispatch(message, chatId);
             }
         } catch (Exception ex) {
             exceptionHandlerDispatcher.handle(ex, chatId);

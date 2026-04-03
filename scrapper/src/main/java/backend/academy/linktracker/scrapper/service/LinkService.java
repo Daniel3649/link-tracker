@@ -57,22 +57,6 @@ public class LinkService {
         return trackedLink;
     }
 
-    public void deleteTrackedLinkWithState(TrackedLink trackedLink) {
-        URI uri = URI.create(trackedLink.getUrl());
-        LinkHandler handler = handlerRegistry.getHandler(uri);
-
-        ResourceKey resourceKey = trackedLink.getResourceKey();
-
-        handler.deleteTrackingState(trackedLink);
-        trackedLinkRepository.deleteByResourceKey(resourceKey);
-
-        log.atInfo()
-                .addKeyValue("event", LogEvent.TRACKED_LINK_DELETED)
-                .addKeyValue("trackedLinkId", trackedLink.getId())
-                .addKeyValue("resourceKey", resourceKey)
-                .addKeyValue("handler", handler.getClass().getSimpleName())
-                .log("Tracked link deleted");
-    }
 
     private void initializeTrackingState(LinkHandler handler, TrackedLink trackedLink) {
         try {

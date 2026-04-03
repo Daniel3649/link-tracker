@@ -55,3 +55,4 @@ build/
 /scrapper/.env
 /bot/.env.properties
 /.env
+/scrapper/.env.properties

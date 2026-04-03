@@ -6,7 +6,11 @@ spring:
     name: bot
 
   config:
-    import: optional:file:bot/.env[.properties]
+    import:
+      - optional:file:.env.properties
+      - optional:file:bot/.env.properties
+      - optional:file:.env[.properties]
+      - optional:file:bot/.env[.properties]
 
 
 app:

@@ -124,14 +124,12 @@ public class ScrapperClient {
         HttpStatus status = HttpStatus.resolve(statusCode.value());
         String message = extractMessage(error, statusCode);
 
-        if (status == HttpStatus.BAD_REQUEST) {
-            return new InvalidScrapperRequestException(message);
-        }
-        if (status == HttpStatus.CONFLICT) {
-            return new ChatAlreadyRegisteredException(message);
-        }
-
-        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+        return switch (status) {
+            case BAD_REQUEST -> new InvalidScrapperRequestException(message);
+            case CONFLICT -> new ChatAlreadyRegisteredException(message);
+            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " +
+                statusCode.value());
+        };
     }
 
     private RuntimeException mapAddLinkException(ClientHttpResponse response) throws IOException {
@@ -140,17 +138,13 @@ public class ScrapperClient {
         HttpStatus status = HttpStatus.resolve(statusCode.value());
         String message = extractMessage(error, statusCode);
 
-        if (status == HttpStatus.BAD_REQUEST) {
-            return new InvalidScrapperRequestException(message);
-        }
-        if (status == HttpStatus.NOT_FOUND) {
-            return new ChatNotRegisteredException(message);
-        }
-        if (status == HttpStatus.CONFLICT) {
-            return new LinkAlreadyTrackedException(message);
-        }
-
-        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+        return switch (status) {
+            case BAD_REQUEST -> new InvalidScrapperRequestException(message);
+            case NOT_FOUND -> new ChatNotRegisteredException(message);
+            case CONFLICT ->  new LinkAlreadyTrackedException(message);
+            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: "
+                + statusCode.value());
+        };
     }
 
     private RuntimeException mapRemoveLinkException(ClientHttpResponse response) throws IOException {
@@ -159,14 +153,12 @@ public class ScrapperClient {
         HttpStatus status = HttpStatus.resolve(statusCode.value());
         String message = extractMessage(error, statusCode);
 
-        if (status == HttpStatus.BAD_REQUEST) {
-            return new InvalidScrapperRequestException(message);
-        }
-        if (status == HttpStatus.NOT_FOUND) {
-            return new LinkNotTrackedException(message);
-        }
-
-        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+        return switch (status) {
+            case BAD_REQUEST -> new InvalidScrapperRequestException(message);
+            case NOT_FOUND -> new LinkNotTrackedException(message);
+            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: "
+                + statusCode.value());
+        };
     }
 
     private RuntimeException mapGetLinksException(ClientHttpResponse response) throws IOException {
@@ -175,14 +167,12 @@ public class ScrapperClient {
         HttpStatus status = HttpStatus.resolve(statusCode.value());
         String message = extractMessage(error, statusCode);
 
-        if (status == HttpStatus.BAD_REQUEST) {
-            return new InvalidScrapperRequestException(message);
-        }
-        if (status == HttpStatus.NOT_FOUND) {
-            return new ChatNotRegisteredException(message);
-        }
-
-        return new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+        return switch (status) {
+            case BAD_REQUEST -> new InvalidScrapperRequestException(message);
+            case NOT_FOUND -> new ChatNotRegisteredException(message);
+            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " +
+                statusCode.value());
+        };
     }
 
     private ApiErrorResponse readError(ClientHttpResponse response) throws IOException {

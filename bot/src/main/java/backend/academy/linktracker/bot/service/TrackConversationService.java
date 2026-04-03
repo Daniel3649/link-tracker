@@ -43,7 +43,7 @@ public class TrackConversationService {
             log.atInfo()
                     .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
                     .addKeyValue("stage", "link_accepted")
-                    .log("Track dialog message processed");
+                    .log("Track dialog message processed for link");
         }
     }
 
@@ -71,7 +71,7 @@ public class TrackConversationService {
                     .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
                     .addKeyValue("stage", "tags_accepted")
                     .addKeyValue("tagsCount", tags.size())
-                    .log("Track dialog message processed");
+                    .log("Track dialog message processed for tags");
         }
     }
 
