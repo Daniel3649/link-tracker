@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class LinkAlreadyTrackedExceptionHandler implements ExceptionHandler {
-    private final MessageService  messageService;
+    private final MessageService messageService;
     private final TelegramSender telegramSender;
 
     @Override

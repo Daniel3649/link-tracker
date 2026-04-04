@@ -133,7 +133,8 @@ public class HttpScrapperClient implements ScrapperClient {
         return switch (status) {
             case BAD_REQUEST -> new InvalidScrapperRequestException(message);
             case CONFLICT -> new ChatAlreadyRegisteredException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+            default ->
+                new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
         };
     }
 
@@ -147,7 +148,8 @@ public class HttpScrapperClient implements ScrapperClient {
             case BAD_REQUEST -> new InvalidScrapperRequestException(message);
             case NOT_FOUND -> new ChatNotRegisteredException(message);
             case CONFLICT -> new LinkAlreadyTrackedException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+            default ->
+                new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
         };
     }
 
@@ -160,7 +162,8 @@ public class HttpScrapperClient implements ScrapperClient {
         return switch (status) {
             case BAD_REQUEST -> new InvalidScrapperRequestException(message);
             case NOT_FOUND -> new LinkNotTrackedException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+            default ->
+                new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
         };
     }
 
@@ -173,7 +176,8 @@ public class HttpScrapperClient implements ScrapperClient {
         return switch (status) {
             case BAD_REQUEST -> new InvalidScrapperRequestException(message);
             case NOT_FOUND -> new ChatNotRegisteredException(message);
-            default -> new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
+            default ->
+                new ScrapperUnavailableException("Unexpected scrapper response. HTTP status: " + statusCode.value());
         };
     }
 

@@ -37,9 +37,7 @@ class GitHubClientTest {
 
         wireMock.stubFor(get(urlEqualTo("/repos/octocat/Hello-World"))
                 .withHeader("If-None-Match", equalTo("\"old-etag\""))
-                .willReturn(aResponse()
-                        .withStatus(HttpStatus.OK.value())
-                        .withHeader("ETag", "\"new-etag\"")));
+                .willReturn(aResponse().withStatus(HttpStatus.OK.value()).withHeader("ETag", "\"new-etag\"")));
 
         var result = gitHubClient.fetchRepository(key, "\"old-etag\"");
 

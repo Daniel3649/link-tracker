@@ -65,24 +65,29 @@ public class GrpcScrapperClient implements ScrapperClient {
 
     private RuntimeException mapRegisterChatException(StatusRuntimeException exception) {
         return switch (exception.getStatus().getCode()) {
-            case INVALID_ARGUMENT -> new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
-            case ALREADY_EXISTS -> new ChatAlreadyRegisteredException(descriptionOrDefault(exception, "Chat already exists"));
+            case INVALID_ARGUMENT ->
+                new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
+            case ALREADY_EXISTS ->
+                new ChatAlreadyRegisteredException(descriptionOrDefault(exception, "Chat already exists"));
             default -> unavailable(exception);
         };
     }
 
     private RuntimeException mapAddLinkException(StatusRuntimeException exception) {
         return switch (exception.getStatus().getCode()) {
-            case INVALID_ARGUMENT -> new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
+            case INVALID_ARGUMENT ->
+                new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
             case NOT_FOUND -> new ChatNotRegisteredException(descriptionOrDefault(exception, "Chat not found"));
-            case ALREADY_EXISTS -> new LinkAlreadyTrackedException(descriptionOrDefault(exception, "Link already tracked"));
+            case ALREADY_EXISTS ->
+                new LinkAlreadyTrackedException(descriptionOrDefault(exception, "Link already tracked"));
             default -> unavailable(exception);
         };
     }
 
     private RuntimeException mapRemoveLinkException(StatusRuntimeException exception) {
         return switch (exception.getStatus().getCode()) {
-            case INVALID_ARGUMENT -> new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
+            case INVALID_ARGUMENT ->
+                new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
             case NOT_FOUND -> new LinkNotTrackedException(descriptionOrDefault(exception, "Subscription not found"));
             default -> unavailable(exception);
         };
@@ -90,7 +95,8 @@ public class GrpcScrapperClient implements ScrapperClient {
 
     private RuntimeException mapGetLinksException(StatusRuntimeException exception) {
         return switch (exception.getStatus().getCode()) {
-            case INVALID_ARGUMENT -> new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
+            case INVALID_ARGUMENT ->
+                new InvalidScrapperRequestException(descriptionOrDefault(exception, "Invalid request"));
             case NOT_FOUND -> new ChatNotRegisteredException(descriptionOrDefault(exception, "Chat not found"));
             default -> unavailable(exception);
         };

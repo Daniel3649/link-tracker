@@ -49,6 +49,13 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <configuration>
+                    <onlyAnalyze>backend.academy.linktracker.contract.dto.error.*,backend.academy.linktracker.contract.dto.request.*,backend.academy.linktracker.contract.dto.response.*,backend.academy.linktracker.contract.grpc.GrpcTransportMapper</onlyAnalyze>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

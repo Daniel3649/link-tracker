@@ -11,11 +11,11 @@ import backend.academy.linktracker.bot.exception.handler.ExceptionHandler;
 import backend.academy.linktracker.bot.exception.link.LinkAlreadyTrackedException;
 import backend.academy.linktracker.bot.exception.link.LinkNotTrackedException;
 import backend.academy.linktracker.bot.exception.link.LinkParsingException;
+import backend.academy.linktracker.bot.exception.tracksession.IllegalTrackStateException;
+import backend.academy.linktracker.bot.exception.tracksession.TrackSessionNotFoundException;
 import backend.academy.linktracker.bot.logging.LogEvent;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.exception.tracksession.IllegalTrackStateException;
-import backend.academy.linktracker.bot.exception.tracksession.TrackSessionNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +68,7 @@ public class ExceptionHandlerDispatcher {
                     .addKeyValue("category", "operational");
 
             if (ex.getCause() != null) {
-                warningLog.setCause(ex);
+                warningLog = warningLog.setCause(ex);
             }
 
             warningLog.log("Bot exception handled");

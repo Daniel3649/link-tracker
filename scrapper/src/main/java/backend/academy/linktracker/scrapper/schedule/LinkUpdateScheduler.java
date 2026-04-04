@@ -28,6 +28,7 @@ public class LinkUpdateScheduler {
     private final LinkUpdateSender linkUpdateSender;
 
     @Scheduled(fixedDelayString = "${app.scheduler.link-check-delay-ms}")
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void checkUpdates() {
         List<TrackedLink> trackedLinks = trackedLinkRepository.findAll();
 
@@ -38,7 +39,7 @@ public class LinkUpdateScheduler {
 
         for (TrackedLink trackedLink : trackedLinks) {
             try (var linkIdMdc = MDC.putCloseable("linkId", String.valueOf(trackedLink.getId()));
-                var urlMdc = MDC.putCloseable("url", trackedLink.getUrl())) {
+                    var urlMdc = MDC.putCloseable("url", trackedLink.getUrl())) {
                 URI uri = URI.create(trackedLink.getUrl());
                 LinkHandler handler = linkHandlerRegistry.getHandler(uri);
 

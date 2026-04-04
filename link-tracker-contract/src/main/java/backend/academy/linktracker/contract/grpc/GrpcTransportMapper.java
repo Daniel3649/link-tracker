@@ -14,7 +14,9 @@ public final class GrpcTransportMapper {
     private GrpcTransportMapper() {}
 
     public static ChatCommand toChatCommand(long chatId) {
-        return ChatCommand.newBuilder().setChatId(requirePositive("chatId", chatId)).build();
+        return ChatCommand.newBuilder()
+                .setChatId(requirePositive("chatId", chatId))
+                .build();
     }
 
     public static long toChatId(ChatCommand command) {
@@ -70,7 +72,9 @@ public final class GrpcTransportMapper {
     }
 
     public static ListLinksCommand toListLinksCommand(long chatId) {
-        return ListLinksCommand.newBuilder().setChatId(requirePositive("chatId", chatId)).build();
+        return ListLinksCommand.newBuilder()
+                .setChatId(requirePositive("chatId", chatId))
+                .build();
     }
 
     public static LinkResponseMessage toLinkResponseMessage(LinkResponse response) {
@@ -97,7 +101,9 @@ public final class GrpcTransportMapper {
 
         List<LinkResponseMessage> links = response.links() == null
                 ? List.of()
-                : response.links().stream().map(GrpcTransportMapper::toLinkResponseMessage).toList();
+                : response.links().stream()
+                        .map(GrpcTransportMapper::toLinkResponseMessage)
+                        .toList();
 
         return ListLinksResponseMessage.newBuilder()
                 .addAllLinks(links)
@@ -106,8 +112,9 @@ public final class GrpcTransportMapper {
     }
 
     public static ListLinksResponse toListLinksResponse(ListLinksResponseMessage message) {
-        List<LinkResponse> links =
-                message.getLinksList().stream().map(GrpcTransportMapper::toLinkResponse).toList();
+        List<LinkResponse> links = message.getLinksList().stream()
+                .map(GrpcTransportMapper::toLinkResponse)
+                .toList();
         return new ListLinksResponse(links, message.getSize());
     }
 
@@ -152,14 +159,6 @@ public final class GrpcTransportMapper {
         return value;
     }
 
-    private static int requirePositive(String fieldName, Integer value) {
-        requireNonNull(fieldName, value);
-        if (value <= 0) {
-            throw new IllegalArgumentException(fieldName + " must be positive");
-        }
-        return value;
-    }
-
     private static String requireNonBlank(String fieldName, String value) {
         requireNonNull(fieldName, value);
         if (value.isBlank()) {
@@ -180,9 +179,7 @@ public final class GrpcTransportMapper {
             return List.of();
         }
 
-        return values.stream()
-                .map(value -> requireNonBlank(fieldName, value))
-                .toList();
+        return values.stream().map(value -> requireNonBlank(fieldName, value)).toList();
     }
 
     private static Set<String> validateTextSet(String fieldName, Set<String> values) {
@@ -190,9 +187,7 @@ public final class GrpcTransportMapper {
             return Set.of();
         }
 
-        return values.stream()
-                .map(value -> requireNonBlank(fieldName, value))
-                .collect(Collectors.toUnmodifiableSet());
+        return values.stream().map(value -> requireNonBlank(fieldName, value)).collect(Collectors.toUnmodifiableSet());
     }
 
     private static List<Long> validatePositiveList(String fieldName, List<Long> values) {
@@ -200,8 +195,6 @@ public final class GrpcTransportMapper {
             return List.of();
         }
 
-        return values.stream()
-                .map(value -> requirePositive(fieldName, value))
-                .toList();
+        return values.stream().map(value -> requirePositive(fieldName, value)).toList();
     }
 }

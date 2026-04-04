@@ -84,7 +84,8 @@ class BotUpdatesControllerTest {
                       "tgChatIds": "wrong"
                     }
                     """))
-                .andExpect(result -> assertNotEquals(HttpStatus.OK.value(), result.getResponse().getStatus()));
+                .andExpect(result -> assertNotEquals(
+                        HttpStatus.OK.value(), result.getResponse().getStatus()));
 
         wireMock.verify(0, postRequestedFor(urlPathMatching(".*/sendMessage")));
     }

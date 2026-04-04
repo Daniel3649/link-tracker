@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class TelegramUpdateService {
     private final TelegramUpdateDispatcher telegramUpdateDispatcher;
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void handleEvent(Update update) {
         if (update == null) {
             log.atWarn()

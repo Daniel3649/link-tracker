@@ -32,9 +32,10 @@ public class SubscriptionService {
     private final LinkService linkService;
     private final SubscriptionMapper subscriptionMapper;
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId));
-            var urlMdc = MDC.putCloseable("url", request.link().toString())) {
+                var urlMdc = MDC.putCloseable("url", request.link().toString())) {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
@@ -53,16 +54,19 @@ public class SubscriptionService {
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_ADDED)
                     .addKeyValue("trackedLinkId", trackedLink.getId())
                     .addKeyValue("subscriptionId", savedSubscription.getId())
-                    .addKeyValue("tagsCount", request.tags() == null ? 0 : request.tags().size())
+                    .addKeyValue(
+                            "tagsCount",
+                            request.tags() == null ? 0 : request.tags().size())
                     .log("Subscription added");
 
             return subscriptionMapper.toLinkResponse(savedSubscription);
         }
     }
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public LinkResponse removeSubscription(long chatId, RemoveLinkRequest request) {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId));
-            var urlMdc = MDC.putCloseable("url", request.link().toString())) {
+                var urlMdc = MDC.putCloseable("url", request.link().toString())) {
             TelegramChat telegramChat = telegramChatRepository
                     .findByChatId(chatId)
                     .orElseThrow(() -> {
@@ -95,6 +99,7 @@ public class SubscriptionService {
         }
     }
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public ListLinksResponse getAllSubscriptions(long chatId) {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             TelegramChat telegramChat = telegramChatRepository
@@ -120,6 +125,7 @@ public class SubscriptionService {
         }
     }
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     private Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
         try (var trackedLinkIdMdc = MDC.putCloseable("trackedLinkId", String.valueOf(trackedLink.getId()))) {
             Subscription savedSubscription = subscriptionRepository
@@ -130,7 +136,8 @@ public class SubscriptionService {
                                 .addKeyValue("reason", "subscription_already_exists")
                                 .log("Subscription add rejected");
 
-                        return new SubscriptionAlreadyExistsException("Link is already tracked: " + trackedLink.getUrl());
+                        return new SubscriptionAlreadyExistsException(
+                                "Link is already tracked: " + trackedLink.getUrl());
                     });
 
             subscriptionTagRepository.addTags(savedSubscription, tags);
@@ -139,6 +146,7 @@ public class SubscriptionService {
         }
     }
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     private Subscription deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
         try (var trackedLinkIdMdc = MDC.putCloseable("trackedLinkId", String.valueOf(trackedLink.getId()))) {
             Subscription removedSubscription = subscriptionRepository

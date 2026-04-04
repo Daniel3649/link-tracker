@@ -48,12 +48,12 @@ class GrpcScrapperClientTest {
 
     @Test
     void shouldReturnLinkResponseFromGrpcService() {
-        GrpcScrapperClient client =
-                new GrpcScrapperClient(ScrapperApiGrpc.newBlockingStub(channel));
+        GrpcScrapperClient client = new GrpcScrapperClient(ScrapperApiGrpc.newBlockingStub(channel));
 
         LinkResponse response = client.addLink(
                 101L,
-                new AddLinkRequest(URI.create("https://github.com/octocat/Hello-World"), Set.of("work"), List.of("new")));
+                new AddLinkRequest(
+                        URI.create("https://github.com/octocat/Hello-World"), Set.of("work"), List.of("new")));
 
         assertThat(response.id()).isEqualTo(42L);
         assertThat(response.url()).isEqualTo(URI.create("https://github.com/octocat/Hello-World"));
@@ -63,8 +63,7 @@ class GrpcScrapperClientTest {
 
     @Test
     void shouldMapAlreadyExistsStatusForRegisterChat() {
-        GrpcScrapperClient client =
-                new GrpcScrapperClient(ScrapperApiGrpc.newBlockingStub(channel));
+        GrpcScrapperClient client = new GrpcScrapperClient(ScrapperApiGrpc.newBlockingStub(channel));
 
         assertThatThrownBy(() -> client.registerChat(999L))
                 .isInstanceOf(ChatAlreadyRegisteredException.class)

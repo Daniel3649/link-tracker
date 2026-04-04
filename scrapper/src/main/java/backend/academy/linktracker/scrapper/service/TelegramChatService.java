@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class TelegramChatService {
     private final TelegramChatRepository telegramChatRepository;
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void registerChat(long chatId) {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             boolean created = telegramChatRepository.saveIfAbsent(new TelegramChat(chatId));
@@ -23,12 +24,11 @@ public class TelegramChatService {
                 throw new TelegramChatAlreadyExistsException("Telegram chat already exists. Id: " + chatId);
             }
 
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTERED)
-                    .log("Telegram chat registered");
+            log.atInfo().addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTERED).log("Telegram chat registered");
         }
     }
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void unregisterChat(long chatId) {
         try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
             if (telegramChatRepository.removeByChatId(chatId).isEmpty()) {

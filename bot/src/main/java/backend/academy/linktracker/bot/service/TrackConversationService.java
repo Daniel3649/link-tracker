@@ -28,11 +28,13 @@ public class TrackConversationService {
     private final TrackSessionRepository trackSessionRepository;
     private final ScrapperClient scrapperClient;
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void acceptLink(long chatId, @NotNull URI link) {
         try (var urlMdc = MDC.putCloseable("url", link.toString())) {
             TrackSession session = trackSessionRepository
                     .findByChatId(chatId)
-                    .orElseThrow(() -> new TrackSessionNotFoundException("No track session found for chat id " + chatId));
+                    .orElseThrow(
+                            () -> new TrackSessionNotFoundException("No track session found for chat id " + chatId));
 
             if (session.state() != DialogueState.WAITING_LINK) {
                 throw new IllegalTrackStateException("Chat " + chatId + " is not waiting for link");
@@ -47,6 +49,7 @@ public class TrackConversationService {
         }
     }
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void acceptTags(long chatId, Set<String> tags) {
         TrackSession session = trackSessionRepository
                 .findByChatId(chatId)
@@ -76,17 +79,16 @@ public class TrackConversationService {
     }
 
     public DialogueState getDialogueState(long chatId) {
-        return trackSessionRepository.findByChatId(chatId)
-            .map(TrackSession::state)
-            .orElse(DialogueState.IDLE);
+        return trackSessionRepository
+                .findByChatId(chatId)
+                .map(TrackSession::state)
+                .orElse(DialogueState.IDLE);
     }
 
     public void start(long chatId) {
         trackSessionRepository.save(chatId, TrackSession.waitingLink());
 
-        log.atInfo()
-                .addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED)
-                .log("Track dialog started");
+        log.atInfo().addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED).log("Track dialog started");
     }
 
     public CancelTrackResult cancel(long chatId) {

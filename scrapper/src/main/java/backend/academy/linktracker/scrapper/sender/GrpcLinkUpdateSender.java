@@ -38,10 +38,16 @@ public class GrpcLinkUpdateSender implements LinkUpdateSender {
     private RuntimeException mapException(StatusRuntimeException exception) {
         return switch (exception.getStatus().getCode()) {
             case INVALID_ARGUMENT -> new BotClientException("Bot rejected update: " + descriptionOrDefault(exception));
-            case UNAVAILABLE, DEADLINE_EXCEEDED -> new BotClientException("Bot service error. gRPC status: "
-                    + exception.getStatus().getCode(), exception);
-            default -> new BotClientException("Unexpected bot gRPC response. Status: "
-                    + exception.getStatus().getCode(), exception);
+            case UNAVAILABLE, DEADLINE_EXCEEDED ->
+                new BotClientException(
+                        "Bot service error. gRPC status: "
+                                + exception.getStatus().getCode(),
+                        exception);
+            default ->
+                new BotClientException(
+                        "Unexpected bot gRPC response. Status: "
+                                + exception.getStatus().getCode(),
+                        exception);
         };
     }
 

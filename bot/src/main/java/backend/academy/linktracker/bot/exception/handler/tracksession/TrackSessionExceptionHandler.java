@@ -16,8 +16,7 @@ public class TrackSessionExceptionHandler implements ExceptionHandler {
 
     @Override
     public boolean supports(Exception ex) {
-        return ex instanceof TrackSessionNotFoundException
-            || ex instanceof IllegalTrackStateException;
+        return ex instanceof TrackSessionNotFoundException || ex instanceof IllegalTrackStateException;
     }
 
     @Override

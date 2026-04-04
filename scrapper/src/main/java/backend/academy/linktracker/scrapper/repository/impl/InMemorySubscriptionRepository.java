@@ -54,7 +54,8 @@ public class InMemorySubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
-    public Optional<Subscription> removeByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
+    public Optional<Subscription> removeByTrackedLinkAndTelegramChat(
+            TrackedLink trackedLink, TelegramChat telegramChat) {
         MapKey mapKey = new MapKey(trackedLink, telegramChat);
         return Optional.ofNullable(subscriptions.remove(mapKey));
     }

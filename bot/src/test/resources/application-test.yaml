@@ -14,4 +14,5 @@ app:
     init-commands-on-startup: false
 
   scrapper:
+    transport: http
     base-url: ${wiremock.server.baseUrl}

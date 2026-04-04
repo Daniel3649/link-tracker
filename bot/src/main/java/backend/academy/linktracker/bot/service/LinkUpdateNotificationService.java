@@ -17,11 +17,12 @@ public class LinkUpdateNotificationService {
     private final TelegramSender telegramSender;
     private final UpdateMessageBuilder updateMessageBuilder;
 
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void sendNotification(LinkUpdate update) {
         Objects.requireNonNull(update, "update cannot be null");
 
         try (var linkIdMdc = MDC.putCloseable("linkId", String.valueOf(update.id()));
-            var urlMdc = MDC.putCloseable("url", update.url().toString())) {
+                var urlMdc = MDC.putCloseable("url", update.url().toString())) {
             String message = updateMessageBuilder.buildMessage(update);
 
             for (Long chatId : update.tgChatIds()) {

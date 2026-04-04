@@ -8,8 +8,8 @@ import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkExcept
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -43,9 +43,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Некорректные параметры запроса", ex);
     }
 
-    @ExceptionHandler({
-        SubscriptionNotFoundException.class
-    })
+    @ExceptionHandler({SubscriptionNotFoundException.class})
     public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException ex) {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
     }
@@ -64,9 +62,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
     }
 
-    @ExceptionHandler({
-        SubscriptionAlreadyExistsException.class
-    })
+    @ExceptionHandler({SubscriptionAlreadyExistsException.class})
     public ResponseEntity<ApiErrorResponse> handleConflict(RuntimeException ex) {
         return build(HttpStatus.CONFLICT, "Конфликт состояния ресурса", ex);
     }

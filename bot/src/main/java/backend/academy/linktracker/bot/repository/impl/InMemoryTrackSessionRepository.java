@@ -1,11 +1,11 @@
 package backend.academy.linktracker.bot.repository.impl;
 
-import backend.academy.linktracker.bot.tracksession.TrackSession;
 import backend.academy.linktracker.bot.repository.TrackSessionRepository;
-import org.springframework.stereotype.Repository;
+import backend.academy.linktracker.bot.tracksession.TrackSession;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InMemoryTrackSessionRepository implements TrackSessionRepository {

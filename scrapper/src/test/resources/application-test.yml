@@ -17,4 +17,5 @@ app:
     token: test-github-token
 
   bot:
+    transport: http
     base-url: http://localhost:8080

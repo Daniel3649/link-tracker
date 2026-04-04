@@ -27,9 +27,8 @@ class HttpLinkUpdateSenderTest {
 
         server.expect(requestTo("https://bot.test/updates"))
                 .andExpect(method(POST))
-                .andRespond(withBadRequest()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body("""
+                .andRespond(
+                        withBadRequest().contentType(MediaType.APPLICATION_JSON).body("""
                                 {
                                   "description": "Некорректные параметры запроса",
                                   "code": "400",

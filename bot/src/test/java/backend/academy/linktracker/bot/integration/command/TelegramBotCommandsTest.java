@@ -219,7 +219,6 @@ public class TelegramBotCommandsTest {
     }
 
     private void stubRegisterChatOk(long chatId) {
-        stubFor(post(urlEqualTo("/tg-chat/" + chatId))
-                .willReturn(aResponse().withStatus(HttpStatus.OK.value())));
+        stubFor(post(urlEqualTo("/tg-chat/" + chatId)).willReturn(aResponse().withStatus(HttpStatus.OK.value())));
     }
 }

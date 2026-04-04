@@ -13,7 +13,6 @@ public class ChatAlreadyRegisteredExceptionHandler implements ExceptionHandler {
     private final MessageService messageService;
     private final TelegramSender telegramSender;
 
-
     @Override
     public boolean supports(Exception ex) {
         return ex instanceof ChatAlreadyRegisteredException;

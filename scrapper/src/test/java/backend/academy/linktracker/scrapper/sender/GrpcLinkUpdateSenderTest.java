@@ -44,26 +44,18 @@ class GrpcLinkUpdateSenderTest {
 
     @Test
     void shouldSendUpdateViaGrpc() {
-        GrpcLinkUpdateSender sender =
-                new GrpcLinkUpdateSender(BotUpdatesApiGrpc.newBlockingStub(channel));
+        GrpcLinkUpdateSender sender = new GrpcLinkUpdateSender(BotUpdatesApiGrpc.newBlockingStub(channel));
 
         sender.send(new LinkUpdate(
-                1L,
-                URI.create("https://github.com/octocat/Hello-World"),
-                "Repository changed",
-                List.of(1001L, 1002L)));
+                1L, URI.create("https://github.com/octocat/Hello-World"), "Repository changed", List.of(1001L, 1002L)));
     }
 
     @Test
     void shouldMapInvalidArgumentStatusToBotClientException() {
-        GrpcLinkUpdateSender sender =
-                new GrpcLinkUpdateSender(BotUpdatesApiGrpc.newBlockingStub(channel));
+        GrpcLinkUpdateSender sender = new GrpcLinkUpdateSender(BotUpdatesApiGrpc.newBlockingStub(channel));
 
         assertThatThrownBy(() -> sender.send(new LinkUpdate(
-                        99L,
-                        URI.create("https://github.com/octocat/Hello-World"),
-                        "bad update",
-                        List.of(1L))))
+                        99L, URI.create("https://github.com/octocat/Hello-World"), "bad update", List.of(1L))))
                 .isInstanceOf(BotClientException.class)
                 .hasMessageContaining("Bot rejected update");
     }

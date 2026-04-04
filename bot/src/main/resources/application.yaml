@@ -30,7 +30,7 @@ app:
     debug: false
 
   scrapper:
-    transport: http
+    transport: grpc
     base-url: http://localhost:8081
     grpc-address: localhost:9091
 

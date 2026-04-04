@@ -9,12 +9,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -47,7 +47,8 @@ public class HttpLinkUpdateSender implements LinkUpdateSender {
                     logErrorResponse(request, response, responseBody, error);
 
                     if (HttpStatus.BAD_REQUEST.equals(status)) {
-                        throw new BotClientException("Bot rejected update: " + extractMessage(error, status, responseBody));
+                        throw new BotClientException(
+                                "Bot rejected update: " + extractMessage(error, status, responseBody));
                     }
 
                     if (status.is5xxServerError()) {
@@ -58,8 +59,8 @@ public class HttpLinkUpdateSender implements LinkUpdateSender {
                 });
     }
 
-    private void logErrorResponse(
-            HttpRequest request, ClientHttpResponse response, String body, ApiErrorResponse error) throws IOException {
+    private void logErrorResponse(HttpRequest request, ClientHttpResponse response, String body, ApiErrorResponse error)
+            throws IOException {
         var logEntry = log.atError()
                 .addKeyValue("event", LogEvent.BOT_RESPONSE_FAILED)
                 .addKeyValue("method", request.getMethod())
@@ -69,15 +70,15 @@ public class HttpLinkUpdateSender implements LinkUpdateSender {
 
         if (error != null) {
             if (hasText(error.exceptionName())) {
-                logEntry.addKeyValue("remoteException", error.exceptionName());
+                logEntry = logEntry.addKeyValue("remoteException", error.exceptionName());
             }
             if (hasText(error.exceptionMessage())) {
-                logEntry.addKeyValue("remoteMessage", abbreviate(error.exceptionMessage()));
+                logEntry = logEntry.addKeyValue("remoteMessage", abbreviate(error.exceptionMessage()));
             } else if (hasText(error.description())) {
-                logEntry.addKeyValue("remoteDescription", abbreviate(error.description()));
+                logEntry = logEntry.addKeyValue("remoteDescription", abbreviate(error.description()));
             }
         } else if (hasText(body)) {
-            logEntry.addKeyValue("bodyPreview", abbreviate(body));
+            logEntry = logEntry.addKeyValue("bodyPreview", abbreviate(body));
         }
 
         logEntry.log("Bot returned error response");

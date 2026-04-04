@@ -92,7 +92,8 @@ class TrackDialogTest {
 
         assertThat(messages).anySatisfy(text -> {
             String normalized = text.toLowerCase();
-            assertThat(normalized.contains("incorrect") || normalized.contains("uri")).isTrue();
+            assertThat(normalized.contains("incorrect") || normalized.contains("uri"))
+                    .isTrue();
         });
 
         wireMock.verify(0, postRequestedFor(urlEqualTo("/links")));

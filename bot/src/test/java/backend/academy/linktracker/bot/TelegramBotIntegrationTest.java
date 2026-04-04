@@ -56,11 +56,10 @@ class TelegramBotIntegrationTest implements WithAssertions {
     @Test
     void nonExistingTokenRequest() {
         stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
-                .willReturn(aResponse()
-                        .withStatus(HttpStatus.NOT_FOUND.value())
-                        .withBody("""
+                .willReturn(aResponse().withStatus(HttpStatus.NOT_FOUND.value()).withBody("""
                                 {"ok":false,"error_code":%d,"description":"Not Found"}
-                                """.formatted(HttpStatus.NOT_FOUND.value()))));
+                                """.formatted(
+                                HttpStatus.NOT_FOUND.value()))));
 
         var getUpdatesRequest = new GetUpdates();
         var getUpdatesResponse = telegramBot.execute(getUpdatesRequest);

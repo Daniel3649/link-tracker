@@ -57,7 +57,6 @@ public class LinkService {
         return trackedLink;
     }
 
-
     private void initializeTrackingState(LinkHandler handler, TrackedLink trackedLink) {
         try {
             handler.createTrackingState(trackedLink);

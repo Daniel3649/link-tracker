@@ -85,13 +85,15 @@ public class ScrapperGrpcService extends ScrapperApiGrpc.ScrapperApiImplBase {
     }
 
     private StatusRuntimeException toStatusException(RuntimeException exception) {
-        Status status = switch (exception) {
-            case IllegalArgumentException _, UnsupportedLinkException _ -> Status.INVALID_ARGUMENT;
-            case TelegramChatAlreadyExistsException _, SubscriptionAlreadyExistsException _ -> Status.ALREADY_EXISTS;
-            case TelegramChatNotFoundException _, SubscriptionNotFoundException _ -> Status.NOT_FOUND;
-            case RepositoryPollingException _ -> Status.UNAVAILABLE;
-            default -> Status.INTERNAL;
-        };
+        Status status =
+                switch (exception) {
+                    case IllegalArgumentException _, UnsupportedLinkException _ -> Status.INVALID_ARGUMENT;
+                    case TelegramChatAlreadyExistsException _, SubscriptionAlreadyExistsException _ ->
+                        Status.ALREADY_EXISTS;
+                    case TelegramChatNotFoundException _, SubscriptionNotFoundException _ -> Status.NOT_FOUND;
+                    case RepositoryPollingException _ -> Status.UNAVAILABLE;
+                    default -> Status.INTERNAL;
+                };
 
         String description = status == Status.INTERNAL ? "Internal scrapper error" : exception.getMessage();
 

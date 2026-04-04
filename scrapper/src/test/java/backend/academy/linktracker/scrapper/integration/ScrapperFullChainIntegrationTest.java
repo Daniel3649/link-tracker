@@ -396,9 +396,7 @@ class ScrapperFullChainIntegrationTest {
 
     private void stubGitHubEndpoints() {
         wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World"))
-                .willReturn(aResponse()
-                        .withStatus(HttpStatus.OK.value())
-                        .withHeader("ETag", "\"test-etag-123\"")));
+                .willReturn(aResponse().withStatus(HttpStatus.OK.value()).withHeader("ETag", "\"test-etag-123\"")));
 
         wireMock.stubFor(
                 get(urlPathEqualTo("/repos/octocat/Hello-World/activity")).willReturn(okJson("""
