@@ -38,13 +38,14 @@ public class OrmTelegramChatRepository implements TelegramChatRepository {
     }
 
     @Override
-    public boolean existsByChatId(Long chatId) {
-        return repository.existsById(chatId);
-    }
+    public Optional<TelegramChat> removeByChatId(Long chatId) {
+        Optional<TelegramChat> telegramChat = findByChatId(chatId);
+        if (telegramChat.isEmpty()) {
+            return Optional.empty();
+        }
 
-    @Override
-    public void deleteByChatId(Long chatId) {
         repository.deleteById(chatId);
+        return telegramChat;
     }
 
     @Override

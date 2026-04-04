@@ -10,9 +10,7 @@ public interface TelegramChatRepository {
 
     TelegramChat save(TelegramChat telegramChat);
 
-    boolean existsByChatId(Long chatId);
-
-    void deleteByChatId(Long chatId);
+    Optional<TelegramChat> removeByChatId(Long chatId);
 
     void clear();
 }

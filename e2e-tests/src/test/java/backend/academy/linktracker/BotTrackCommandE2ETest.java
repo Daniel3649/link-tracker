@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 
 class BotTrackCommandE2ETest extends AbstractBotScrapperE2ETest {
 
@@ -23,17 +24,18 @@ class BotTrackCommandE2ETest extends AbstractBotScrapperE2ETest {
         stubTelegramSetMyCommandsOk();
         stubGitHubEndpoints();
 
-        await().atMost(Duration.ofSeconds(20))
+        await().atMost(ASSERTION_TIMEOUT)
                 .pollInterval(Duration.ofMillis(300))
                 .untilAsserted(() ->
                         MOCK.verify(moreThanOrExactly(1), postRequestedFor(urlPathMatching("/bot[^/]+/getUpdates"))));
 
-        await().atMost(Duration.ofSeconds(20))
+        await().ignoreExceptions()
+                .atMost(ASSERTION_TIMEOUT)
                 .pollInterval(Duration.ofMillis(300))
                 .untilAsserted(() -> {
                     HttpResponse<String> response = getLinks(chatId);
 
-                    assertThat(response.statusCode()).isEqualTo(200);
+                    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
 
                     JsonNode json = OBJECT_MAPPER.readTree(response.body());
                     assertThat(json.get("size").asInt()).isEqualTo(1);

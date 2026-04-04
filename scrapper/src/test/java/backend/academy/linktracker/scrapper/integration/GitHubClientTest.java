@@ -9,14 +9,16 @@ import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepos
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GitHubClientTest {
 
     private WireMockServer wireMock;
     private GitHubClient gitHubClient;
 
-    @BeforeEach
+    @BeforeAll
     void setUp() {
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
@@ -25,7 +27,12 @@ class GitHubClientTest {
                 RestClient.builder().baseUrl(wireMock.baseUrl()).build());
     }
 
-    @AfterEach
+    @BeforeEach
+    void resetWireMock() {
+        wireMock.resetAll();
+    }
+
+    @AfterAll
     void tearDown() {
         wireMock.stop();
     }
@@ -36,11 +43,11 @@ class GitHubClientTest {
 
         wireMock.stubFor(get(urlEqualTo("/repos/octocat/Hello-World"))
                 .withHeader("If-None-Match", equalTo("\"old-etag\""))
-                .willReturn(aResponse().withStatus(200).withHeader("ETag", "\"new-etag\"")));
+                .willReturn(aResponse().withStatus(HttpStatus.OK.value()).withHeader("ETag", "\"new-etag\"")));
 
         var result = gitHubClient.fetchRepository(key, "\"old-etag\"");
 
-        assertThat(result.statusCode().value()).isEqualTo(200);
+        assertThat(result.statusCode()).isEqualTo(HttpStatus.OK);
         assertThat(result.etag()).isNotBlank();
         assertThat(result.etag()).contains("new-etag");
 
@@ -55,11 +62,14 @@ class GitHubClientTest {
         GitHubRepositoryKey key = new GitHubRepositoryKey("octocat", "Hello-World");
 
         wireMock.stubFor(get(urlEqualTo("/repos/octocat/Hello-World"))
-                .willReturn(aResponse().withStatus(500)));
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("")));
 
         var result = gitHubClient.fetchRepository(key, null);
 
-        assertThat(result.statusCode().value()).isEqualTo(500);
+        assertThat(result.statusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(result.etag()).isNull();
     }
 
@@ -71,7 +81,7 @@ class GitHubClientTest {
                 .withQueryParam("direction", equalTo("desc"))
                 .withQueryParam("per_page", equalTo("10"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("null")));
 
@@ -88,7 +98,7 @@ class GitHubClientTest {
                 .withQueryParam("direction", equalTo("desc"))
                 .withQueryParam("per_page", equalTo("10"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("{not-json}")));
 

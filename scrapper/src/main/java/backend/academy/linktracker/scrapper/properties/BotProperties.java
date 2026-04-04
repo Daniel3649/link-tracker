@@ -14,5 +14,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @NoArgsConstructor
 public class BotProperties {
     @NotBlank
-    private String baseUrl;
+    private String baseUrl = "http://localhost:8080";
+
+    @NotBlank
+    private String grpcAddress = "localhost:9090";
+
+    private TransportType transport = TransportType.HTTP;
 }

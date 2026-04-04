@@ -24,6 +24,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
@@ -465,7 +466,7 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
 
     private void stubGitHubEndpoints() {
         wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World"))
-                .willReturn(aResponse().withStatus(200).withHeader("ETag", "\"test-etag-123\"")));
+                .willReturn(aResponse().withStatus(HttpStatus.OK.value()).withHeader("ETag", "\"test-etag-123\"")));
 
         wireMock.stubFor(
                 get(urlPathEqualTo("/repos/octocat/Hello-World/activity")).willReturn(okJson("""

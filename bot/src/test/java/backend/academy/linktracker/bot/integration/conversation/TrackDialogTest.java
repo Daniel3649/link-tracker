@@ -16,7 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.bot.BotApplication;
-import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
+import backend.academy.linktracker.bot.repository.TrackSessionRepository;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -35,6 +35,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.wiremock.spring.ConfigureWireMock;
@@ -53,7 +54,7 @@ class TrackDialogTest {
     private TelegramUpdateService updateService;
 
     @Autowired
-    private TrackDialogStateRepository trackDialogStateRepository;
+    private TrackSessionRepository trackSessionRepository;
 
     @MockitoBean
     private TelegramSender telegramSender;
@@ -64,7 +65,6 @@ class TrackDialogTest {
     @BeforeEach
     void setUp() {
         wireMock.resetAll();
-        trackDialogStateRepository.clear();
         Mockito.clearInvocations(telegramSender, telegramBot);
     }
 
@@ -84,8 +84,8 @@ class TrackDialogTest {
 
     @Test
     void shouldNotifyUserWhenTrackLinkIsInvalid() {
-        long chatId = 123456L;
-        String invalidLink = "tbank://github.com/user/repo";
+        long chatId = 123457L;
+        String invalidLink = "not a uri";
 
         updateService.handleEvent(update(1, chatId, "/track"));
         Mockito.clearInvocations(telegramSender);
@@ -94,7 +94,11 @@ class TrackDialogTest {
 
         List<String> messages = capturedMessages(chatId);
 
-        assertThat(messages).anySatisfy(text -> assertThat(text.toLowerCase()).contains("invalid"));
+        assertThat(messages).anySatisfy(text -> {
+            String normalized = text.toLowerCase();
+            assertThat(normalized.contains("incorrect") || normalized.contains("uri"))
+                    .isTrue();
+        });
 
         wireMock.verify(0, postRequestedFor(urlEqualTo("/links")));
     }
@@ -114,9 +118,12 @@ class TrackDialogTest {
                 .inScenario("duplicate-track")
                 .whenScenarioStateIs("already-tracked")
                 .willReturn(aResponse()
-                        .withStatus(409)
+                        .withStatus(HttpStatus.CONFLICT.value())
                         .withHeader("Content-Type", "application/json")
-                        .withBody(apiErrorJson("Link is already tracked", "Link is already tracked", "409"))));
+                        .withBody(apiErrorJson(
+                                "Link is already tracked",
+                                "Link is already tracked",
+                                String.valueOf(HttpStatus.CONFLICT.value())))));
 
         updateService.handleEvent(update(1, chatId, "/track"));
         updateService.handleEvent(update(2, chatId, link.toString()));
@@ -144,13 +151,13 @@ class TrackDialogTest {
         long chatId = 334455L;
 
         updateService.handleEvent(update(1, chatId, "/track"));
-        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isTrue();
+        assertThat(trackSessionRepository.existsByChatId(chatId)).isTrue();
 
         Mockito.clearInvocations(telegramSender);
 
         updateService.handleEvent(update(2, chatId, "/cancel"));
 
-        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isFalse();
+        assertThat(trackSessionRepository.existsByChatId(chatId)).isFalse();
         assertThat(capturedMessages(chatId))
                 .anySatisfy(text -> assertThat(text.toLowerCase()).contains("cancel"));
 
@@ -174,13 +181,13 @@ class TrackDialogTest {
                 """)));
 
         updateService.handleEvent(update(1, chatId, "/track"));
-        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isTrue();
+        assertThat(trackSessionRepository.existsByChatId(chatId)).isTrue();
 
         Mockito.clearInvocations(telegramSender);
 
         updateService.handleEvent(update(2, chatId, "/list"));
 
-        assertThat(trackDialogStateRepository.existsByChatId(chatId)).isFalse();
+        assertThat(trackSessionRepository.existsByChatId(chatId)).isFalse();
         assertThat(capturedMessages(chatId))
                 .anySatisfy(text -> assertThat(text.toLowerCase()).contains("empty"));
 

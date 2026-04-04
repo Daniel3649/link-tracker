@@ -49,17 +49,15 @@ public class SqlTelegramChatRepository implements TelegramChatRepository {
     }
 
     @Override
-    public boolean existsByChatId(Long chatId) {
-        MapSqlParameterSource parameters = new MapSqlParameterSource("chatId", chatId);
+    public Optional<TelegramChat> removeByChatId(Long chatId) {
+        Optional<TelegramChat> telegramChat = findByChatId(chatId);
+        if (telegramChat.isEmpty()) {
+            return Optional.empty();
+        }
 
-        return Boolean.TRUE.equals(jdbcTemplate.queryForObject(
-                "select exists(select 1 from telegram_chat where chat_id = :chatId)", parameters, Boolean.class));
-    }
-
-    @Override
-    public void deleteByChatId(Long chatId) {
         jdbcTemplate.update(
                 "delete from telegram_chat where chat_id = :chatId", new MapSqlParameterSource("chatId", chatId));
+        return telegramChat;
     }
 
     @Override

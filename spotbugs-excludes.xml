@@ -68,4 +68,9 @@
     <Match>
         <Package name="~.*\.jmh_generated"/>
     </Match>
+
+    <!-- Exclude protobuf/gRPC generated classes, but keep the handwritten mapper analyzed -->
+    <Match>
+        <Class name="~backend\.academy\.linktracker\.contract\.grpc\.(?!GrpcTransportMapper$).*"/>
+    </Match>
 </FindBugsFilter>

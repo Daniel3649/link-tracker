@@ -11,6 +11,7 @@ import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingEx
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 
 class StackOverflowClientTest {
@@ -68,7 +69,7 @@ class StackOverflowClientTest {
 
         wireMock.stubFor(get(urlPathEqualTo("/questions/123"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("null")));
 
@@ -121,7 +122,7 @@ class StackOverflowClientTest {
         StackOverflowQuestionKey key = new StackOverflowQuestionKey(123L);
 
         wireMock.stubFor(get(urlPathEqualTo("/questions/123/timeline"))
-                .willReturn(aResponse().withStatus(500)));
+                .willReturn(aResponse().withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())));
 
         assertThatThrownBy(() -> stackOverflowClient.fetchQuestionTimeline(key, 10))
                 .isInstanceOf(RepositoryPollingException.class)

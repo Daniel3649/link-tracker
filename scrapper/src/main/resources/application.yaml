@@ -4,8 +4,21 @@ server:
 spring:
   application:
     name: scrapper
+  grpc:
+    server:
+      port: 9091
+      servlet:
+        enabled: false
+    client:
+      channels:
+        bot:
+          address: ${app.bot.grpc-address}
   config:
-    import: optional:file:scrapper/.env.properties,optional:file:.env.properties
+    import:
+      - optional:file:.env.properties
+      - optional:file:scrapper/.env.properties
+      - optional:file:.env[.properties]
+      - optional:file:scrapper/.env[.properties]
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/link_tracker}
     username: ${POSTGRES_USER:postgres}
@@ -37,8 +50,10 @@ app:
     link-check-delay-ms: 60s
     link-check-batch-size: 100
   bot:
+    transport: http
     base-url: http://localhost:8080
+    grpc-address: localhost:9090
 
 logging:
   pattern:
-    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSS} level=%-5level logger=%logger{36} msg=\"%msg\" %kvp%n"
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSS} level=%-5level logger=%logger{36} msg=\"%msg\" %kvp %mdc%n"

@@ -31,6 +31,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.wiremock.spring.EnableWireMock;
 
@@ -134,7 +135,7 @@ public class TelegramBotCommandsTest {
 
         assertTrue(latch.await(10, SECONDS));
 
-        String expectedText = messageService.get("command.unknown");
+        String expectedText = messageService.get("exception.unknown-command");
 
         await().atMost(10, SECONDS)
                 .untilAsserted(() -> verify(
@@ -150,7 +151,7 @@ public class TelegramBotCommandsTest {
                 .inScenario("cmd")
                 .whenScenarioStateIs(STARTED)
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     {
@@ -175,7 +176,7 @@ public class TelegramBotCommandsTest {
                 .inScenario("cmd")
                 .whenScenarioStateIs("EMPTY")
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     { "ok": true, "result": [] }
@@ -185,7 +186,7 @@ public class TelegramBotCommandsTest {
     private void stubSendMessageOk(long chatId) {
         stubFor(post(urlMatching("/bot[^/]+/sendMessage"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     {
@@ -218,6 +219,6 @@ public class TelegramBotCommandsTest {
     }
 
     private void stubRegisterChatOk(long chatId) {
-        stubFor(post(urlEqualTo("/tg-chat/" + chatId)).willReturn(aResponse().withStatus(200)));
+        stubFor(post(urlEqualTo("/tg-chat/" + chatId)).willReturn(aResponse().withStatus(HttpStatus.OK.value())));
     }
 }

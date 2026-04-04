@@ -16,19 +16,26 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.Stream;
+import org.springframework.http.HttpStatus;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
 
 @org.testcontainers.junit.jupiter.Testcontainers
 abstract class AbstractBotScrapperE2ETest {
+    protected static final Duration ASSERTION_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(5);
 
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    protected static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    protected static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(HTTP_TIMEOUT)
+            .version(HttpClient.Version.HTTP_1_1)
+            .build();
 
     protected static final Path BOT_JAR = findBootJarUnchecked(Path.of("bot/target"), Path.of("../bot/target"));
 
@@ -47,10 +54,12 @@ abstract class AbstractBotScrapperE2ETest {
 
     static {
         MOCK.start();
+        stubTelegramGetUpdatesEmptyByDefault();
         Testcontainers.exposeHostPorts(MOCK.port());
     }
 
     protected static final Network NETWORK = Network.newNetwork();
+    private static final Duration CONTAINER_STARTUP_TIMEOUT = Duration.ofSeconds(90);
 
     @Container
     protected static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18-alpine")
@@ -81,6 +90,7 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("POSTGRES_PASSWORD", POSTGRES_PASSWORD)
             .withEnv("APP_DATABASE_ACCESS_TYPE", "SQL")
             .withEnv("APP_LIQUIBASE_CHANGE_LOG", "file:/migrations/master.xml")
+            .withEnv("APP_BOT_TRANSPORT", "http")
             .withEnv("APP_BOT_BASE_URL", "http://bot:8080")
             .withEnv("APP_GITHUB_BASE_URL", "http://host.testcontainers.internal:" + MOCK.port())
             .withEnv("APP_STACKOVERFLOW_BASE_URL", "http://host.testcontainers.internal:" + MOCK.port())
@@ -88,8 +98,11 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("STACKOVERFLOW_KEY", "dummy-stackoverflow-key")
             .withEnv("STACKOVERFLOW_ACCESS_KEY", "dummy-stackoverflow-access-key")
             .withEnv("APP_SCHEDULER_LINK_CHECK_DELAY_MS", "1h")
-            .waitingFor(Wait.forHttp("/actuator/health").forPort(8081).forStatusCode(200))
-            .withStartupTimeout(Duration.ofSeconds(60));
+            .waitingFor(new WaitAllStrategy()
+                    .withStrategy(Wait.forListeningPort())
+                    .withStrategy(Wait.forLogMessage(".*Started ScrapperApplication.*", 1))
+                    .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
+            .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT);
 
     @Container
     protected static final GenericContainer<?> BOT = new GenericContainer<>(
@@ -99,6 +112,7 @@ abstract class AbstractBotScrapperE2ETest {
                                     .copy("app.jar", "/app.jar")
                                     .entryPoint("java", "-jar", "/app.jar")
                                     .build()))
+            .dependsOn(SCRAPPER)
             .withNetwork(NETWORK)
             .withNetworkAliases("bot")
             .withAccessToHost(true)
@@ -109,9 +123,13 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("APP_TELEGRAM_UPDATE_LISTENER_SLEEP", "200ms")
             .withEnv("APP_TELEGRAM_INIT_COMMANDS_ON_STARTUP", "false")
             .withEnv("APP_TELEGRAM_DEBUG", "true")
+            .withEnv("APP_SCRAPPER_TRANSPORT", "http")
             .withEnv("APP_SCRAPPER_BASE_URL", "http://scrapper:8081")
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofSeconds(60));
+            .waitingFor(new WaitAllStrategy()
+                    .withStrategy(Wait.forListeningPort())
+                    .withStrategy(Wait.forLogMessage(".*Started BotApplication.*", 1))
+                    .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
+            .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT);
 
     protected String scrapperBaseUrl() {
         return "http://" + SCRAPPER.getHost() + ":" + SCRAPPER.getMappedPort(8081);
@@ -119,6 +137,13 @@ abstract class AbstractBotScrapperE2ETest {
 
     protected void resetMocks() {
         MOCK.resetAll();
+        stubTelegramGetUpdatesEmptyByDefault();
+    }
+
+    private static void stubTelegramGetUpdatesEmptyByDefault() {
+        MOCK.stubFor(post(urlMatching("/bot[^/]+/getUpdates")).atPriority(10).willReturn(okJson("""
+                { "ok": true, "result": [] }
+                """)));
     }
 
     protected void stubTelegramGetUpdatesOnceThenEmpty(String text, long chatId) {
@@ -126,7 +151,7 @@ abstract class AbstractBotScrapperE2ETest {
                 .inScenario("telegram-updates")
                 .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody(singleUpdateJson(1, chatId, text)))
                 .willSetStateTo("EMPTY"));
@@ -175,7 +200,7 @@ abstract class AbstractBotScrapperE2ETest {
     protected void stubTelegramSendMessageOk(long chatId) {
         MOCK.stubFor(post(urlMatching("/bot[^/]+/sendMessage"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     {
@@ -193,7 +218,7 @@ abstract class AbstractBotScrapperE2ETest {
     protected void stubTelegramSetMyCommandsOk() {
         MOCK.stubFor(post(urlMatching("/bot[^/]+/setMyCommands"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     { "ok": true, "result": true }
@@ -208,7 +233,7 @@ abstract class AbstractBotScrapperE2ETest {
     protected void stubGitHubRepo(String owner, String repo, String etag) {
         MOCK.stubFor(get(urlPathEqualTo("/repos/" + owner + "/" + repo))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withHeader("ETag", etag)
                         .withBody("""
@@ -221,7 +246,7 @@ abstract class AbstractBotScrapperE2ETest {
 
         MOCK.stubFor(get(urlPathEqualTo("/repos/" + owner + "/" + repo + "/activity"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     [
@@ -237,6 +262,7 @@ abstract class AbstractBotScrapperE2ETest {
     protected HttpResponse<String> registerChat(long chatId) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(scrapperBaseUrl() + "/tg-chat/" + chatId))
+                .timeout(HTTP_TIMEOUT)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
@@ -246,6 +272,7 @@ abstract class AbstractBotScrapperE2ETest {
     protected HttpResponse<String> getLinks(long chatId) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(scrapperBaseUrl() + "/links"))
+                .timeout(HTTP_TIMEOUT)
                 .header("Tg-Chat-Id", String.valueOf(chatId))
                 .GET()
                 .build();

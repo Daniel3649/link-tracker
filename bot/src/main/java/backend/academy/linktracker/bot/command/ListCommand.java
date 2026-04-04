@@ -3,10 +3,6 @@ package backend.academy.linktracker.bot.command;
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.command.meta.CommandName;
 import backend.academy.linktracker.bot.command.support.CommandArgSupport;
-import backend.academy.linktracker.bot.exception.chat.ChatNotRegisteredException;
-import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
-import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
-import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
@@ -14,7 +10,6 @@ import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
 import com.pengrad.telegrambot.model.Update;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,8 +24,6 @@ public class ListCommand implements Command {
 
     @Override
     public void execute(Update update) {
-        Objects.requireNonNull(update, "update cannot be null");
-
         if (update.message() == null || update.message().chat() == null) {
             return;
         }
@@ -39,31 +32,21 @@ public class ListCommand implements Command {
         String rawText = update.message().text();
         String tagFilter = normalizeTagFilter(commandArgSupport.extractFirstArgument(rawText));
 
-        try {
-            ListLinksResponse response = scrapperClient.getLinks(chatId);
-            List<LinkResponse> links = response.links() == null ? Collections.emptyList() : response.links();
+        ListLinksResponse response = scrapperClient.getLinks(chatId);
+        List<LinkResponse> links = response.links() == null ? Collections.emptyList() : response.links();
 
-            List<LinkResponse> filteredLinks = filterByTag(links, tagFilter);
+        List<LinkResponse> filteredLinks = filterByTag(links, tagFilter);
 
-            if (filteredLinks.isEmpty()) {
-                telegramSender.sendPlain(
-                        chatId,
-                        tagFilter == null
-                                ? messageService.get("command.list.empty")
-                                : messageService.get("command.list.empty.by-tag", tagFilter));
-                return;
-            }
-
-            telegramSender.sendPlain(chatId, buildListMessage(filteredLinks, tagFilter));
-        } catch (ChatNotRegisteredException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.chat-not-registered"));
-        } catch (InvalidScrapperRequestException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.invalid-request"));
-        } catch (ScrapperUnavailableException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.scrapper-unavailable"));
-        } catch (ScrapperClientException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.list.client-error"));
+        if (filteredLinks.isEmpty()) {
+            telegramSender.sendPlain(
+                    chatId,
+                    tagFilter == null
+                            ? messageService.get("command.list.empty")
+                            : messageService.get("command.list.empty.by-tag", tagFilter));
+            return;
         }
+
+        telegramSender.sendPlain(chatId, buildListMessage(filteredLinks, tagFilter));
     }
 
     private String normalizeTagFilter(String tagFilter) {

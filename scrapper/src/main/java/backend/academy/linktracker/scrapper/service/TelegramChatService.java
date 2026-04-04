@@ -48,7 +48,7 @@ public class TelegramChatService {
                     .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_STARTED)
                     .log("Telegram chat unregistration started");
 
-            if (!telegramChatRepository.existsByChatId(chatId)) {
+            if (telegramChatRepository.removeByChatId(chatId).isEmpty()) {
                 log.atWarn()
                         .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_FAILED)
                         .addKeyValue("reason", "chat_not_found")
@@ -56,8 +56,6 @@ public class TelegramChatService {
 
                 throw new TelegramChatNotFoundException("Telegram chat not found. Id: " + chatId);
             }
-
-            telegramChatRepository.deleteByChatId(chatId);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTERED)

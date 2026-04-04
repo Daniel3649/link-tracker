@@ -1,6 +1,11 @@
 spring:
   liquibase:
     change-log: file:../migrations/master.xml
+  grpc:
+    server:
+      enabled: false
+      servlet:
+        enabled: false
 
 app:
   database:
@@ -15,5 +20,9 @@ app:
     base-url: ${wiremock.server.baseUrl}
     token: test-github-token
 
+  scheduler:
+    enabled: false
+
   bot:
+    transport: http
     base-url: http://localhost:8080

@@ -35,9 +35,7 @@ public class SubscriptionService {
         try {
             MDC.put("chatId", String.valueOf(chatId));
             MDC.put("url", request.link().toString());
-            MDC.put(
-                    "tagsCount",
-                    request.tags() == null ? "0" : String.valueOf(request.tags().size()));
+            MDC.put("tagsCount", request.tags() == null ? "0" : String.valueOf(request.tags().size()));
 
             log.atInfo().addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_STARTED).log("Subscription add started");
             TelegramChat telegramChat = telegramChatRepository
@@ -55,7 +53,7 @@ public class SubscriptionService {
             // то я не помечаю addSubscription аннотацией Transactional
             TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
 
-            var savedSubscription =
+            Subscription savedSubscription =
                     subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, request.tags());
 
             log.atInfo()
@@ -99,7 +97,7 @@ public class SubscriptionService {
                         return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
                     });
 
-            var removedSubscription = subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
+            Subscription removedSubscription = subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVED)

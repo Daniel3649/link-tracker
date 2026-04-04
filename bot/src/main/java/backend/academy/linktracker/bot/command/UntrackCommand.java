@@ -3,18 +3,13 @@ package backend.academy.linktracker.bot.command;
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.command.meta.CommandName;
 import backend.academy.linktracker.bot.command.support.CommandArgSupport;
-import backend.academy.linktracker.bot.exception.client.InvalidScrapperRequestException;
-import backend.academy.linktracker.bot.exception.client.ScrapperClientException;
-import backend.academy.linktracker.bot.exception.client.ScrapperUnavailableException;
-import backend.academy.linktracker.bot.exception.link.LinkNotTrackedException;
+import backend.academy.linktracker.bot.exception.command.NoArgumentUntrackCommandException;
+import backend.academy.linktracker.bot.exception.link.LinkParsingException;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
-import backend.academy.linktracker.contract.link.common.ParsedSupportedLink;
-import backend.academy.linktracker.contract.link.exception.UnsupportedLinkFormatException;
-import backend.academy.linktracker.contract.link.parser.SupportedLinkParser;
 import com.pengrad.telegrambot.model.Update;
-import java.util.Objects;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,46 +17,30 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UntrackCommand implements Command {
     private final MessageService messageService;
-    private final SupportedLinkParser supportedLinkParser;
     private final ScrapperClient scrapperClient;
     private final TelegramSender telegramSender;
     private final CommandArgSupport commandArgSupport;
 
     @Override
     public void execute(Update update) {
-        Objects.requireNonNull(update);
-
         long chatId = update.message().chat().id();
         String rawText = update.message().text();
 
         String linkArgument = commandArgSupport.extractFirstArgument(rawText);
         if (linkArgument == null) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.usage"));
-            return;
+            throw new NoArgumentUntrackCommandException("No link argument was provided");
         }
 
-        ParsedSupportedLink parsedLink;
+        URI link;
         try {
-            parsedLink = supportedLinkParser.parse(linkArgument);
-        } catch (UnsupportedLinkFormatException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.invalid-link"));
-            return;
+            link = URI.create(linkArgument);
+        } catch (IllegalArgumentException e) {
+            throw new LinkParsingException("Invalid link argument: " + linkArgument);
         }
 
-        RemoveLinkRequest request = new RemoveLinkRequest(parsedLink.uri());
-
-        try {
-            scrapperClient.removeLink(chatId, request);
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.success"));
-        } catch (LinkNotTrackedException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.not-found"));
-        } catch (InvalidScrapperRequestException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.invalid-scrapper-request"));
-        } catch (ScrapperUnavailableException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.scrapper-unavailable"));
-        } catch (ScrapperClientException e) {
-            telegramSender.sendPlain(chatId, messageService.get("command.untrack.client-error"));
-        }
+        RemoveLinkRequest request = new RemoveLinkRequest(link);
+        scrapperClient.removeLink(chatId, request);
+        telegramSender.sendPlain(chatId, messageService.get("command.untrack.success"));
     }
 
     @Override

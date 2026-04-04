@@ -1,72 +1,108 @@
 package backend.academy.linktracker.bot.service;
 
-import backend.academy.linktracker.bot.conversation.TrackDialogState;
-import backend.academy.linktracker.bot.conversation.handler.TrackStepHandler;
-import backend.academy.linktracker.bot.conversation.handler.TrackStepHandlerRegistry;
+import backend.academy.linktracker.bot.client.ScrapperClient;
+import backend.academy.linktracker.bot.exception.tracksession.IllegalTrackStateException;
+import backend.academy.linktracker.bot.exception.tracksession.TrackSessionNotFoundException;
 import backend.academy.linktracker.bot.logging.LogEvent;
-import backend.academy.linktracker.bot.repository.TrackDialogStateRepository;
-import java.util.Objects;
+import backend.academy.linktracker.bot.repository.TrackSessionRepository;
+import backend.academy.linktracker.bot.tracksession.CancelTrackResult;
+import backend.academy.linktracker.bot.tracksession.DialogueState;
+import backend.academy.linktracker.bot.tracksession.TrackSession;
+import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
+import jakarta.validation.constraints.NotNull;
+import java.net.URI;
+import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 @Service
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class TrackConversationService {
-    private final TrackDialogStateRepository trackDialogStateRepository;
-    private final TrackStepHandlerRegistry trackStepHandlerRegistry;
+    private final TrackSessionRepository trackSessionRepository;
+    private final ScrapperClient scrapperClient;
+
+    @SuppressWarnings("PMD.UnusedLocalVariable")
+    public void acceptLink(long chatId, @NotNull URI link) {
+        try (var urlMdc = MDC.putCloseable("url", link.toString())) {
+            TrackSession session = trackSessionRepository
+                    .findByChatId(chatId)
+                    .orElseThrow(
+                            () -> new TrackSessionNotFoundException("No track session found for chat id " + chatId));
+
+            if (session.state() != DialogueState.WAITING_LINK) {
+                throw new IllegalTrackStateException("Chat " + chatId + " is not waiting for link");
+            }
+
+            trackSessionRepository.save(chatId, TrackSession.waitingTags(link));
+
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
+                    .addKeyValue("stage", "link_accepted")
+                    .log("Track dialog message processed for link");
+        }
+    }
+
+    @SuppressWarnings("PMD.UnusedLocalVariable")
+    public void acceptTags(long chatId, Set<String> tags) {
+        TrackSession session = trackSessionRepository
+                .findByChatId(chatId)
+                .orElseThrow(() -> new TrackSessionNotFoundException("No track session found for chat id " + chatId));
+
+        if (session.state() != DialogueState.WAITING_TAGS) {
+            throw new IllegalTrackStateException("Chat " + chatId + " is not waiting for tags");
+        }
+
+        URI link = session.link();
+        if (link == null) {
+            trackSessionRepository.deleteByChatId(chatId);
+            throw new IllegalTrackStateException("Pending link is missing for chat id " + chatId);
+        }
+
+        try (var urlMdc = MDC.putCloseable("url", link.toString())) {
+            AddLinkRequest request = new AddLinkRequest(link, tags, List.of());
+            scrapperClient.addLink(chatId, request);
+            trackSessionRepository.deleteByChatId(chatId);
+
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
+                    .addKeyValue("stage", "tags_accepted")
+                    .addKeyValue("tagsCount", tags.size())
+                    .log("Track dialog message processed for tags");
+        }
+    }
+
+    public DialogueState getDialogueState(long chatId) {
+        return trackSessionRepository
+                .findByChatId(chatId)
+                .map(TrackSession::state)
+                .orElse(DialogueState.IDLE);
+    }
 
     public void start(long chatId) {
-        trackDialogStateRepository.save(chatId, TrackDialogState.waitingLink());
+        trackSessionRepository.save(chatId, TrackSession.waitingLink());
 
         log.atInfo().addKeyValue("event", LogEvent.TRACK_DIALOG_STARTED).log("Track dialog started");
     }
 
-    public void cancel(long chatId) {
-        trackDialogStateRepository.deleteByChatId(chatId);
-
-        log.atInfo().addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED).log("Track dialog cancelled");
-    }
-
-    public boolean hasActiveSession(long chatId) {
-        boolean hasActiveSession = trackDialogStateRepository.existsByChatId(chatId);
-
-        log.atInfo()
-                .addKeyValue("event", LogEvent.TRACK_DIALOG_SESSION_CHECKED)
-                .addKeyValue("hasActiveSession", hasActiveSession)
-                .log("Track dialog session checked");
-
-        return hasActiveSession;
-    }
-
-    public boolean handleDialogMessage(long chatId, String rawText) {
-        Objects.requireNonNull(rawText, "rawText cannot be null");
-
-        return trackDialogStateRepository
+    public CancelTrackResult cancel(long chatId) {
+        return trackSessionRepository
                 .findByChatId(chatId)
-                .map(state -> {
-                    TrackStepHandler handler = trackStepHandlerRegistry.getHandler(state);
-
-                    handler.handle(chatId, rawText, state);
+                .map(session -> {
+                    trackSessionRepository.deleteByChatId(chatId);
 
                     log.atInfo()
-                            .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_PROCESSED)
-                            .addKeyValue("rawText", rawText)
-                            .addKeyValue("state", state)
-                            .addKeyValue("handler", handler.getClass().getSimpleName())
-                            .log("Track dialog message processed");
+                            .addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED)
+                            .addKeyValue("state", session.state())
+                            .log("Track dialog cancelled");
 
-                    return true;
+                    return CancelTrackResult.CANCELLED;
                 })
-                .orElseGet(() -> {
-                    log.atDebug()
-                            .addKeyValue("event", LogEvent.TRACK_DIALOG_MESSAGE_IGNORED)
-                            .addKeyValue("rawText", rawText)
-                            .addKeyValue("reason", "no_active_session")
-                            .log("Track dialog message ignored");
-
-                    return false;
-                });
+                .orElse(CancelTrackResult.NO_ACTIVE_SESSION);
     }
 }

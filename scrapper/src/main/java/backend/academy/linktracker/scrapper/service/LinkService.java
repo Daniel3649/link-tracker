@@ -42,8 +42,7 @@ public class LinkService {
             log.atDebug()
                     .addKeyValue("event", "tracked_link_lookup_finished")
                     .addKeyValue("found", trackedLink.isPresent())
-                    .addKeyValue(
-                            "trackedLinkId", trackedLink.map(TrackedLink::getId).orElse(null))
+                    .addKeyValue("trackedLinkId", trackedLink.map(TrackedLink::getId).orElse(null))
                     .log("Tracked link lookup finished");
 
             return trackedLink;

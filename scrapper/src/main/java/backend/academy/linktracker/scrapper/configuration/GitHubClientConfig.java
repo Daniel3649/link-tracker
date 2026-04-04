@@ -20,9 +20,23 @@ public class GitHubClientConfig {
                     headers.add("X-GitHub-Api-Version", "2022-11-28");
 
                     if (StringUtils.hasText(properties.getToken())) {
-                        headers.setBearerAuth(properties.getToken());
+                        headers.setBearerAuth(sanitizeToken(properties.getToken()));
                     }
                 })
                 .build();
+    }
+
+    static String sanitizeToken(String rawToken) {
+        String token = rawToken.strip();
+
+        if ((token.startsWith("\"") && token.endsWith("\"")) || (token.startsWith("'") && token.endsWith("'"))) {
+            token = token.substring(1, token.length() - 1).strip();
+        }
+
+        if (token.contains("${") && token.contains("}")) {
+            throw new IllegalStateException("GitHub token placeholder was not resolved");
+        }
+
+        return token;
     }
 }

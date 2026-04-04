@@ -4,12 +4,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import backend.academy.linktracker.contract.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
@@ -19,6 +17,7 @@ import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingEx
 import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityDescriptionBuilder;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubActivityExtractor;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubLinkHandler;
+import backend.academy.linktracker.scrapper.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class GitHubLinkHandlerTest {
@@ -63,7 +62,7 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(401), null);
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.UNAUTHORIZED, null);
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
                 .thenReturn(fetchResult);
@@ -82,7 +81,7 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(200), null);
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.OK, null);
 
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
                 .thenReturn(fetchResult);
@@ -104,7 +103,8 @@ class GitHubLinkHandlerTest {
         state.setEtag("\"old-etag\"");
         state.setLastActivityId(1L);
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatusCode.valueOf(500), null);
+        GitHubRepositoryFetchResult fetchResult =
+                new GitHubRepositoryFetchResult(HttpStatus.INTERNAL_SERVER_ERROR, null);
 
         when(trackingStateRepository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
         when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
@@ -119,9 +119,6 @@ class GitHubLinkHandlerTest {
     }
 
     private TrackedLink trackedLink(String url, GitHubRepositoryKey key) {
-        TrackedLink trackedLink = mock(TrackedLink.class);
-        when(trackedLink.getUrl()).thenReturn(url);
-        when(trackedLink.getResourceKey()).thenReturn(key);
-        return trackedLink;
+        return new TrackedLink(1L, url, key);
     }
 }

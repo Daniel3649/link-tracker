@@ -11,9 +11,9 @@ public interface SubscriptionRepository {
 
     boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
-    Subscription save(Subscription subscription);
-
     boolean existsByTrackedLink(TrackedLink trackedLink);
+
+    Subscription save(Subscription subscription);
 
     Optional<Subscription> findByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 

@@ -5,7 +5,6 @@ import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import backend.academy.linktracker.bot.service.TrackConversationService;
 import com.pengrad.telegrambot.model.Update;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +17,8 @@ public class TrackCommand implements Command {
 
     @Override
     public void execute(Update update) {
-        Objects.requireNonNull(update);
-
         long chatId = update.message().chat().id();
         trackConversationService.start(chatId);
-
         telegramSender.sendPlain(chatId, messageService.get("command.track"));
     }
 

@@ -1,7 +1,5 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
-import backend.academy.linktracker.contract.link.common.ParsedStackOverflowQuestionLink;
-import backend.academy.linktracker.contract.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionFetchResult;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionResponse;
@@ -16,6 +14,7 @@ import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOver
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
+import backend.academy.linktracker.scrapper.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import java.net.URI;
 import java.time.Instant;
@@ -42,8 +41,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
     @Override
     public ParsedLink parse(URI uri) {
-        ParsedStackOverflowQuestionLink parsed = stackOverflowQuestionLinkParser.parse(uri);
-        return new ParsedLink(parsed.uri().toString(), new StackOverflowQuestionKey(parsed.questionId()));
+        return stackOverflowQuestionLinkParser.parse(uri);
     }
 
     @Override
@@ -75,8 +73,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
     @Override
     public Optional<LinkChange> checkForUpdate(TrackedLink trackedLink) {
-        StackOverflowTrackingState state =
-                repository.findByTrackedLink(trackedLink).orElse(null);
+        StackOverflowTrackingState state = repository.findByTrackedLink(trackedLink).orElse(null);
 
         if (state == null) {
             return Optional.empty();
@@ -107,8 +104,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
             return Optional.empty();
         }
 
-        StackOverflowTimelineFetchResult timelineResult =
-                stackOverflowClient.fetchQuestionTimeline(key, TIMELINE_FETCH_LIMIT);
+        StackOverflowTimelineFetchResult timelineResult = stackOverflowClient.fetchQuestionTimeline(key, TIMELINE_FETCH_LIMIT);
 
         List<StackOverflowQuestionTimelineEventResponse> newEvents =
                 timelineSupport.extractNewEvents(timelineResult.events(), cursor);
