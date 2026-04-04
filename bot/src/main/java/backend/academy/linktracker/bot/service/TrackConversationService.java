@@ -12,7 +12,6 @@ import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,19 +91,18 @@ public class TrackConversationService {
     }
 
     public CancelTrackResult cancel(long chatId) {
-        Optional<TrackSession> session = trackSessionRepository.findByChatId(chatId);
+        return trackSessionRepository
+                .findByChatId(chatId)
+                .map(session -> {
+                    trackSessionRepository.deleteByChatId(chatId);
 
-        if (session.isEmpty()) {
-            return CancelTrackResult.NO_ACTIVE_SESSION;
-        }
+                    log.atInfo()
+                            .addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED)
+                            .addKeyValue("state", session.state())
+                            .log("Track dialog cancelled");
 
-        trackSessionRepository.deleteByChatId(chatId);
-
-        log.atInfo()
-                .addKeyValue("event", LogEvent.TRACK_DIALOG_CANCELLED)
-                .addKeyValue("state", session.get().state())
-                .log("Track dialog cancelled");
-
-        return CancelTrackResult.CANCELLED;
+                    return CancelTrackResult.CANCELLED;
+                })
+                .orElse(CancelTrackResult.NO_ACTIVE_SESSION);
     }
 }
