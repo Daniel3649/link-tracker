@@ -49,8 +49,8 @@ public class SubscriptionService {
                         return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
                     });
 
-            // так как getOrCreateTrackedLink может ходить во внешний API,
-            // то я не помечаю addSubscription аннотацией Transactional
+            // LinkService сам держит транзакцию на запись tracked_link и tracking state,
+            // а сохранение subscription и tags отдельно инкапсулировано в persistence service.
             TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
 
             Subscription savedSubscription =

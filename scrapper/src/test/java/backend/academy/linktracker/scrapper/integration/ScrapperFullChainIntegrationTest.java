@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -213,6 +214,32 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
 
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
+    }
+
+    @Test
+    void shouldRollbackTrackedLinkCreationWhenTrackingStateInitializationFails() throws Exception {
+        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World"))
+                .willReturn(aResponse().withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())));
+
+        mockMvc.perform(post("/tg-chat/{id}", 1L)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/links")
+                        .header("Tg-Chat-Id", 1L)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                    {
+                      "link": "https://github.com/octocat/Hello-World",
+                      "tags": ["java"],
+                      "filters": []
+                    }
+                    """))
+                .andExpect(status().isBadGateway());
+
+        assertThat(trackedLinkRepository.findAll()).isEmpty();
+        assertThat(subscriptionRepository.findAllByTelegramChatId(1L)).isEmpty();
+
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
+        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
     }
 
     @Test

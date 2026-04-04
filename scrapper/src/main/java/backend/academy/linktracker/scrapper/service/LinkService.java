@@ -51,6 +51,7 @@ public class LinkService {
         }
     }
 
+    @Transactional
     public TrackedLink getOrCreateTrackedLink(URI uri) {
         LinkHandler handler = handlerRegistry.getHandler(uri);
         ParsedLink parsedLink = handler.parse(uri);
