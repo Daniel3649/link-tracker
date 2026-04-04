@@ -10,6 +10,7 @@ app:
     url: ${wiremock.server.baseUrl}/bot
     token: test-token
     update-listener-sleep: 1s
+    updates-listener-enabled: false
     debug: true
     init-commands-on-startup: false
 

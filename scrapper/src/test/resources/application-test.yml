@@ -16,6 +16,9 @@ app:
     base-url: ${wiremock.server.baseUrl}
     token: test-github-token
 
+  scheduler:
+    enabled: false
+
   bot:
     transport: http
     base-url: http://localhost:8080

@@ -8,10 +8,16 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        prefix = "app.telegram",
+        name = "updates-listener-enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class TelegramUpdatesListener implements UpdatesListener {
     private final TelegramBot bot;
     private final TelegramUpdateService updateService;
