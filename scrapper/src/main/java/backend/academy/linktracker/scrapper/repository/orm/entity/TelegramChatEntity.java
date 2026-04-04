@@ -17,9 +17,9 @@ import lombok.Setter;
 public class TelegramChatEntity {
     @Id
     @Column(name = "chat_id", nullable = false)
-    private Long id;
+    private Long chatId;
 
-    public TelegramChatEntity(Long id) {
-        this.id = id;
+    public TelegramChatEntity(Long chatId) {
+        this.chatId = chatId;
     }
 }

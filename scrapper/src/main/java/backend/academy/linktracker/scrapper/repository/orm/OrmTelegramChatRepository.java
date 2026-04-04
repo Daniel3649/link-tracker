@@ -34,7 +34,7 @@ public class OrmTelegramChatRepository implements TelegramChatRepository {
     @Override
     public TelegramChat save(TelegramChat telegramChat) {
         TelegramChatEntity entity = repository.save(new TelegramChatEntity(telegramChat.id()));
-        return new TelegramChat(entity.getId());
+        return new TelegramChat(entity.getChatId());
     }
 
     @Override

@@ -40,7 +40,7 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
 
     @Override
     public boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
-        return repository.existsByTrackedLink_IdAndTelegramChat_Id(trackedLink.getId(), telegramChat.id());
+        return repository.existsByTrackedLink_IdAndTelegramChat_ChatId(trackedLink.getId(), telegramChat.id());
     }
 
     @Override
@@ -76,18 +76,18 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
     @Override
     public Optional<Subscription> findByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         return repository
-                .findByTrackedLink_IdAndTelegramChat_Id(trackedLink.getId(), telegramChat.id())
+                .findByTrackedLink_IdAndTelegramChat_ChatId(trackedLink.getId(), telegramChat.id())
                 .map(this::toDomain);
     }
 
     @Override
     public void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
-        repository.deleteByTrackedLink_IdAndTelegramChat_Id(trackedLink.getId(), telegramChat.id());
+        repository.deleteByTrackedLink_IdAndTelegramChat_ChatId(trackedLink.getId(), telegramChat.id());
     }
 
     @Override
     public List<Subscription> findAllByTelegramChatId(Long chatId) {
-        return repository.findAllByTelegramChat_IdOrderByIdAsc(chatId).stream()
+        return repository.findAllByTelegramChat_ChatIdOrderByIdAsc(chatId).stream()
                 .map(this::toDomain)
                 .toList();
     }
@@ -106,7 +106,7 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
 
     private Subscription toDomain(SubscriptionEntity entity) {
         TrackedLink trackedLink = OrmTrackedLinkSupport.toDomain(entity.getTrackedLink());
-        TelegramChat telegramChat = new TelegramChat(entity.getTelegramChat().getId());
+        TelegramChat telegramChat = new TelegramChat(entity.getTelegramChat().getChatId());
         return new Subscription(entity.getId(), trackedLink, telegramChat);
     }
 }
