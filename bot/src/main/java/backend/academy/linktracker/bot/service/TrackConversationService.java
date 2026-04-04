@@ -27,9 +27,8 @@ public class TrackConversationService {
     private final TrackSessionRepository trackSessionRepository;
     private final ScrapperClient scrapperClient;
 
-    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void acceptLink(long chatId, @NotNull URI link) {
-        try (var urlMdc = MDC.putCloseable("url", link.toString())) {
+        try (var _ = MDC.putCloseable("url", link.toString())) {
             TrackSession session = trackSessionRepository
                     .findByChatId(chatId)
                     .orElseThrow(
@@ -48,7 +47,6 @@ public class TrackConversationService {
         }
     }
 
-    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void acceptTags(long chatId, Set<String> tags) {
         TrackSession session = trackSessionRepository
                 .findByChatId(chatId)
@@ -64,7 +62,7 @@ public class TrackConversationService {
             throw new IllegalTrackStateException("Pending link is missing for chat id " + chatId);
         }
 
-        try (var urlMdc = MDC.putCloseable("url", link.toString())) {
+        try (var _ = MDC.putCloseable("url", link.toString())) {
             AddLinkRequest request = new AddLinkRequest(link, tags, List.of());
             scrapperClient.addLink(chatId, request);
             trackSessionRepository.deleteByChatId(chatId);

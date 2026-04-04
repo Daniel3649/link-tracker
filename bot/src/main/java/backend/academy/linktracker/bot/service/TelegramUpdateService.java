@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 public class TelegramUpdateService {
     private final TelegramUpdateDispatcher telegramUpdateDispatcher;
 
-    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void handleEvent(Update update) {
         if (update == null) {
             log.atWarn()
@@ -25,7 +24,7 @@ public class TelegramUpdateService {
             return;
         }
 
-        try (var updateIdMdc = MDC.putCloseable("updateId", String.valueOf(update.updateId()))) {
+        try (var _ = MDC.putCloseable("updateId", String.valueOf(update.updateId()))) {
             Message message = update.message();
             if (message == null) {
                 log.atDebug()
@@ -35,8 +34,7 @@ public class TelegramUpdateService {
                 return;
             }
 
-            try (var chatIdMdc =
-                    MDC.putCloseable("chatId", String.valueOf(message.chat().id()))) {
+            try (var _ = MDC.putCloseable("chatId", String.valueOf(message.chat().id()))) {
                 String messageText = message.text();
                 if (messageText == null) {
                     log.atDebug()

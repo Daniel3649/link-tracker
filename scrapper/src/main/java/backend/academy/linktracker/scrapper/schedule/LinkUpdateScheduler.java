@@ -46,10 +46,8 @@ public class LinkUpdateScheduler {
             }
 
             for (TrackedLink trackedLink : trackedLinks) {
-                try {
-                    MDC.put("linkId", String.valueOf(trackedLink.getId()));
-                    MDC.put("url", trackedLink.getUrl());
-
+                try (var _ = MDC.putCloseable("linkId", String.valueOf(trackedLink.getId()));
+                        var _ = MDC.putCloseable("url", trackedLink.getUrl())) {
                     URI uri = URI.create(trackedLink.getUrl());
                     LinkHandler handler = linkHandlerRegistry.getHandler(uri);
 
@@ -70,8 +68,6 @@ public class LinkUpdateScheduler {
                             .addKeyValue("event", LogEvent.LINK_UPDATE_CHECK_FAILED)
                             .addKeyValue("exception", e.getClass().getSimpleName())
                             .log("Unexpected error while checking link");
-                } finally {
-                    MDC.clear();
                 }
             }
 
@@ -89,30 +85,23 @@ public class LinkUpdateScheduler {
         List<Long> tgChatIds = subscriptionRepository.findAllByTrackedLink(trackedLink).stream()
                 .map(subscription -> subscription.getTelegramChat().id())
                 .toList();
-        try {
-            MDC.put("linkId", String.valueOf(trackedLink.getId()));
-            MDC.put("url", trackedLink.getUrl());
+        if (tgChatIds.isEmpty()) {
+            log.atWarn()
+                    .addKeyValue("event", LogEvent.LINK_UPDATE_SKIPPED)
+                    .addKeyValue("reason", "no_recipients")
+                    .log("Link update skipped");
 
-            if (tgChatIds.isEmpty()) {
-                log.atWarn()
-                        .addKeyValue("event", LogEvent.LINK_UPDATE_SKIPPED)
-                        .addKeyValue("reason", "no_recipients")
-                        .log("Link update skipped");
-
-                return;
-            }
-
-            LinkUpdate update = new LinkUpdate(
-                    trackedLink.getId(), URI.create(trackedLink.getUrl()), change.description(), tgChatIds);
-
-            linkUpdateSender.send(update);
-
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.LINK_UPDATE_NOTIFICATION)
-                    .addKeyValue("recipientsCount", update.tgChatIds().size())
-                    .log("Link update processed");
-        } finally {
-            MDC.clear();
+            return;
         }
+
+        LinkUpdate update =
+                new LinkUpdate(trackedLink.getId(), URI.create(trackedLink.getUrl()), change.description(), tgChatIds);
+
+        linkUpdateSender.send(update);
+
+        log.atInfo()
+                .addKeyValue("event", LogEvent.LINK_UPDATE_NOTIFICATION)
+                .addKeyValue("recipientsCount", update.tgChatIds().size())
+                .log("Link update processed");
     }
 }

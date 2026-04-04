@@ -28,9 +28,8 @@ public class LinkService {
         ParsedLink parsedLink = handler.parse(uri);
         ResourceKey resourceKey = parsedLink.resourceKey();
 
-        try {
-            MDC.put("url", uri.toString());
-            MDC.put("resourceKey", resourceKey.toString());
+        try (var _ = MDC.putCloseable("url", uri.toString());
+                var _ = MDC.putCloseable("resourceKey", resourceKey.toString())) {
 
             log.atDebug()
                     .addKeyValue("event", LogEvent.TRACKED_LINK_LOOKUP_STARTED)
@@ -46,8 +45,6 @@ public class LinkService {
                     .log("Tracked link lookup finished");
 
             return trackedLink;
-        } finally {
-            MDC.clear();
         }
     }
 
@@ -57,9 +54,8 @@ public class LinkService {
         ParsedLink parsedLink = handler.parse(uri);
         ResourceKey resourceKey = parsedLink.resourceKey();
 
-        try {
-            MDC.put("url", parsedLink.url());
-            MDC.put("resourceKey", resourceKey.toString());
+        try (var _ = MDC.putCloseable("url", parsedLink.url());
+                var _ = MDC.putCloseable("resourceKey", resourceKey.toString())) {
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.TRACKED_LINK_GET_OR_CREATE_STARTED)
@@ -86,8 +82,6 @@ public class LinkService {
 
                         return createdTrackedLink;
                     });
-        } finally {
-            MDC.clear();
         }
     }
 
@@ -97,10 +91,9 @@ public class LinkService {
         LinkHandler handler = handlerRegistry.getHandler(uri);
         ResourceKey resourceKey = trackedLink.getResourceKey();
 
-        try {
-            MDC.put("url", uri.toString());
-            MDC.put("resourceKey", resourceKey.toString());
-            MDC.put("trackedLinkId", trackedLink.getId().toString());
+        try (var _ = MDC.putCloseable("url", uri.toString());
+                var _ = MDC.putCloseable("resourceKey", resourceKey.toString());
+                var _ = MDC.putCloseable("trackedLinkId", trackedLink.getId().toString())) {
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.TRACKED_LINK_DELETE_STARTED)
@@ -111,8 +104,6 @@ public class LinkService {
             trackedLinkRepository.delete(trackedLink);
 
             log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_DELETED).log("Tracked link deleted");
-        } finally {
-            MDC.clear();
         }
     }
 
@@ -121,18 +112,16 @@ public class LinkService {
             TrackedLink newTrackedLink = new TrackedLink(null, parsedLink.url(), parsedLink.resourceKey());
             TrackedLink savedTrackedLink = trackedLinkRepository.save(newTrackedLink);
 
-            MDC.put("trackedLinkId", savedTrackedLink.getId().toString());
-            MDC.put("url", savedTrackedLink.getUrl());
-            MDC.put("resourceKey", savedTrackedLink.getResourceKey().toString());
+            try (var _ = MDC.putCloseable("trackedLinkId", savedTrackedLink.getId().toString())) {
+                log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_SAVED).log("Tracked link saved");
 
-            log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_SAVED).log("Tracked link saved");
+                handler.createTrackingState(savedTrackedLink);
 
-            handler.createTrackingState(savedTrackedLink);
-
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.TRACKING_STATE_CREATED)
-                    .addKeyValue("handler", handler.getClass().getSimpleName())
-                    .log("Tracking state created");
+                log.atInfo()
+                        .addKeyValue("event", LogEvent.TRACKING_STATE_CREATED)
+                        .addKeyValue("handler", handler.getClass().getSimpleName())
+                        .log("Tracking state created");
+            }
 
             return savedTrackedLink;
         } catch (RuntimeException e) {
@@ -143,8 +132,6 @@ public class LinkService {
                     .log("Tracked link creation failed, rollback applied");
 
             throw e;
-        } finally {
-            MDC.clear();
         }
     }
 }

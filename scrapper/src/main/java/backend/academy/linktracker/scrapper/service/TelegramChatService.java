@@ -17,8 +17,7 @@ public class TelegramChatService {
     private final TelegramChatRepository telegramChatRepository;
 
     public void registerChat(long chatId) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
+        try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTER_STARTED)
@@ -35,14 +34,11 @@ public class TelegramChatService {
             }
 
             log.atInfo().addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTERED).log("Telegram chat registered");
-        } finally {
-            MDC.clear();
         }
     }
 
     public void unregisterChat(long chatId) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
+        try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_STARTED)
@@ -60,8 +56,6 @@ public class TelegramChatService {
             log.atInfo()
                     .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTERED)
                     .log("Telegram chat unregistered");
-        } finally {
-            MDC.clear();
         }
     }
 }

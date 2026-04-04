@@ -32,10 +32,9 @@ public class SubscriptionService {
     private final SubscriptionMapper subscriptionMapper;
 
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
-            MDC.put("url", request.link().toString());
-            MDC.put("tagsCount", request.tags() == null ? "0" : String.valueOf(request.tags().size()));
+        try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId));
+                var _ = MDC.putCloseable(
+                        "tagsCount", request.tags() == null ? "0" : String.valueOf(request.tags().size()))) {
 
             log.atInfo().addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_STARTED).log("Subscription add started");
             TelegramChat telegramChat = telegramChatRepository
@@ -63,15 +62,11 @@ public class SubscriptionService {
                     .log("Subscription added");
 
             return subscriptionMapper.toLinkResponse(savedSubscription);
-        } finally {
-            MDC.clear();
         }
     }
 
     public LinkResponse removeSubscription(long chatId, RemoveLinkRequest request) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
-            MDC.put("url", request.link().toString());
+        try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_STARTED)
@@ -106,15 +101,12 @@ public class SubscriptionService {
                     .log("Subscription removed");
 
             return subscriptionMapper.toLinkResponse(removedSubscription);
-        } finally {
-            MDC.clear();
         }
     }
 
     @Transactional(readOnly = true)
     public ListLinksResponse getAllSubscriptions(long chatId) {
-        try {
-            MDC.put("chatId", String.valueOf(chatId));
+        try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {
 
             log.atDebug()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_LIST_REQUESTED)
@@ -140,8 +132,6 @@ public class SubscriptionService {
                     .log("Subscription list loaded");
 
             return new ListLinksResponse(links, links.size());
-        } finally {
-            MDC.clear();
         }
     }
 }
