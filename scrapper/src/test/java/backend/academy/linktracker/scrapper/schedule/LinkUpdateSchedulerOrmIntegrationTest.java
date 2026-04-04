@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.integration;
+package backend.academy.linktracker.scrapper.schedule;
 
 import org.springframework.test.context.TestPropertySource;
 

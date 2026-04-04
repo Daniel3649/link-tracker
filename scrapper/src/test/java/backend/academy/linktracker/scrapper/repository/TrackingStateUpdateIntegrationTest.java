@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.integration;
+package backend.academy.linktracker.scrapper.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,6 +8,7 @@ import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverfl
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
+import backend.academy.linktracker.scrapper.integration.AbstractIntegrationTest;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 

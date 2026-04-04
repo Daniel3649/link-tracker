@@ -1,10 +1,9 @@
-package backend.academy.linktracker.scrapper.integration;
+package backend.academy.linktracker.scrapper.clients.github;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.*;
 
-import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import com.github.tomakehurst.wiremock.WireMockServer;

@@ -1,11 +1,10 @@
-package backend.academy.linktracker.scrapper.integration;
+package backend.academy.linktracker.scrapper.clients.stackoverflow;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.properties.StackoverflowProperties;

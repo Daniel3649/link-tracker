@@ -21,7 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Testcontainers(disabledWithoutDocker = true)
-abstract class AbstractIntegrationTest extends TestcontainersConfiguration {
+public abstract class AbstractIntegrationTest extends TestcontainersConfiguration {
 
     @Autowired
     protected TelegramChatRepository telegramChatRepository;
@@ -42,7 +42,7 @@ abstract class AbstractIntegrationTest extends TestcontainersConfiguration {
     protected StackOverflowTrackingStateRepository stackOverflowTrackingStateRepository;
 
     @BeforeEach
-    void clearRepositories() {
+    protected void clearRepositories() {
         telegramChatRepository.clear();
         trackedLinkRepository.clear();
         subscriptionRepository.clear();

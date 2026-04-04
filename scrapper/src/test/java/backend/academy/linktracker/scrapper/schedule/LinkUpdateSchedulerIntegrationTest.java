@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.integration;
+package backend.academy.linktracker.scrapper.schedule;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,7 +12,7 @@ import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepos
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
-import backend.academy.linktracker.scrapper.schedule.LinkUpdateScheduler;
+import backend.academy.linktracker.scrapper.integration.AbstractIntegrationTest;
 import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
 import java.net.URI;
 import java.util.Optional;

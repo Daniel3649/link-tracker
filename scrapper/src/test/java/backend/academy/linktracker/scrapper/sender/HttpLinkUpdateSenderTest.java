@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.integration;
+package backend.academy.linktracker.scrapper.sender;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.http.HttpMethod.POST;
@@ -8,7 +8,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.exception.client.BotClientException;
-import backend.academy.linktracker.scrapper.sender.HttpLinkUpdateSender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.util.List;
