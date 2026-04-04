@@ -1,0 +1,10 @@
+spring:
+  grpc:
+    server:
+      enabled: false
+      servlet:
+        enabled: false
+
+app:
+  scrapper:
+    transport: http

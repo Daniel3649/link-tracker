@@ -12,12 +12,13 @@ import org.junit.jupiter.api.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GitHubClientTest {
 
     private WireMockServer wireMock;
     private GitHubClient gitHubClient;
 
-    @BeforeEach
+    @BeforeAll
     void setUp() {
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
@@ -26,7 +27,12 @@ class GitHubClientTest {
                 RestClient.builder().baseUrl(wireMock.baseUrl()).build());
     }
 
-    @AfterEach
+    @BeforeEach
+    void resetWireMock() {
+        wireMock.resetAll();
+    }
+
+    @AfterAll
     void tearDown() {
         wireMock.stop();
     }
@@ -56,7 +62,10 @@ class GitHubClientTest {
         GitHubRepositoryKey key = new GitHubRepositoryKey("octocat", "Hello-World");
 
         wireMock.stubFor(get(urlEqualTo("/repos/octocat/Hello-World"))
-                .willReturn(aResponse().withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())));
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("")));
 
         var result = gitHubClient.fetchRepository(key, null);
 
