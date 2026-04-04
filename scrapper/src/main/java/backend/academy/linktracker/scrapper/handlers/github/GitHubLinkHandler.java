@@ -48,7 +48,8 @@ public class GitHubLinkHandler implements LinkHandler {
         GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key, null);
         if (!repositoryResult.isOk()) {
             throw new RepositoryPollingException("Failed to initialize GitHub tracking state for %s. HTTP status: %s"
-                    .formatted(trackedLink.getUrl(), repositoryResult.statusCode().value()));
+                    .formatted(
+                            trackedLink.getUrl(), repositoryResult.statusCode().value()));
         }
 
         String etag = requireEtag(repositoryResult, trackedLink.getUrl());
@@ -56,7 +57,8 @@ public class GitHubLinkHandler implements LinkHandler {
 
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
         state.setEtag(etag);
-        state.setLastActivityId(recentActivities.isEmpty() ? null : recentActivities.getFirst().id());
+        state.setLastActivityId(
+                recentActivities.isEmpty() ? null : recentActivities.getFirst().id());
 
         trackingStateRepository.saveIfAbsent(state);
     }
@@ -84,12 +86,14 @@ public class GitHubLinkHandler implements LinkHandler {
 
         if (!repositoryResult.isOk()) {
             throw new RepositoryPollingException("Failed to check GitHub repository %s. HTTP status: %s"
-                    .formatted(trackedLink.getUrl(), repositoryResult.statusCode().value()));
+                    .formatted(
+                            trackedLink.getUrl(), repositoryResult.statusCode().value()));
         }
 
         String newEtag = requireEtag(repositoryResult, trackedLink.getUrl());
 
-        List<GitHubRepositoryActivityResponse> recentActivities = gitHubClient.fetchRecentActivities(key, ACTIVITY_FETCH_LIMIT);
+        List<GitHubRepositoryActivityResponse> recentActivities =
+                gitHubClient.fetchRecentActivities(key, ACTIVITY_FETCH_LIMIT);
 
         List<GitHubRepositoryActivityResponse> newActivities =
                 activityExtractor.extractNewActivities(recentActivities, state.getLastActivityId());

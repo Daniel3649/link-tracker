@@ -34,7 +34,8 @@ public class TelegramUpdateService {
                 return;
             }
 
-            try (var _ = MDC.putCloseable("chatId", String.valueOf(message.chat().id()))) {
+            try (var _ =
+                    MDC.putCloseable("chatId", String.valueOf(message.chat().id()))) {
                 String messageText = message.text();
                 if (messageText == null) {
                     log.atDebug()

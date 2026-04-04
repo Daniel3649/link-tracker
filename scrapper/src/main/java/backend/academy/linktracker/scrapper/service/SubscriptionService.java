@@ -34,7 +34,10 @@ public class SubscriptionService {
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
         try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId));
                 var _ = MDC.putCloseable(
-                        "tagsCount", request.tags() == null ? "0" : String.valueOf(request.tags().size()))) {
+                        "tagsCount",
+                        request.tags() == null
+                                ? "0"
+                                : String.valueOf(request.tags().size()))) {
 
             log.atInfo().addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_STARTED).log("Subscription add started");
             TelegramChat telegramChat = telegramChatRepository
@@ -92,7 +95,8 @@ public class SubscriptionService {
                         return new SubscriptionNotFoundException("Subscription not found for link: " + request.link());
                     });
 
-            Subscription removedSubscription = subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
+            Subscription removedSubscription =
+                    subscriptionPersistenceService.deleteSubscription(trackedLink, telegramChat);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVED)

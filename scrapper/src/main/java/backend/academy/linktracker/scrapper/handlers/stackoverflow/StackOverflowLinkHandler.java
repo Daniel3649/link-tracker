@@ -73,7 +73,8 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
     @Override
     public Optional<LinkChange> checkForUpdate(TrackedLink trackedLink) {
-        StackOverflowTrackingState state = repository.findByTrackedLink(trackedLink).orElse(null);
+        StackOverflowTrackingState state =
+                repository.findByTrackedLink(trackedLink).orElse(null);
 
         if (state == null) {
             return Optional.empty();
@@ -104,7 +105,8 @@ public class StackOverflowLinkHandler implements LinkHandler {
             return Optional.empty();
         }
 
-        StackOverflowTimelineFetchResult timelineResult = stackOverflowClient.fetchQuestionTimeline(key, TIMELINE_FETCH_LIMIT);
+        StackOverflowTimelineFetchResult timelineResult =
+                stackOverflowClient.fetchQuestionTimeline(key, TIMELINE_FETCH_LIMIT);
 
         List<StackOverflowQuestionTimelineEventResponse> newEvents =
                 timelineSupport.extractNewEvents(timelineResult.events(), cursor);

@@ -41,7 +41,8 @@ public class LinkService {
             log.atDebug()
                     .addKeyValue("event", "tracked_link_lookup_finished")
                     .addKeyValue("found", trackedLink.isPresent())
-                    .addKeyValue("trackedLinkId", trackedLink.map(TrackedLink::getId).orElse(null))
+                    .addKeyValue(
+                            "trackedLinkId", trackedLink.map(TrackedLink::getId).orElse(null))
                     .log("Tracked link lookup finished");
 
             return trackedLink;
@@ -112,7 +113,8 @@ public class LinkService {
             TrackedLink newTrackedLink = new TrackedLink(null, parsedLink.url(), parsedLink.resourceKey());
             TrackedLink savedTrackedLink = trackedLinkRepository.save(newTrackedLink);
 
-            try (var _ = MDC.putCloseable("trackedLinkId", savedTrackedLink.getId().toString())) {
+            try (var _ =
+                    MDC.putCloseable("trackedLinkId", savedTrackedLink.getId().toString())) {
                 log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_SAVED).log("Tracked link saved");
 
                 handler.createTrackingState(savedTrackedLink);

@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.link.parser;
 
 import backend.academy.linktracker.scrapper.common.ParsedLink;
-import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
+import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import java.net.URI;
 
 public class StackOverflowQuestionLinkParser implements LinkParser {
