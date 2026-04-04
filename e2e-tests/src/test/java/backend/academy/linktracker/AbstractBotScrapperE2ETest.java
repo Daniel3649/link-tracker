@@ -21,6 +21,7 @@ import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
 
@@ -50,6 +51,7 @@ abstract class AbstractBotScrapperE2ETest {
     }
 
     protected static final Network NETWORK = Network.newNetwork();
+    private static final Duration CONTAINER_STARTUP_TIMEOUT = Duration.ofSeconds(90);
 
     @Container
     protected static final GenericContainer<?> SCRAPPER = new GenericContainer<>(
@@ -71,8 +73,11 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("STACKOVERFLOW_KEY", "dummy-stackoverflow-key")
             .withEnv("STACKOVERFLOW_ACCESS_KEY", "dummy-stackoverflow-access-key")
             .withEnv("APP_SCHEDULER_LINK_CHECK_DELAY_MS", "1h")
-            .waitingFor(Wait.forHttp("/actuator/health").forPort(8081).forStatusCode(200))
-            .withStartupTimeout(Duration.ofSeconds(60));
+            .waitingFor(new WaitAllStrategy()
+                    .withStrategy(Wait.forListeningPort())
+                    .withStrategy(Wait.forLogMessage(".*Started ScrapperApplication.*", 1))
+                    .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
+            .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT);
 
     @Container
     protected static final GenericContainer<?> BOT = new GenericContainer<>(
@@ -95,8 +100,11 @@ abstract class AbstractBotScrapperE2ETest {
             .withEnv("APP_TELEGRAM_DEBUG", "true")
             .withEnv("APP_SCRAPPER_TRANSPORT", "http")
             .withEnv("APP_SCRAPPER_BASE_URL", "http://scrapper:8081")
-            .waitingFor(Wait.forHttp("/actuator/health").forPort(8080).forStatusCode(200))
-            .withStartupTimeout(Duration.ofSeconds(60));
+            .waitingFor(new WaitAllStrategy()
+                    .withStrategy(Wait.forListeningPort())
+                    .withStrategy(Wait.forLogMessage(".*Started BotApplication.*", 1))
+                    .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT))
+            .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT);
 
     protected String scrapperBaseUrl() {
         return "http://" + SCRAPPER.getHost() + ":" + SCRAPPER.getMappedPort(8081);
