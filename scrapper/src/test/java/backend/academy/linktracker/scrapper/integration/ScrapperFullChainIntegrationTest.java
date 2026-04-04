@@ -15,14 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
-import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
-import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
-import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,36 +29,8 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private TelegramChatRepository telegramChatRepository;
-
-    @Autowired
-    private TrackedLinkRepository trackedLinkRepository;
-
-    @Autowired
-    private SubscriptionTagRepository subscriptionTagRepository;
-
-    @Autowired
-    private SubscriptionRepository subscriptionRepository;
-
-    @Autowired
-    private GitHubTrackingStateRepository gitHubTrackingStateRepository;
-
-    @Autowired
-    private StackOverflowTrackingStateRepository stackOverflowTrackingStateRepository;
-
     @InjectWireMock
     private WireMockServer wireMock;
-
-    @BeforeEach
-    void cleanRepositories() {
-        telegramChatRepository.clear();
-        trackedLinkRepository.clear();
-        subscriptionRepository.clear();
-        subscriptionTagRepository.clear();
-        gitHubTrackingStateRepository.clear();
-        stackOverflowTrackingStateRepository.clear();
-    }
 
     @Test
     void shouldRegisterChatAddGithubLinkAndReturnItInList() throws Exception {

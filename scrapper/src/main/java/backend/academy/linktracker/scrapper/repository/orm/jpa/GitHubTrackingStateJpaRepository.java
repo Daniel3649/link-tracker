@@ -4,5 +4,5 @@ import backend.academy.linktracker.scrapper.repository.orm.entity.GitHubTracking
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GitHubTrackingStateJpaRepository extends JpaRepository<GitHubTrackingStateEntity, Long> {
-    void deleteByTrackedLink_Id(Long trackedLinkId);
+    void deleteByTrackedLinkId(Long trackedLinkId);
 }

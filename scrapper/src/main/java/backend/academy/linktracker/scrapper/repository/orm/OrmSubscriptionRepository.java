@@ -40,7 +40,7 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
 
     @Override
     public boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
-        return repository.existsByTrackedLink_IdAndTelegramChat_ChatId(trackedLink.getId(), telegramChat.id());
+        return repository.existsByTrackedLinkIdAndTelegramChatChatId(trackedLink.getId(), telegramChat.id());
     }
 
     @Override
@@ -70,31 +70,31 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
 
     @Override
     public boolean existsByTrackedLink(TrackedLink trackedLink) {
-        return repository.existsByTrackedLink_Id(trackedLink.getId());
+        return repository.existsByTrackedLinkId(trackedLink.getId());
     }
 
     @Override
     public Optional<Subscription> findByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
         return repository
-                .findByTrackedLink_IdAndTelegramChat_ChatId(trackedLink.getId(), telegramChat.id())
+                .findByTrackedLinkIdAndTelegramChatChatId(trackedLink.getId(), telegramChat.id())
                 .map(this::toDomain);
     }
 
     @Override
     public void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat) {
-        repository.deleteByTrackedLink_IdAndTelegramChat_ChatId(trackedLink.getId(), telegramChat.id());
+        repository.deleteByTrackedLinkIdAndTelegramChatChatId(trackedLink.getId(), telegramChat.id());
     }
 
     @Override
     public List<Subscription> findAllByTelegramChatId(Long chatId) {
-        return repository.findAllByTelegramChat_ChatIdOrderByIdAsc(chatId).stream()
+        return repository.findAllByTelegramChatChatIdOrderByIdAsc(chatId).stream()
                 .map(this::toDomain)
                 .toList();
     }
 
     @Override
     public List<Subscription> findAllByTrackedLink(TrackedLink trackedLink) {
-        return repository.findAllByTrackedLink_IdOrderByIdAsc(trackedLink.getId()).stream()
+        return repository.findAllByTrackedLinkIdOrderByIdAsc(trackedLink.getId()).stream()
                 .map(this::toDomain)
                 .toList();
     }

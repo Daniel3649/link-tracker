@@ -12,17 +12,10 @@ import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepos
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
-import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
-import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
-import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
-import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import backend.academy.linktracker.scrapper.schedule.LinkUpdateScheduler;
 import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
 import java.net.URI;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,39 +26,11 @@ abstract class LinkUpdateSchedulerIntegrationTest extends AbstractIntegrationTes
     @Autowired
     private LinkUpdateScheduler scheduler;
 
-    @Autowired
-    private TelegramChatRepository telegramChatRepository;
-
-    @Autowired
-    private TrackedLinkRepository trackedLinkRepository;
-
-    @Autowired
-    private SubscriptionRepository subscriptionRepository;
-
-    @Autowired
-    private SubscriptionTagRepository subscriptionTagRepository;
-
-    @Autowired
-    private GitHubTrackingStateRepository gitHubTrackingStateRepository;
-
-    @Autowired
-    private StackOverflowTrackingStateRepository stackOverflowTrackingStateRepository;
-
     @MockitoBean
     private LinkHandlerRegistry linkHandlerRegistry;
 
     @MockitoBean
     private LinkUpdateSender linkUpdateSender;
-
-    @BeforeEach
-    void cleanRepositories() {
-        telegramChatRepository.clear();
-        trackedLinkRepository.clear();
-        subscriptionRepository.clear();
-        subscriptionTagRepository.clear();
-        gitHubTrackingStateRepository.clear();
-        stackOverflowTrackingStateRepository.clear();
-    }
 
     @Test
     void shouldSendUpdateOnlyToSubscribedChats() {

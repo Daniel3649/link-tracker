@@ -4,5 +4,5 @@ import backend.academy.linktracker.scrapper.repository.orm.entity.StackOverflowT
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StackOverflowTrackingStateJpaRepository extends JpaRepository<StackOverflowTrackingStateEntity, Long> {
-    void deleteByTrackedLink_Id(Long trackedLinkId);
+    void deleteByTrackedLinkId(Long trackedLinkId);
 }

@@ -6,15 +6,15 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SubscriptionJpaRepository extends JpaRepository<SubscriptionEntity, Long> {
-    boolean existsByTrackedLink_IdAndTelegramChat_ChatId(Long trackedLinkId, Long telegramChatId);
+    boolean existsByTrackedLinkIdAndTelegramChatChatId(Long trackedLinkId, Long telegramChatId);
 
-    boolean existsByTrackedLink_Id(Long trackedLinkId);
+    boolean existsByTrackedLinkId(Long trackedLinkId);
 
-    Optional<SubscriptionEntity> findByTrackedLink_IdAndTelegramChat_ChatId(Long trackedLinkId, Long telegramChatId);
+    Optional<SubscriptionEntity> findByTrackedLinkIdAndTelegramChatChatId(Long trackedLinkId, Long telegramChatId);
 
-    void deleteByTrackedLink_IdAndTelegramChat_ChatId(Long trackedLinkId, Long telegramChatId);
+    void deleteByTrackedLinkIdAndTelegramChatChatId(Long trackedLinkId, Long telegramChatId);
 
-    List<SubscriptionEntity> findAllByTelegramChat_ChatIdOrderByIdAsc(Long telegramChatId);
+    List<SubscriptionEntity> findAllByTelegramChatChatIdOrderByIdAsc(Long telegramChatId);
 
-    List<SubscriptionEntity> findAllByTrackedLink_IdOrderByIdAsc(Long trackedLinkId);
+    List<SubscriptionEntity> findAllByTrackedLinkIdOrderByIdAsc(Long trackedLinkId);
 }

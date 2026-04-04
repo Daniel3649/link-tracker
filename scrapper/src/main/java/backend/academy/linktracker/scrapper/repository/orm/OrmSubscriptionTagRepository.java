@@ -50,7 +50,7 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
 
     @Override
     public boolean existsBySubscriptionAndTag(Subscription subscription, String tag) {
-        return repository.existsBySubscription_IdAndId_Tag(subscription.getId(), tag);
+        return repository.existsBySubscriptionIdAndIdTag(subscription.getId(), tag);
     }
 
     @Override
@@ -70,17 +70,17 @@ public class OrmSubscriptionTagRepository implements SubscriptionTagRepository {
 
     @Override
     public boolean deleteTag(Subscription subscription, String tag) {
-        return repository.deleteBySubscription_IdAndId_Tag(subscription.getId(), tag) > 0;
+        return repository.deleteBySubscriptionIdAndIdTag(subscription.getId(), tag) > 0;
     }
 
     @Override
     public void deleteAllBySubscription(Subscription subscription) {
-        repository.deleteAllBySubscription_Id(subscription.getId());
+        repository.deleteAllBySubscriptionId(subscription.getId());
     }
 
     @Override
     public Set<String> findAllBySubscription(Subscription subscription) {
-        return repository.findAllBySubscription_IdOrderById_TagAsc(subscription.getId()).stream()
+        return repository.findAllBySubscriptionIdOrderByIdTagAsc(subscription.getId()).stream()
                 .map(SubscriptionTagEntity::getTag)
                 .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
     }

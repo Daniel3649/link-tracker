@@ -8,46 +8,10 @@ import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverfl
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
-import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
-import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
-import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
-import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
-import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import java.time.Instant;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 abstract class TrackingStateUpdateIntegrationTest extends AbstractIntegrationTest {
-
-    @Autowired
-    private TelegramChatRepository telegramChatRepository;
-
-    @Autowired
-    private TrackedLinkRepository trackedLinkRepository;
-
-    @Autowired
-    private SubscriptionRepository subscriptionRepository;
-
-    @Autowired
-    private SubscriptionTagRepository subscriptionTagRepository;
-
-    @Autowired
-    private GitHubTrackingStateRepository gitHubTrackingStateRepository;
-
-    @Autowired
-    private StackOverflowTrackingStateRepository stackOverflowTrackingStateRepository;
-
-    @BeforeEach
-    void cleanRepositories() {
-        telegramChatRepository.clear();
-        trackedLinkRepository.clear();
-        subscriptionRepository.clear();
-        subscriptionTagRepository.clear();
-        gitHubTrackingStateRepository.clear();
-        stackOverflowTrackingStateRepository.clear();
-    }
 
     @Test
     void shouldUpdateGitHubTrackingState() {

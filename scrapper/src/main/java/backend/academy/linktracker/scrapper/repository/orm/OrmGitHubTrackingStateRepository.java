@@ -35,7 +35,7 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
 
     @Override
     public void deleteByTrackedLinkId(Long id) {
-        repository.deleteByTrackedLink_Id(id);
+        repository.deleteByTrackedLinkId(id);
     }
 
     @Override

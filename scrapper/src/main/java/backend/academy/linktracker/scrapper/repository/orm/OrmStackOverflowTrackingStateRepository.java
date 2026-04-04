@@ -25,7 +25,7 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
 
     @Override
     public void deleteByTrackedLinkId(Long id) {
-        repository.deleteByTrackedLink_Id(id);
+        repository.deleteByTrackedLinkId(id);
     }
 
     @Override
