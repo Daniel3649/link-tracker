@@ -14,5 +14,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @NoArgsConstructor
 public class ScrapperProperties {
     @NotBlank
-    private String baseUrl;
+    private String baseUrl = "http://localhost:8081";
+
+    @NotBlank
+    private String grpcAddress = "localhost:9091";
+
+    private TransportType transport = TransportType.HTTP;
 }

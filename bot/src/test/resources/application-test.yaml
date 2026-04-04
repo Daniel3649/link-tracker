@@ -1,3 +1,10 @@
+spring:
+  grpc:
+    server:
+      enabled: false
+      servlet:
+        enabled: false
+
 app:
   telegram:
     url: ${wiremock.server.baseUrl}/bot

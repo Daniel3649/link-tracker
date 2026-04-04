@@ -54,6 +54,7 @@
         <commons-lang.version>3.20.0</commons-lang.version>
         <commons-text.version>1.15.0</commons-text.version>
         <datafaker.version>2.5.2</datafaker.version>
+        <error-prone.annotations.version>2.41.0</error-prone.annotations.version>
         <grpc.version>1.77.1</grpc.version>
         <guava.version>33.5.0-jre</guava.version>
         <instancio.version>5.5.1</instancio.version>
@@ -124,6 +125,11 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>${error-prone.annotations.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

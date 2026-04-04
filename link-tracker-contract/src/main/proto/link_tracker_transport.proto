@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package backend.academy.linktracker.contract.grpc;
+
+import "google/protobuf/empty.proto";
+
+option java_multiple_files = true;
+option java_package = "backend.academy.linktracker.contract.grpc";
+option java_outer_classname = "LinkTrackerTransportProto";
+
+message ChatCommand {
+  int64 chat_id = 1;
+}
+
+message AddLinkCommand {
+  int64 chat_id = 1;
+  string link = 2;
+  repeated string tags = 3;
+  repeated string filters = 4;
+}
+
+message RemoveLinkCommand {
+  int64 chat_id = 1;
+  string link = 2;
+}
+
+message ListLinksCommand {
+  int64 chat_id = 1;
+}
+
+message LinkResponseMessage {
+  int64 id = 1;
+  string url = 2;
+  repeated string tags = 3;
+  repeated string filters = 4;
+}
+
+message ListLinksResponseMessage {
+  repeated LinkResponseMessage links = 1;
+  int32 size = 2;
+}
+
+message LinkUpdateMessage {
+  int64 id = 1;
+  string url = 2;
+  string description = 3;
+  repeated int64 tg_chat_ids = 4;
+}
+
+service ScrapperApi {
+  rpc RegisterChat(ChatCommand) returns (google.protobuf.Empty);
+  rpc UnregisterChat(ChatCommand) returns (google.protobuf.Empty);
+  rpc AddLink(AddLinkCommand) returns (LinkResponseMessage);
+  rpc RemoveLink(RemoveLinkCommand) returns (LinkResponseMessage);
+  rpc ListLinks(ListLinksCommand) returns (ListLinksResponseMessage);
+}
+
+service BotUpdatesApi {
+  rpc SendUpdate(LinkUpdateMessage) returns (google.protobuf.Empty);
+}

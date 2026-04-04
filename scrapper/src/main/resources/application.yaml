@@ -4,6 +4,15 @@ server:
 spring:
   application:
     name: scrapper
+  grpc:
+    server:
+      port: 9091
+      servlet:
+        enabled: false
+    client:
+      channels:
+        bot:
+          address: ${app.bot.grpc-address}
   config:
     import:
       - optional:file:.env.properties
@@ -23,7 +32,9 @@ app:
   scheduler:
     link-check-delay-ms: 60s
   bot:
+    transport: http
     base-url: http://localhost:8080
+    grpc-address: localhost:9090
 
 logging:
   pattern:
