@@ -10,6 +10,7 @@ import backend.academy.linktracker.scrapper.repository.orm.entity.LinkTypeEntity
 import backend.academy.linktracker.scrapper.repository.orm.entity.TrackedLinkEntity;
 import backend.academy.linktracker.scrapper.repository.orm.jpa.TrackedLinkJpaRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,12 @@ public class OrmTrackedLinkRepository implements TrackedLinkRepository {
     @Override
     public Optional<TrackedLink> findByResourceKey(ResourceKey resourceKey) {
         return findEntityByResourceKey(resourceKey).map(OrmTrackedLinkSupport::toDomain);
+    }
+
+    @Override
+    public Optional<TrackedLink> findByIdForUpdate(Long id) {
+        TrackedLinkEntity entity = entityManager.find(TrackedLinkEntity.class, id, LockModeType.PESSIMISTIC_WRITE);
+        return Optional.ofNullable(entity).map(OrmTrackedLinkSupport::toDomain);
     }
 
     @Override

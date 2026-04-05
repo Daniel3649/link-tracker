@@ -10,6 +10,7 @@ import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
+import backend.academy.linktracker.scrapper.exception.link.NotFoundTrackedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
 import backend.academy.linktracker.scrapper.mapper.SubscriptionMapper;
@@ -57,14 +58,20 @@ public class SubscriptionService {
             Subscription savedSubscription;
             TrackedLink trackedLink = linkService.findTrackedLink(request.link()).orElse(null);
             if (trackedLink != null) {
-                savedSubscription =
-                        subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, normalizedTags);
+                try {
+                    savedSubscription =
+                            subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, normalizedTags);
+                } catch (NotFoundTrackedLinkException e) {
+                    PreparedTrackedLink preparedTrackedLink = linkService.prepareTrackedLink(request.link());
+                    savedSubscription = subscriptionPersistenceService.createSubscription(
+                            preparedTrackedLink, telegramChat, normalizedTags);
+                }
             } else {
                 PreparedTrackedLink preparedTrackedLink = linkService.prepareTrackedLink(request.link());
                 savedSubscription =
                         subscriptionPersistenceService.createSubscription(preparedTrackedLink, telegramChat, normalizedTags);
-                trackedLink = savedSubscription.getTrackedLink();
             }
+            trackedLink = savedSubscription.getTrackedLink();
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_ADDED)

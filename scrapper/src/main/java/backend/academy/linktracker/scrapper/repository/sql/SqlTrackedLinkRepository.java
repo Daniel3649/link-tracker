@@ -26,6 +26,18 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
     }
 
     @Override
+    public Optional<TrackedLink> findByIdForUpdate(Long id) {
+        return jdbcTemplate
+                .query(
+                        "select " + SqlTrackedLinkSupport.TRACKED_LINK_COLUMNS
+                                + " from tracked_link where id = :id for update",
+                        new MapSqlParameterSource("id", id),
+                        (resultSet, rowNum) -> SqlTrackedLinkSupport.mapTrackedLink(resultSet))
+                .stream()
+                .findFirst();
+    }
+
+    @Override
     public TrackedLink save(TrackedLink trackedLink) {
         MapSqlParameterSource parameters = SqlTrackedLinkSupport.trackedLinkParams(trackedLink);
 

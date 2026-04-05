@@ -60,6 +60,11 @@ public class LinkService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<TrackedLink> lockTrackedLink(TrackedLink trackedLink) {
+        return trackedLinkRepository.findByIdForUpdate(trackedLink.getId());
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
     public TrackedLink getOrCreateTrackedLink(PreparedTrackedLink preparedTrackedLink) {
         ParsedLink parsedLink = preparedTrackedLink.parsedLink();
         PreparedTrackingState trackingState = preparedTrackedLink.trackingState();

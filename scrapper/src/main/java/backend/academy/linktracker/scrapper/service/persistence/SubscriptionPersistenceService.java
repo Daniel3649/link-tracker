@@ -4,6 +4,7 @@ import backend.academy.linktracker.scrapper.common.PreparedTrackedLink;
 import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
+import backend.academy.linktracker.scrapper.exception.link.NotFoundTrackedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
@@ -34,7 +35,17 @@ public class SubscriptionPersistenceService {
 
     @Transactional
     public Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
-        return persistSubscription(trackedLink, telegramChat, tags);
+        TrackedLink lockedTrackedLink = linkService.lockTrackedLink(trackedLink).orElseThrow(() -> {
+            log.atWarn()
+                    .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_FAILED)
+                    .addKeyValue("reason", "tracked_link_not_found")
+                    .addKeyValue("trackedLinkId", trackedLink.getId())
+                    .log("Subscription add failed because tracked link disappeared");
+
+            return new NotFoundTrackedLinkException("Tracked link not found: " + trackedLink.getUrl());
+        });
+
+        return persistSubscription(lockedTrackedLink, telegramChat, tags);
     }
 
     private Subscription persistSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
@@ -62,8 +73,16 @@ public class SubscriptionPersistenceService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Subscription deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
+        TrackedLink lockedTrackedLink = linkService.lockTrackedLink(trackedLink).orElseThrow(() -> {
+            log.atWarn()
+                    .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_TRACKED_LINK_NOT_FOUND)
+                    .log("Subscription remove rejected because tracked link disappeared");
+
+            return new SubscriptionNotFoundException("Subscription not found for link: " + trackedLink.getUrl());
+        });
+
         Subscription subscription = subscriptionRepository
-                .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
+                .findByTrackedLinkAndTelegramChat(lockedTrackedLink, telegramChat)
                 .orElseThrow(() -> {
                     log.atWarn()
                             .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_REJECTED)
@@ -75,11 +94,11 @@ public class SubscriptionPersistenceService {
                 });
 
         subscriptionTagRepository.deleteAllBySubscription(subscription);
-        subscriptionRepository.deleteByTrackedLinkAndTelegramChat(trackedLink, telegramChat);
+        subscriptionRepository.deleteByTrackedLinkAndTelegramChat(lockedTrackedLink, telegramChat);
 
-        boolean trackedLinkHasSubscribers = subscriptionRepository.existsByTrackedLink(trackedLink);
+        boolean trackedLinkHasSubscribers = subscriptionRepository.existsByTrackedLink(lockedTrackedLink);
         if (!trackedLinkHasSubscribers) {
-            linkService.deleteTrackedLinkWithState(trackedLink);
+            linkService.deleteTrackedLinkWithState(lockedTrackedLink);
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.ORPHAN_TRACKED_LINK_DELETED)
