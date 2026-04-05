@@ -24,14 +24,16 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,11 +60,31 @@ class LinkUpdateSchedulerTest {
     @Mock
     private SchedulerProperties schedulerProperties;
 
-    @Spy
+    private ExecutorService linkUpdateCheckExecutorService;
+
     private LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
 
-    @InjectMocks
     private LinkUpdateScheduler scheduler;
+
+    @BeforeEach
+    void setUp() {
+        linkUpdateCheckExecutorService = Executors.newFixedThreadPool(4);
+        linkChangeDescriptionFormatter = new LinkChangeDescriptionFormatter();
+        scheduler = new LinkUpdateScheduler(
+                trackedLinkRepository,
+                subscriptionRepository,
+                linkHandlerRegistry,
+                linkUpdateSender,
+                textNotificationSender,
+                linkChangeDescriptionFormatter,
+                schedulerProperties,
+                linkUpdateCheckExecutorService);
+    }
+
+    @AfterEach
+    void tearDownExecutor() {
+        linkUpdateCheckExecutorService.shutdownNow();
+    }
 
     @Test
     void shouldSendUpdateOnlyToUsersWhoTrackThisLink() {

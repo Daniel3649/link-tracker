@@ -22,15 +22,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +49,8 @@ public class LinkUpdateScheduler {
     private final TextNotificationSender textNotificationSender;
     private final LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
     private final SchedulerProperties schedulerProperties;
+    @Qualifier("linkUpdateCheckExecutorService")
+    private final ExecutorService linkUpdateCheckExecutorService;
 
     @Scheduled(fixedDelayString = "${app.scheduler.link-check-delay-ms}")
     public void checkUpdates() {
@@ -96,7 +95,6 @@ public class LinkUpdateScheduler {
         long lastSeenId = 0L;
         int processedLinksCount = 0;
         List<LinkCheckFailure> failures = new ArrayList<>();
-        ExecutorService executorService = createExecutor(parallelism);
 
         try {
             while (true) {
@@ -105,20 +103,19 @@ public class LinkUpdateScheduler {
                     break;
                 }
 
-                failures.addAll(processBatch(trackedLinks, executorService));
+                failures.addAll(processBatch(trackedLinks, parallelism));
                 processedLinksCount += trackedLinks.size();
                 lastSeenId = trackedLinks.getLast().getId();
             }
         } finally {
-            shutdownExecutor(executorService);
             updateCheckInProgress.set(false);
         }
 
         return new LinkUpdateCheckReport(processedLinksCount, List.copyOf(failures), false);
     }
 
-    private List<LinkCheckFailure> processBatch(List<TrackedLink> trackedLinks, ExecutorService executorService) {
-        if (executorService == null || trackedLinks.size() <= 1) {
+    private List<LinkCheckFailure> processBatch(List<TrackedLink> trackedLinks, int parallelism) {
+        if (parallelism <= 1 || trackedLinks.size() <= 1) {
             return trackedLinks.stream()
                     .map(this::checkTrackedLink)
                     .flatMap(Optional::stream)
@@ -126,7 +123,7 @@ public class LinkUpdateScheduler {
         }
 
         List<Future<Optional<LinkCheckFailure>>> futures = trackedLinks.stream()
-                .map(trackedLink -> executorService.submit(() -> checkTrackedLink(trackedLink)))
+                .map(trackedLink -> linkUpdateCheckExecutorService.submit(() -> checkTrackedLink(trackedLink)))
                 .toList();
 
         List<LinkCheckFailure> failures = new ArrayList<>();
@@ -183,38 +180,6 @@ public class LinkUpdateScheduler {
                 trackedLink.getUrl(),
                 throwable.getClass().getSimpleName(),
                 throwable.getMessage());
-    }
-
-    private ExecutorService createExecutor(int parallelism) {
-        if (parallelism <= 1) {
-            return null;
-        }
-
-        AtomicInteger threadCounter = new AtomicInteger(1);
-        ThreadFactory threadFactory = runnable -> {
-            Thread thread = new Thread(runnable);
-            thread.setName("link-update-check-" + threadCounter.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
-        };
-
-        return Executors.newFixedThreadPool(parallelism, threadFactory);
-    }
-
-    private void shutdownExecutor(ExecutorService executorService) {
-        if (executorService == null) {
-            return;
-        }
-
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            executorService.shutdownNow();
-        }
     }
 
     private void sendUpdate(TrackedLink trackedLink, LinkChange change) {
