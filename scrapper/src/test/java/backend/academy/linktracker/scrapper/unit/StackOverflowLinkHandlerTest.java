@@ -1,6 +1,7 @@
 package backend.academy.linktracker.scrapper.unit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -23,6 +24,7 @@ import backend.academy.linktracker.scrapper.common.LinkChangeType;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
+import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowLinkHandler;
 import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowTimelineChangeBuilder;
 import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowTimelineSupport;
@@ -170,6 +172,31 @@ class StackOverflowLinkHandlerTest {
         verify(stackOverflowClient, never()).fetchQuestionTimeline(any(StackOverflowQuestionKey.class), anyInt());
         verify(stackOverflowClient, never()).fetchAnswer(anyLong());
         verify(stackOverflowClient, never()).fetchComment(anyLong());
+    }
+
+    @Test
+    void checkForUpdate_shouldThrowWhenCommentDetailsEndpointFails() {
+        TrackedLink trackedLink = trackedLink("https://stackoverflow.com/questions/12345678/example");
+        StackOverflowTrackingState state = new StackOverflowTrackingState(trackedLink);
+        state.setLastQuestionActivityDateEpochSec(100L);
+
+        StackOverflowQuestionResponse question = new StackOverflowQuestionResponse(12345678L, 200L, "Example");
+        StackOverflowQuestionTimelineEventResponse comment =
+                new StackOverflowQuestionTimelineEventResponse(200L, "comment", 12345678L, 10L, 33L, null);
+
+        when(repository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
+        when(stackOverflowClient.fetchQuestion(any(StackOverflowQuestionKey.class)))
+                .thenReturn(new StackOverflowQuestionFetchResult(question, 0));
+        when(stackOverflowClient.fetchQuestionTimeline(any(StackOverflowQuestionKey.class), anyInt()))
+                .thenReturn(new StackOverflowTimelineFetchResult(List.of(comment), 0));
+        when(stackOverflowClient.fetchComment(33L))
+                .thenThrow(new RepositoryPollingException("Failed to call StackOverflow API for comment 33"));
+
+        assertThatThrownBy(() -> handler.checkForUpdate(trackedLink))
+                .isInstanceOf(RepositoryPollingException.class)
+                .hasMessageContaining("comment 33");
+
+        verify(repository, never()).save(any(StackOverflowTrackingState.class));
     }
 
     private TrackedLink trackedLink(String url) {

@@ -117,6 +117,39 @@ class GitHubLinkHandlerTest {
     }
 
     @Test
+    void checkForUpdate_shouldReturnIssueChangeWhenNewIssueAppears() {
+        TrackedLink trackedLink = trackedLink(
+                "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
+
+        GitHubTrackingState state = new GitHubTrackingState(trackedLink);
+        state.setLastActivityId(100L);
+
+        GitHubRepositoryIssueResponse newIssue = new GitHubRepositoryIssueResponse(
+                101L,
+                8L,
+                "Fix bug",
+                "a".repeat(210),
+                Instant.parse("2026-04-05T08:30:00Z"),
+                new GitHubRepositoryIssueResponse.GitHubIssueUser("alice"),
+                null);
+
+        when(trackingStateRepository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
+        when(gitHubClient.fetchRecentIssuesAndPullRequests(any(GitHubRepositoryKey.class), anyInt()))
+                .thenReturn(List.of(newIssue));
+
+        Optional<LinkChange> result = handler.checkForUpdate(trackedLink);
+
+        assertThat(result).isPresent();
+        assertThat(result.orElseThrow().type()).isEqualTo(LinkChangeType.GITHUB_ISSUE);
+        assertThat(result.orElseThrow().description()).isEqualTo("New GitHub issue");
+        assertThat(result.orElseThrow().title()).isEqualTo("Fix bug");
+        assertThat(result.orElseThrow().username()).isEqualTo("alice");
+        assertThat(result.orElseThrow().createdAt()).isEqualTo(Instant.parse("2026-04-05T08:30:00Z"));
+        assertThat(result.orElseThrow().preview()).isEqualTo("a".repeat(200));
+        verify(trackingStateRepository).save(any(GitHubTrackingState.class));
+    }
+
+    @Test
     void checkForUpdate_shouldReturnPullRequestChangeWhenNewPullRequestAppears() {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
