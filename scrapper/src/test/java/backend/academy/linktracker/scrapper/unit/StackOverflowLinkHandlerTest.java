@@ -97,10 +97,7 @@ class StackOverflowLinkHandlerTest {
         StackOverflowQuestionTimelineEventResponse comment =
                 new StackOverflowQuestionTimelineEventResponse(200L, "comment", 12345678L, 10L, 33L, null);
         StackOverflowCommentResponse commentDetails = new StackOverflowCommentResponse(
-                33L,
-                200L,
-                "<p>Hello&nbsp;<b>world</b> &amp; bye</p>",
-                new StackOverflowOwnerResponse("alice"));
+                33L, 200L, "<p>Hello&nbsp;<b>world</b> &amp; bye</p>", new StackOverflowOwnerResponse("alice"));
 
         when(repository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
         when(stackOverflowClient.fetchQuestion(any(StackOverflowQuestionKey.class)))
@@ -131,10 +128,7 @@ class StackOverflowLinkHandlerTest {
         StackOverflowQuestionTimelineEventResponse answer =
                 new StackOverflowQuestionTimelineEventResponse(200L, "answer", 12345678L, 44L, null, null);
         StackOverflowAnswerResponse answerDetails = new StackOverflowAnswerResponse(
-                44L,
-                200L,
-                "<p>Answer with <code>&lt;tag&gt;</code></p>",
-                new StackOverflowOwnerResponse("bob"));
+                44L, 200L, "<p>Answer with <code>&lt;tag&gt;</code></p>", new StackOverflowOwnerResponse("bob"));
 
         when(repository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));
         when(stackOverflowClient.fetchQuestion(any(StackOverflowQuestionKey.class)))

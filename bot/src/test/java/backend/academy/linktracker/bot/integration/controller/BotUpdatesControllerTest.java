@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -65,7 +67,10 @@ class BotUpdatesControllerTest {
 
         assertEquals(2, requests.size());
 
-        String allBodies = requests.stream().map(LoggedRequest::getBodyAsString).collect(Collectors.joining("\n"));
+        String allBodies = requests.stream()
+                .map(LoggedRequest::getBodyAsString)
+                .map(body -> URLDecoder.decode(body, StandardCharsets.UTF_8))
+                .collect(Collectors.joining("\n"));
 
         assertTrue(allBodies.contains("1001"));
         assertTrue(allBodies.contains("1002"));
@@ -116,7 +121,10 @@ class BotUpdatesControllerTest {
         List<LoggedRequest> requests = wireMock.findAll(postRequestedFor(urlPathMatching(".*/sendMessage")));
         assertEquals(2, requests.size());
 
-        String allBodies = requests.stream().map(LoggedRequest::getBodyAsString).collect(Collectors.joining("\n"));
+        String allBodies = requests.stream()
+                .map(LoggedRequest::getBodyAsString)
+                .map(body -> URLDecoder.decode(body, StandardCharsets.UTF_8))
+                .collect(Collectors.joining("\n"));
 
         assertTrue(allBodies.contains("1001"));
         assertTrue(allBodies.contains("1002"));

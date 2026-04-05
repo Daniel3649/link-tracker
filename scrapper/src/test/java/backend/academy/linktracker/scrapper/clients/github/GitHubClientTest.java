@@ -23,7 +23,8 @@ class GitHubClientTest {
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
 
-        gitHubClient = new GitHubClient(RestClient.builder().baseUrl(wireMock.baseUrl()).build());
+        gitHubClient = new GitHubClient(
+                RestClient.builder().baseUrl(wireMock.baseUrl()).build());
     }
 
     @BeforeEach
@@ -40,8 +41,8 @@ class GitHubClientTest {
     void shouldFetchRepositoryStatusWhenRepositoryExists() {
         GitHubRepositoryKey key = new GitHubRepositoryKey("octocat", "Hello-World");
 
-        wireMock.stubFor(
-                get(urlEqualTo("/repos/octocat/Hello-World")).willReturn(aResponse().withStatus(HttpStatus.OK.value())));
+        wireMock.stubFor(get(urlEqualTo("/repos/octocat/Hello-World"))
+                .willReturn(aResponse().withStatus(HttpStatus.OK.value())));
 
         var result = gitHubClient.fetchRepository(key);
 
@@ -116,9 +117,7 @@ class GitHubClientTest {
 
         var issues = gitHubClient.fetchRecentIssuesAndPullRequests(key, 10);
 
-        assertThat(issues)
-                .extracting(GitHubRepositoryIssueResponse::id)
-                .containsExactly(101L, 102L);
+        assertThat(issues).extracting(GitHubRepositoryIssueResponse::id).containsExactly(101L, 102L);
         assertThat(issues.getFirst().isPullRequest()).isFalse();
         assertThat(issues.get(1).isPullRequest()).isTrue();
     }

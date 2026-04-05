@@ -41,11 +41,13 @@ public class GrpcTextNotificationSender implements TextNotificationSender {
                 new BotClientException("Bot rejected text notification: " + descriptionOrDefault(exception));
             case UNAVAILABLE, DEADLINE_EXCEEDED ->
                 new BotClientException(
-                        "Bot service error. gRPC status: " + exception.getStatus().getCode(),
+                        "Bot service error. gRPC status: "
+                                + exception.getStatus().getCode(),
                         exception);
             default ->
                 new BotClientException(
-                        "Unexpected bot gRPC response. Status: " + exception.getStatus().getCode(),
+                        "Unexpected bot gRPC response. Status: "
+                                + exception.getStatus().getCode(),
                         exception);
         };
     }

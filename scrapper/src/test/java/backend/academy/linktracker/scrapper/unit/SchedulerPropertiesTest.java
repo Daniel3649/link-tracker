@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test;
 
 class SchedulerPropertiesTest {
 
-    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    private final Validator validator =
+            Validation.buildDefaultValidatorFactory().getValidator();
 
     @Test
     void shouldAcceptBatchSizeWithinAllowedRange() {

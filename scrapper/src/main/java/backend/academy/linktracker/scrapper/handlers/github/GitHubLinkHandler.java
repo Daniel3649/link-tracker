@@ -48,12 +48,12 @@ public class GitHubLinkHandler implements LinkHandler {
         GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key);
         if (!repositoryResult.isOk()) {
             throw new RepositoryPollingException("Failed to initialize GitHub tracking state for %s. HTTP status: %s"
-                    .formatted(
-                            parsedLink.url(), repositoryResult.statusCode().value()));
+                    .formatted(parsedLink.url(), repositoryResult.statusCode().value()));
         }
 
         List<GitHubRepositoryIssueResponse> recentIssues = gitHubClient.fetchRecentIssuesAndPullRequests(key, 1);
-        Long lastActivityId = recentIssues.isEmpty() ? null : recentIssues.getFirst().id();
+        Long lastActivityId =
+                recentIssues.isEmpty() ? null : recentIssues.getFirst().id();
 
         return trackedLink -> {
             GitHubTrackingState state = new GitHubTrackingState(trackedLink);

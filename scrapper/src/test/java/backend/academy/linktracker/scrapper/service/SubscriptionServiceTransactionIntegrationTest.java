@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 abstract class SubscriptionServiceTransactionIntegrationTest extends AbstractIntegrationTest {
 
@@ -45,11 +45,14 @@ abstract class SubscriptionServiceTransactionIntegrationTest extends AbstractInt
         LinkHandler handler = mock(LinkHandler.class);
 
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(handler);
-        when(handler.parse(uri)).thenReturn(new ParsedLink(uri.toString(), new GitHubRepositoryKey("octocat", "Hello-World")));
+        when(handler.parse(uri))
+                .thenReturn(new ParsedLink(uri.toString(), new GitHubRepositoryKey("octocat", "Hello-World")));
         when(handler.prepareTrackingState(any(ParsedLink.class))).thenAnswer(invocation -> {
-            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+                    .isFalse();
             return (PreparedTrackingState) trackedLink -> {
-                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+                assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+                        .isTrue();
             };
         });
         doThrow(new IllegalStateException("Subscription tags are unavailable"))

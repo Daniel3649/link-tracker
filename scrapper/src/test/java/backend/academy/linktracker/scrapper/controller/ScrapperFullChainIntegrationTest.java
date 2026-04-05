@@ -458,8 +458,8 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
     }
 
     private void stubGitHubEndpoints() {
-        wireMock.stubFor(
-                get(urlPathEqualTo("/repos/octocat/Hello-World")).willReturn(aResponse().withStatus(HttpStatus.OK.value())));
+        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World"))
+                .willReturn(aResponse().withStatus(HttpStatus.OK.value())));
 
         wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World/issues"))
                 .withQueryParam("state", equalTo("all"))

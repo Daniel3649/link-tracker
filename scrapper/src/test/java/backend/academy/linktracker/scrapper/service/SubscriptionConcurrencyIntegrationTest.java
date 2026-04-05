@@ -87,7 +87,8 @@ abstract class SubscriptionConcurrencyIntegrationTest extends AbstractIntegratio
         CountDownLatch allowConcurrentAdd = new CountDownLatch(1);
 
         Future<?> addFuture = executorService.submit(() -> transactionTemplate.executeWithoutResult(status -> {
-            TrackedLink lockedTrackedLink = linkService.lockTrackedLink(trackedLink).orElseThrow();
+            TrackedLink lockedTrackedLink =
+                    linkService.lockTrackedLink(trackedLink).orElseThrow();
             trackedLinkLocked.countDown();
             await(allowConcurrentAdd);
             subscriptionPersistenceService.createSubscription(lockedTrackedLink, new TelegramChat(2L), Set.of());
@@ -108,7 +109,11 @@ abstract class SubscriptionConcurrencyIntegrationTest extends AbstractIntegratio
         assertThat(removedSubscription.url()).isEqualTo(URI);
         assertThat(subscriptionRepository.findAllByTelegramChatId(1L)).isEmpty();
         assertThat(subscriptionRepository.findAllByTelegramChatId(2L)).hasSize(1);
-        assertThat(subscriptionRepository.findAllByTelegramChatId(2L).getFirst().getTrackedLink().getUrl())
+        assertThat(subscriptionRepository
+                        .findAllByTelegramChatId(2L)
+                        .getFirst()
+                        .getTrackedLink()
+                        .getUrl())
                 .isEqualTo(URI.toString());
         assertThat(trackedLinkRepository.findAll()).hasSize(1);
     }
@@ -122,7 +127,8 @@ abstract class SubscriptionConcurrencyIntegrationTest extends AbstractIntegratio
         }
     }
 
-    private void await(Future<?> future) throws InterruptedException, ExecutionException, java.util.concurrent.TimeoutException {
+    private void await(Future<?> future)
+            throws InterruptedException, ExecutionException, java.util.concurrent.TimeoutException {
         future.get(5, TimeUnit.SECONDS);
     }
 }

@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.unit;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
@@ -64,8 +64,7 @@ class GitHubLinkHandlerTest {
 
         GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.UNAUTHORIZED);
 
-        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class)))
-                .thenReturn(fetchResult);
+        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class))).thenReturn(fetchResult);
 
         assertThatThrownBy(() -> handler.createTrackingState(trackedLink))
                 .isInstanceOf(RepositoryPollingException.class)
@@ -85,8 +84,7 @@ class GitHubLinkHandlerTest {
         GitHubRepositoryIssueResponse issue =
                 new GitHubRepositoryIssueResponse(101L, 7L, "Bug", "Body", Instant.now(), null, null);
 
-        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class)))
-                .thenReturn(fetchResult);
+        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class))).thenReturn(fetchResult);
         when(gitHubClient.fetchRecentIssuesAndPullRequests(any(GitHubRepositoryKey.class), anyInt()))
                 .thenReturn(List.of(issue));
 

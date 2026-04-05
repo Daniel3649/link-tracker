@@ -10,8 +10,7 @@ class LinkChangePreviewFormatterTest {
 
     @Test
     void shouldNormalizePlainTextPreview() {
-        assertThat(formatter.formatPlainText("  Hello \n   world  "))
-                .isEqualTo("Hello world");
+        assertThat(formatter.formatPlainText("  Hello \n   world  ")).isEqualTo("Hello world");
     }
 
     @Test
@@ -24,8 +23,6 @@ class LinkChangePreviewFormatterTest {
     void shouldTrimPreviewToTwoHundredCharacters() {
         String input = "a".repeat(210);
 
-        assertThat(formatter.formatPlainText(input))
-                .hasSize(200)
-                .isEqualTo("a".repeat(200));
+        assertThat(formatter.formatPlainText(input)).hasSize(200).isEqualTo("a".repeat(200));
     }
 }

@@ -107,9 +107,7 @@ abstract class LinkUpdateSchedulerIntegrationTest extends AbstractIntegrationTes
         ArgumentCaptor<LinkUpdate> captor = ArgumentCaptor.forClass(LinkUpdate.class);
         verify(linkUpdateSender).send(captor.capture());
 
-        assertThat(captor.getValue().description())
-                .isEqualTo(
-                        """
+        assertThat(captor.getValue().description()).isEqualTo("""
                         New GitHub issue
                         Title: Fix login flow
                         User: alice
@@ -124,17 +122,17 @@ abstract class LinkUpdateSchedulerIntegrationTest extends AbstractIntegrationTes
         TrackedLink failedTrackedLink = trackedLinkRepository.save(new TrackedLink(
                 null, "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World")));
         TrackedLink successfulTrackedLink = trackedLinkRepository.save(new TrackedLink(
-                null,
-                "https://github.com/octocat/Spoon-Knife",
-                new GitHubRepositoryKey("octocat", "Spoon-Knife")));
+                null, "https://github.com/octocat/Spoon-Knife", new GitHubRepositoryKey("octocat", "Spoon-Knife")));
 
         subscriptionRepository.save(new Subscription(null, failedTrackedLink, chat));
         subscriptionRepository.save(new Subscription(null, successfulTrackedLink, chat));
 
         LinkHandler failedHandler = mock(LinkHandler.class);
         LinkHandler successfulHandler = mock(LinkHandler.class);
-        when(linkHandlerRegistry.getHandler(URI.create(failedTrackedLink.getUrl()))).thenReturn(failedHandler);
-        when(linkHandlerRegistry.getHandler(URI.create(successfulTrackedLink.getUrl()))).thenReturn(successfulHandler);
+        when(linkHandlerRegistry.getHandler(URI.create(failedTrackedLink.getUrl())))
+                .thenReturn(failedHandler);
+        when(linkHandlerRegistry.getHandler(URI.create(successfulTrackedLink.getUrl())))
+                .thenReturn(successfulHandler);
         when(failedHandler.checkForUpdate(failedTrackedLink))
                 .thenThrow(new RepositoryPollingException("GitHub API unavailable"));
         when(successfulHandler.checkForUpdate(successfulTrackedLink))

@@ -36,7 +36,8 @@ abstract class SubscriptionTagNormalizationIntegrationTest extends AbstractInteg
         LinkHandler handler = mock(LinkHandler.class);
 
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(handler);
-        when(handler.parse(uri)).thenReturn(new ParsedLink(uri.toString(), new GitHubRepositoryKey("octocat", "Hello-World")));
+        when(handler.parse(uri))
+                .thenReturn(new ParsedLink(uri.toString(), new GitHubRepositoryKey("octocat", "Hello-World")));
         when(handler.prepareTrackingState(any(ParsedLink.class))).thenReturn(trackedLink -> {});
 
         AddLinkRequest request = new AddLinkRequest(uri, Set.of("java", " java ", "spring "), List.of());

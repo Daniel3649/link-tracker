@@ -28,8 +28,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -216,10 +216,7 @@ class LinkUpdateSchedulerTest {
         assertThat(report.skipped()).isFalse();
         assertThat(report.failedLinks())
                 .containsExactly(new LinkUpdateScheduler.LinkCheckFailure(
-                        10L,
-                        failedUrl,
-                        RepositoryPollingException.class.getSimpleName(),
-                        "GitHub API unavailable"));
+                        10L, failedUrl, RepositoryPollingException.class.getSimpleName(), "GitHub API unavailable"));
     }
 
     @Test
@@ -330,7 +327,8 @@ class LinkUpdateSchedulerTest {
         when(linkHandlerRegistry.getHandler(URI.create(failedUrl))).thenReturn(linkHandler);
         when(linkHandler.checkForUpdate(failedTrackedLink))
                 .thenThrow(new RepositoryPollingException("GitHub API unavailable"));
-        when(subscriptionRepository.findAllByTrackedLink(any(TrackedLink.class))).thenReturn(List.of(subscription));
+        when(subscriptionRepository.findAllByTrackedLink(any(TrackedLink.class)))
+                .thenReturn(List.of(subscription));
 
         scheduler.checkUpdates();
 

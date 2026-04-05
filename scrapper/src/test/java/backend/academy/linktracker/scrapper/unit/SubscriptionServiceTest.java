@@ -77,7 +77,6 @@ class SubscriptionServiceTest {
         assertThat(actualResponse).isEqualTo(expectedResponse);
         verify(subscriptionPersistenceService).createSubscription(staleTrackedLink, telegramChat, Set.of("Java"));
         verify(linkService).prepareTrackedLink(uri);
-        verify(subscriptionPersistenceService)
-                .createSubscription(preparedTrackedLink, telegramChat, Set.of("Java"));
+        verify(subscriptionPersistenceService).createSubscription(preparedTrackedLink, telegramChat, Set.of("Java"));
     }
 }

@@ -155,8 +155,8 @@ public class StackOverflowLinkHandler implements LinkHandler {
             StackOverflowItemFetchResult<StackOverflowCommentResponse> commentResult =
                     stackOverflowClient.fetchComment(commentId);
             if (commentResult.item() == null) {
-                throw new RepositoryPollingException("Failed to fetch StackOverflow comment %s for %s"
-                        .formatted(commentId, question.questionId()));
+                throw new RepositoryPollingException(
+                        "Failed to fetch StackOverflow comment %s for %s".formatted(commentId, question.questionId()));
             }
 
             return new TrackedChangeBuildResult(
@@ -166,15 +166,15 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
         Long answerId = newestEvent.postId();
         if (answerId == null) {
-            throw new RepositoryPollingException("StackOverflow answer event does not contain answer id for %s"
-                    .formatted(question.questionId()));
+            throw new RepositoryPollingException(
+                    "StackOverflow answer event does not contain answer id for %s".formatted(question.questionId()));
         }
 
         StackOverflowItemFetchResult<StackOverflowAnswerResponse> answerResult =
                 stackOverflowClient.fetchAnswer(answerId);
         if (answerResult.item() == null) {
-            throw new RepositoryPollingException("Failed to fetch StackOverflow answer %s for %s"
-                    .formatted(answerId, question.questionId()));
+            throw new RepositoryPollingException(
+                    "Failed to fetch StackOverflow answer %s for %s".formatted(answerId, question.questionId()));
         }
 
         return new TrackedChangeBuildResult(

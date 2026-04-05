@@ -15,7 +15,8 @@ public interface LinkHandler {
     PreparedTrackingState prepareTrackingState(ParsedLink parsedLink);
 
     default void createTrackingState(TrackedLink trackedLink) {
-        prepareTrackingState(new ParsedLink(trackedLink.getUrl(), trackedLink.getResourceKey())).persist(trackedLink);
+        prepareTrackingState(new ParsedLink(trackedLink.getUrl(), trackedLink.getResourceKey()))
+                .persist(trackedLink);
     }
 
     void deleteTrackingStateIfExists(TrackedLink trackedLink);

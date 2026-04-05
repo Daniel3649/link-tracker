@@ -31,9 +31,7 @@ class LinkChangeDescriptionFormatterTest {
 
         String description = formatter.format(change);
 
-        assertThat(description)
-                .isEqualTo(
-                        """
+        assertThat(description).isEqualTo("""
                         New GitHub pull request
                         Title: Add notifications
                         User: octocat

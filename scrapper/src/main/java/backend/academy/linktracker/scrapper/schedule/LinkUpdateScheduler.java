@@ -28,12 +28,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnProperty(prefix = "app.scheduler", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 @Slf4j
 public class LinkUpdateScheduler {
@@ -51,6 +49,7 @@ public class LinkUpdateScheduler {
     private final TextNotificationSender textNotificationSender;
     private final LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
     private final SchedulerProperties schedulerProperties;
+
     @Qualifier("linkUpdateCheckExecutorService")
     private final ExecutorService linkUpdateCheckExecutorService;
 
@@ -244,7 +243,9 @@ public class LinkUpdateScheduler {
                     .toList();
 
             for (Long chatId : chatIds) {
-                failuresByChatId.computeIfAbsent(chatId, ignored -> new ArrayList<>()).add(failure);
+                failuresByChatId
+                        .computeIfAbsent(chatId, ignored -> new ArrayList<>())
+                        .add(failure);
             }
         }
 
@@ -252,7 +253,8 @@ public class LinkUpdateScheduler {
     }
 
     private List<String> buildFailureReports(List<LinkCheckFailure> failedLinks) {
-        List<String> lines = failedLinks.stream().map(this::formatFailureLine).distinct().toList();
+        List<String> lines =
+                failedLinks.stream().map(this::formatFailureLine).distinct().toList();
         List<String> reports = new ArrayList<>();
         StringBuilder currentReport = new StringBuilder(FAILURE_REPORT_HEADER);
 

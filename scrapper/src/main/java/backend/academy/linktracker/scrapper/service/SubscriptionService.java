@@ -39,9 +39,7 @@ public class SubscriptionService {
         Set<String> normalizedTags = TagNormalizer.normalizeAll(request.tags());
 
         try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId));
-                var _ = MDC.putCloseable(
-                        "tagsCount",
-                        String.valueOf(normalizedTags.size()))) {
+                var _ = MDC.putCloseable("tagsCount", String.valueOf(normalizedTags.size()))) {
 
             log.atInfo().addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_STARTED).log("Subscription add started");
             TelegramChat telegramChat = telegramChatRepository
@@ -56,11 +54,12 @@ public class SubscriptionService {
                     });
 
             Subscription savedSubscription;
-            TrackedLink trackedLink = linkService.findTrackedLink(request.link()).orElse(null);
+            TrackedLink trackedLink =
+                    linkService.findTrackedLink(request.link()).orElse(null);
             if (trackedLink != null) {
                 try {
-                    savedSubscription =
-                            subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, normalizedTags);
+                    savedSubscription = subscriptionPersistenceService.createSubscription(
+                            trackedLink, telegramChat, normalizedTags);
                 } catch (NotFoundTrackedLinkException e) {
                     PreparedTrackedLink preparedTrackedLink = linkService.prepareTrackedLink(request.link());
                     savedSubscription = subscriptionPersistenceService.createSubscription(
@@ -68,8 +67,8 @@ public class SubscriptionService {
                 }
             } else {
                 PreparedTrackedLink preparedTrackedLink = linkService.prepareTrackedLink(request.link());
-                savedSubscription =
-                        subscriptionPersistenceService.createSubscription(preparedTrackedLink, telegramChat, normalizedTags);
+                savedSubscription = subscriptionPersistenceService.createSubscription(
+                        preparedTrackedLink, telegramChat, normalizedTags);
             }
             trackedLink = savedSubscription.getTrackedLink();
 
