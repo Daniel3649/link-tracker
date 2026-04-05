@@ -2,61 +2,56 @@ package backend.academy.linktracker.scrapper.handlers.github;
 
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
 import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.common.LinkChangePreviewFormatter;
 import backend.academy.linktracker.scrapper.common.LinkChangeSource;
 import backend.academy.linktracker.scrapper.common.LinkChangeType;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class GitHubIssueChangeBuilder {
+    private final LinkChangePreviewFormatter previewFormatter;
+
     public LinkChange buildChange(GitHubRepositoryKey key, List<GitHubRepositoryIssueResponse> newIssues) {
         int count = newIssues == null ? 0 : newIssues.size();
 
-        if (count <= 0) {
+        if (count == 0) {
             return LinkChange.plain("Repository changed: " + key.owner() + "/" + key.repo());
         }
 
-        if (count == 1) {
-            return toSingleChange(newIssues.getFirst());
-        }
-
-        long pullRequests = newIssues.stream().filter(GitHubRepositoryIssueResponse::isPullRequest).count();
-        long issues = count - pullRequests;
-
-        if (pullRequests == 0) {
-            return LinkChange.plain(
-                    "Repository %s/%s has %d new issues".formatted(key.owner(), key.repo(), count));
-        }
-
-        if (issues == 0) {
-            return LinkChange.plain(
-                    "Repository %s/%s has %d new pull requests".formatted(key.owner(), key.repo(), count));
-        }
-
-        return LinkChange.plain(
-                "Repository %s/%s has %d new issues or pull requests".formatted(key.owner(), key.repo(), count));
+        return toStructuredChange(newIssues.getFirst(), count - 1);
     }
 
-    private LinkChange toSingleChange(GitHubRepositoryIssueResponse issue) {
+    private LinkChange toStructuredChange(GitHubRepositoryIssueResponse issue, int extraUpdatesCount) {
+        String description = extraUpdatesCount > 0
+                ? "%s (+%d more updates)".formatted(resolveHeader(issue), extraUpdatesCount)
+                : resolveHeader(issue);
+
         if (issue.isPullRequest()) {
             return new LinkChange(
-                    "New GitHub pull request",
+                    description,
                     LinkChangeSource.GITHUB,
                     LinkChangeType.GITHUB_PULL_REQUEST,
-                    null,
-                    null,
-                    null,
-                    null);
+                    issue.title(),
+                    issue.user() == null ? null : issue.user().login(),
+                    issue.createdAt(),
+                    previewFormatter.formatPlainText(issue.body()));
         }
 
         return new LinkChange(
-                "New GitHub issue",
+                description,
                 LinkChangeSource.GITHUB,
                 LinkChangeType.GITHUB_ISSUE,
-                null,
-                null,
-                null,
-                null);
+                issue.title(),
+                issue.user() == null ? null : issue.user().login(),
+                issue.createdAt(),
+                previewFormatter.formatPlainText(issue.body()));
+    }
+
+    private String resolveHeader(GitHubRepositoryIssueResponse issue) {
+        return issue.isPullRequest() ? "New GitHub pull request" : "New GitHub issue";
     }
 }

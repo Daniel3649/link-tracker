@@ -1,6 +1,9 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
 import backend.academy.linktracker.scrapper.clients.stackoverflow.StackOverflowClient;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowAnswerResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowCommentResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowItemFetchResult;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionFetchResult;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionResponse;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionTimelineEventResponse;
@@ -113,17 +116,21 @@ public class StackOverflowLinkHandler implements LinkHandler {
                 timelineSupport.extractTrackedEvents(newEvents);
 
         state.setTimelineCursor(timelineSupport.buildUpdatedCursor(timelineResult.events(), cursor));
-        state.setNextCheckAt(
-                timelineSupport.calculateNextCheckAt(questionResult.backoffSeconds(), timelineResult.backoffSeconds()));
         state.setLastQuestionActivityDateEpochSec(timelineSupport.safeLong(currentLastActivity));
 
-        repository.save(state);
-
         if (trackedEvents.isEmpty()) {
+            state.setNextCheckAt(timelineSupport.calculateNextCheckAt(
+                    questionResult.backoffSeconds(), timelineResult.backoffSeconds()));
+            repository.save(state);
             return Optional.empty();
         }
 
-        return Optional.of(changeBuilder.buildChange(trackedEvents));
+        TrackedChangeBuildResult changeResult = buildTrackedChange(question, trackedEvents);
+        state.setNextCheckAt(timelineSupport.calculateNextCheckAt(
+                questionResult.backoffSeconds(), timelineResult.backoffSeconds(), changeResult.backoffSeconds()));
+        repository.save(state);
+
+        return Optional.of(changeResult.change());
     }
 
     private StackOverflowQuestionKey extractKey(ResourceKey resourceKey) {
@@ -132,4 +139,51 @@ public class StackOverflowLinkHandler implements LinkHandler {
         }
         return key;
     }
+
+    private TrackedChangeBuildResult buildTrackedChange(
+            StackOverflowQuestionResponse question, List<StackOverflowQuestionTimelineEventResponse> trackedEvents) {
+        StackOverflowQuestionTimelineEventResponse newestEvent = trackedEvents.getFirst();
+
+        if (isCommentEvent(newestEvent)) {
+            Long commentId = newestEvent.commentId();
+            if (commentId == null) {
+                throw new RepositoryPollingException("StackOverflow comment event does not contain comment id for %s"
+                        .formatted(question.questionId()));
+            }
+
+            StackOverflowItemFetchResult<StackOverflowCommentResponse> commentResult =
+                    stackOverflowClient.fetchComment(commentId);
+            if (commentResult.item() == null) {
+                throw new RepositoryPollingException("Failed to fetch StackOverflow comment %s for %s"
+                        .formatted(commentId, question.questionId()));
+            }
+
+            return new TrackedChangeBuildResult(
+                    changeBuilder.buildCommentChange(question, commentResult.item(), trackedEvents.size()),
+                    commentResult.backoffSeconds());
+        }
+
+        Long answerId = newestEvent.postId();
+        if (answerId == null) {
+            throw new RepositoryPollingException("StackOverflow answer event does not contain answer id for %s"
+                    .formatted(question.questionId()));
+        }
+
+        StackOverflowItemFetchResult<StackOverflowAnswerResponse> answerResult =
+                stackOverflowClient.fetchAnswer(answerId);
+        if (answerResult.item() == null) {
+            throw new RepositoryPollingException("Failed to fetch StackOverflow answer %s for %s"
+                    .formatted(answerId, question.questionId()));
+        }
+
+        return new TrackedChangeBuildResult(
+                changeBuilder.buildAnswerChange(question, answerResult.item(), trackedEvents.size()),
+                answerResult.backoffSeconds());
+    }
+
+    private boolean isCommentEvent(StackOverflowQuestionTimelineEventResponse event) {
+        return event != null && "comment".equalsIgnoreCase(event.timelineType());
+    }
+
+    private record TrackedChangeBuildResult(LinkChange change, Integer backoffSeconds) {}
 }

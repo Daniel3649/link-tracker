@@ -1,66 +1,59 @@
 package backend.academy.linktracker.scrapper.handlers.stackoverflow;
 
-import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionTimelineEventResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowAnswerResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowCommentResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowOwnerResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionResponse;
 import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.common.LinkChangePreviewFormatter;
 import backend.academy.linktracker.scrapper.common.LinkChangeSource;
 import backend.academy.linktracker.scrapper.common.LinkChangeType;
-import java.util.List;
+import java.time.Instant;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class StackOverflowTimelineChangeBuilder {
-    public LinkChange buildChange(List<StackOverflowQuestionTimelineEventResponse> newEvents) {
-        int count = newEvents == null ? 0 : newEvents.size();
+    private final LinkChangePreviewFormatter previewFormatter;
 
-        if (count <= 0) {
-            return LinkChange.plain("Question changed");
-        }
-
-        if (count == 1) {
-            return toSingleChange(newEvents.getFirst());
-        }
-
-        long answers = newEvents.stream().filter(this::isAnswer).count();
-        long comments = count - answers;
-
-        if (comments == 0) {
-            return LinkChange.plain("Question has %d new answers".formatted(count));
-        }
-
-        if (answers == 0) {
-            return LinkChange.plain("Question has %d new comments".formatted(count));
-        }
-
-        return LinkChange.plain("Question has %d new answers or comments".formatted(count));
-    }
-
-    private LinkChange toSingleChange(StackOverflowQuestionTimelineEventResponse event) {
-        if (isComment(event)) {
-            return new LinkChange(
-                    "New StackOverflow comment",
-                    LinkChangeSource.STACKOVERFLOW,
-                    LinkChangeType.STACKOVERFLOW_COMMENT,
-                    null,
-                    null,
-                    null,
-                    null);
-        }
-
+    public LinkChange buildAnswerChange(
+            StackOverflowQuestionResponse question, StackOverflowAnswerResponse answer, int trackedEventsCount) {
         return new LinkChange(
-                "New StackOverflow answer",
+                resolveDescription("New StackOverflow answer", trackedEventsCount),
                 LinkChangeSource.STACKOVERFLOW,
                 LinkChangeType.STACKOVERFLOW_ANSWER,
-                null,
-                null,
-                null,
-                null);
+                question == null ? null : question.title(),
+                extractUsername(answer == null ? null : answer.owner()),
+                toInstant(answer == null ? null : answer.creationDateEpochSec()),
+                previewFormatter.formatHtml(answer == null ? null : answer.body()));
     }
 
-    private boolean isAnswer(StackOverflowQuestionTimelineEventResponse event) {
-        return event != null && "answer".equalsIgnoreCase(event.timelineType());
+    public LinkChange buildCommentChange(
+            StackOverflowQuestionResponse question, StackOverflowCommentResponse comment, int trackedEventsCount) {
+        return new LinkChange(
+                resolveDescription("New StackOverflow comment", trackedEventsCount),
+                LinkChangeSource.STACKOVERFLOW,
+                LinkChangeType.STACKOVERFLOW_COMMENT,
+                question == null ? null : question.title(),
+                extractUsername(comment == null ? null : comment.owner()),
+                toInstant(comment == null ? null : comment.creationDateEpochSec()),
+                previewFormatter.formatHtml(comment == null ? null : comment.body()));
     }
 
-    private boolean isComment(StackOverflowQuestionTimelineEventResponse event) {
-        return event != null && "comment".equalsIgnoreCase(event.timelineType());
+    private String resolveDescription(String baseDescription, int trackedEventsCount) {
+        if (trackedEventsCount <= 1) {
+            return baseDescription;
+        }
+
+        return "%s (+%d more updates)".formatted(baseDescription, trackedEventsCount - 1);
+    }
+
+    private String extractUsername(StackOverflowOwnerResponse owner) {
+        return owner == null ? null : owner.displayName();
+    }
+
+    private Instant toInstant(Long epochSec) {
+        return epochSec == null ? null : Instant.ofEpochSecond(epochSec);
     }
 }

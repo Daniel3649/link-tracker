@@ -13,6 +13,7 @@ import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
 import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.common.LinkChangePreviewFormatter;
 import backend.academy.linktracker.scrapper.common.LinkChangeType;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
@@ -53,7 +54,7 @@ class GitHubLinkHandlerTest {
                 gitHubClient,
                 trackingStateRepository,
                 new GitHubIssueExtractor(),
-                new GitHubIssueChangeBuilder(),
+                new GitHubIssueChangeBuilder(new LinkChangePreviewFormatter()),
                 gitHubRepositoryLinkParser);
     }
 
@@ -142,6 +143,10 @@ class GitHubLinkHandlerTest {
         assertThat(result).isPresent();
         assertThat(result.orElseThrow().type()).isEqualTo(LinkChangeType.GITHUB_PULL_REQUEST);
         assertThat(result.orElseThrow().description()).isEqualTo("New GitHub pull request");
+        assertThat(result.orElseThrow().title()).isEqualTo("Add feature");
+        assertThat(result.orElseThrow().username()).isEqualTo("octocat");
+        assertThat(result.orElseThrow().createdAt()).isEqualTo(Instant.parse("2026-04-05T09:30:00Z"));
+        assertThat(result.orElseThrow().preview()).isEqualTo("PR body");
         verify(trackingStateRepository).save(any(GitHubTrackingState.class));
     }
 
