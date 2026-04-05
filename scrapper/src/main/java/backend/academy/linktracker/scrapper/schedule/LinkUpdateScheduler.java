@@ -184,8 +184,8 @@ public class LinkUpdateScheduler {
     }
 
     private void sendUpdate(TrackedLink trackedLink, LinkChange change) {
-        List<Long> tgChatIds = subscriptionRepository.findAllByTrackedLink(trackedLink).stream()
-                .map(subscription -> subscription.getTelegramChat().id())
+        List<Long> tgChatIds = subscriptionRepository.findAllChatIdsByTrackedLinkId(trackedLink.getId()).stream()
+                .distinct()
                 .toList();
         if (tgChatIds.isEmpty()) {
             log.atWarn()
@@ -236,9 +236,7 @@ public class LinkUpdateScheduler {
         Map<Long, List<LinkCheckFailure>> failuresByChatId = new LinkedHashMap<>();
 
         for (LinkCheckFailure failure : failedLinks) {
-            TrackedLink trackedLink = new TrackedLink(failure.linkId(), failure.url(), null);
-            List<Long> chatIds = subscriptionRepository.findAllByTrackedLink(trackedLink).stream()
-                    .map(subscription -> subscription.getTelegramChat().id())
+            List<Long> chatIds = subscriptionRepository.findAllChatIdsByTrackedLinkId(failure.linkId()).stream()
                     .distinct()
                     .toList();
 

@@ -4,6 +4,7 @@ import backend.academy.linktracker.scrapper.repository.orm.entity.SubscriptionEn
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface SubscriptionJpaRepository extends JpaRepository<SubscriptionEntity, Long> {
     boolean existsByTrackedLinkIdAndTelegramChatChatId(Long trackedLinkId, Long telegramChatId);
@@ -17,4 +18,7 @@ public interface SubscriptionJpaRepository extends JpaRepository<SubscriptionEnt
     List<SubscriptionEntity> findAllByTelegramChatChatIdOrderByIdAsc(Long telegramChatId);
 
     List<SubscriptionEntity> findAllByTrackedLinkIdOrderByIdAsc(Long trackedLinkId);
+
+    @Query("select s.chatId from SubscriptionEntity s where s.linkId = :trackedLinkId order by s.id")
+    List<Long> findAllChatIdsByTrackedLinkIdOrderByIdAsc(Long trackedLinkId);
 }

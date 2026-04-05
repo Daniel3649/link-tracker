@@ -19,8 +19,24 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
     private final EntityManager entityManager;
 
     @Override
+    @Transactional
     public StackOverflowTrackingState save(StackOverflowTrackingState stackOverflowTrackingState) {
-        return toDomain(repository.save(toEntity(stackOverflowTrackingState)));
+        Long trackedLinkId = stackOverflowTrackingState.getTrackedLink().getId();
+        StackOverflowTrackingStateEntity entity = repository
+                .findById(trackedLinkId)
+                .orElseGet(() -> {
+                    StackOverflowTrackingStateEntity newEntity = new StackOverflowTrackingStateEntity();
+                    newEntity.setTrackedLink(entityManager.getReference(TrackedLinkEntity.class, trackedLinkId));
+                    return newEntity;
+                });
+
+        StackOverflowTimelineCursor cursor = stackOverflowTrackingState.getTimelineCursor();
+        entity.setLastCreationDateEpochSec(cursor != null ? cursor.lastCreationDateEpochSec() : 0L);
+        entity.setLastEventKey(cursor != null ? cursor.lastEventKey() : null);
+        entity.setNextCheckAt(stackOverflowTrackingState.getNextCheckAt());
+        entity.setLastQuestionActivityDateEpochSec(stackOverflowTrackingState.getLastQuestionActivityDateEpochSec());
+
+        return toDomain(repository.saveAndFlush(entity), stackOverflowTrackingState.getTrackedLink());
     }
 
     @Override
@@ -62,10 +78,6 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
         entity.setNextCheckAt(state.getNextCheckAt());
         entity.setLastQuestionActivityDateEpochSec(state.getLastQuestionActivityDateEpochSec());
         return entity;
-    }
-
-    private StackOverflowTrackingState toDomain(StackOverflowTrackingStateEntity entity) {
-        return toDomain(entity, OrmTrackedLinkSupport.toDomain(entity.getTrackedLink()));
     }
 
     private StackOverflowTrackingState toDomain(StackOverflowTrackingStateEntity entity, TrackedLink trackedLink) {

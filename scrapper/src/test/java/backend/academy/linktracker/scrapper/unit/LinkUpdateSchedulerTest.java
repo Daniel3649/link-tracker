@@ -8,9 +8,7 @@ import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.contract.dto.request.TextNotification;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.LinkChangeDescriptionFormatter;
-import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
-import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
@@ -97,20 +95,13 @@ class LinkUpdateSchedulerTest {
 
         LinkChange change = new LinkChange("New commit detected");
 
-        TelegramChat chat1 = new TelegramChat(101L);
-        TelegramChat chat2 = new TelegramChat(202L);
-
-        Subscription subscription1 = new Subscription(1L, trackedLink, chat1);
-        Subscription subscription2 = new Subscription(2L, trackedLink, chat2);
-
         when(schedulerProperties.getLinkCheckBatchSize()).thenReturn(100);
         when(schedulerProperties.getLinkCheckParallelism()).thenReturn(1);
         when(trackedLinkRepository.findNextBatchAfterId(0L, 100)).thenReturn(List.of(trackedLink));
         when(trackedLinkRepository.findNextBatchAfterId(10L, 100)).thenReturn(List.of());
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(linkHandler);
         when(linkHandler.checkForUpdate(trackedLink)).thenReturn(Optional.of(change));
-        when(subscriptionRepository.findAllByTrackedLink(trackedLink))
-                .thenReturn(List.of(subscription1, subscription2));
+        when(subscriptionRepository.findAllChatIdsByTrackedLinkId(10L)).thenReturn(List.of(101L, 202L));
 
         scheduler.checkUpdates();
 
@@ -143,7 +134,7 @@ class LinkUpdateSchedulerTest {
         when(trackedLinkRepository.findNextBatchAfterId(10L, 100)).thenReturn(List.of());
         when(linkHandlerRegistry.getHandler(uri)).thenReturn(linkHandler);
         when(linkHandler.checkForUpdate(trackedLink)).thenReturn(Optional.of(change));
-        when(subscriptionRepository.findAllByTrackedLink(trackedLink)).thenReturn(List.of());
+        when(subscriptionRepository.findAllChatIdsByTrackedLinkId(10L)).thenReturn(List.of());
 
         scheduler.checkUpdates();
 
@@ -317,9 +308,6 @@ class LinkUpdateSchedulerTest {
         when(failedTrackedLink.getId()).thenReturn(10L);
         when(failedTrackedLink.getUrl()).thenReturn(failedUrl);
 
-        TelegramChat chat = new TelegramChat(101L);
-        Subscription subscription = new Subscription(1L, failedTrackedLink, chat);
-
         when(schedulerProperties.getLinkCheckBatchSize()).thenReturn(100);
         when(schedulerProperties.getLinkCheckParallelism()).thenReturn(1);
         when(trackedLinkRepository.findNextBatchAfterId(0L, 100)).thenReturn(List.of(failedTrackedLink));
@@ -327,8 +315,7 @@ class LinkUpdateSchedulerTest {
         when(linkHandlerRegistry.getHandler(URI.create(failedUrl))).thenReturn(linkHandler);
         when(linkHandler.checkForUpdate(failedTrackedLink))
                 .thenThrow(new RepositoryPollingException("GitHub API unavailable"));
-        when(subscriptionRepository.findAllByTrackedLink(any(TrackedLink.class)))
-                .thenReturn(List.of(subscription));
+        when(subscriptionRepository.findAllChatIdsByTrackedLinkId(10L)).thenReturn(List.of(101L));
 
         scheduler.checkUpdates();
 

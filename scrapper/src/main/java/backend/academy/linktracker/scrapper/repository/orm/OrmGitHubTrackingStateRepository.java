@@ -29,8 +29,16 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     }
 
     @Override
+    @Transactional
     public GitHubTrackingState save(GitHubTrackingState gitHubTrackingState) {
-        return toDomain(repository.save(toEntity(gitHubTrackingState)));
+        Long trackedLinkId = gitHubTrackingState.getTrackedLink().getId();
+        GitHubTrackingStateEntity entity = repository.findById(trackedLinkId).orElseGet(() -> {
+            GitHubTrackingStateEntity newEntity = new GitHubTrackingStateEntity();
+            newEntity.setTrackedLink(entityManager.getReference(TrackedLinkEntity.class, trackedLinkId));
+            return newEntity;
+        });
+        entity.setLastActivityId(gitHubTrackingState.getLastActivityId());
+        return toDomain(repository.saveAndFlush(entity), gitHubTrackingState.getTrackedLink());
     }
 
     @Override
@@ -56,10 +64,6 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
                 TrackedLinkEntity.class, state.getTrackedLink().getId()));
         entity.setLastActivityId(state.getLastActivityId());
         return entity;
-    }
-
-    private GitHubTrackingState toDomain(GitHubTrackingStateEntity entity) {
-        return toDomain(entity, OrmTrackedLinkSupport.toDomain(entity.getTrackedLink()));
     }
 
     private GitHubTrackingState toDomain(GitHubTrackingStateEntity entity, TrackedLink trackedLink) {
