@@ -7,9 +7,7 @@ import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingEx
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -21,18 +19,12 @@ public class GitHubClient {
 
     private final RestClient gitHubRestClient;
 
-    public GitHubRepositoryFetchResult fetchRepository(GitHubRepositoryKey key, String etag) {
+    public GitHubRepositoryFetchResult fetchRepository(GitHubRepositoryKey key) {
         try {
             return gitHubRestClient
                     .get()
                     .uri("/repos/{owner}/{repo}", key.owner(), key.repo())
-                    .headers(headers -> {
-                        if (StringUtils.hasText(etag)) {
-                            headers.add(HttpHeaders.IF_NONE_MATCH, etag);
-                        }
-                    })
-                    .exchange((request, response) -> new GitHubRepositoryFetchResult(
-                            response.getStatusCode(), response.getHeaders().getETag()));
+                    .exchange((request, response) -> new GitHubRepositoryFetchResult(response.getStatusCode()));
         } catch (RestClientException e) {
             throw new RepositoryPollingException(
                     "Failed to call GitHub API for repository %s/%s".formatted(key.owner(), key.repo()), e);

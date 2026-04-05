@@ -54,7 +54,6 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
         GitHubTrackingStateEntity entity = new GitHubTrackingStateEntity();
         entity.setTrackedLink(entityManager.getReference(
                 TrackedLinkEntity.class, state.getTrackedLink().getId()));
-        entity.setEtag(state.getEtag());
         entity.setLastActivityId(state.getLastActivityId());
         return entity;
     }
@@ -65,7 +64,6 @@ public class OrmGitHubTrackingStateRepository implements GitHubTrackingStateRepo
 
     private GitHubTrackingState toDomain(GitHubTrackingStateEntity entity, TrackedLink trackedLink) {
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
-        state.setEtag(entity.getEtag());
         state.setLastActivityId(entity.getLastActivityId());
         return state;
     }

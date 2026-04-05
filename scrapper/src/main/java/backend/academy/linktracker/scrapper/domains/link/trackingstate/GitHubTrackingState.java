@@ -14,9 +14,5 @@ public class GitHubTrackingState {
     @EqualsAndHashCode.Include
     private final TrackedLink trackedLink;
 
-    @Setter
-    private String etag;
-
-    @Setter
     private Long lastActivityId;
 }

@@ -1,5 +1,6 @@
 package backend.academy.linktracker.scrapper.service.persistence;
 
+import backend.academy.linktracker.scrapper.common.PreparedTrackedLink;
 import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
@@ -13,6 +14,7 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -24,7 +26,18 @@ public class SubscriptionPersistenceService {
     private final LinkService linkService;
 
     @Transactional
+    public Subscription createSubscription(
+            PreparedTrackedLink preparedTrackedLink, TelegramChat telegramChat, Set<String> tags) {
+        TrackedLink trackedLink = linkService.getOrCreateTrackedLink(preparedTrackedLink);
+        return persistSubscription(trackedLink, telegramChat, tags);
+    }
+
+    @Transactional
     public Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
+        return persistSubscription(trackedLink, telegramChat, tags);
+    }
+
+    private Subscription persistSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
         Subscription savedSubscription = subscriptionRepository
                 .saveIfAbsent(new Subscription(null, trackedLink, telegramChat))
                 .orElseThrow(() -> {
@@ -47,7 +60,7 @@ public class SubscriptionPersistenceService {
         return savedSubscription;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.MANDATORY)
     public Subscription deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
         Subscription subscription = subscriptionRepository
                 .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)

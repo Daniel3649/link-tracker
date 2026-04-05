@@ -5,6 +5,7 @@ import backend.academy.linktracker.contract.dto.request.RemoveTagRequest;
 import backend.academy.linktracker.contract.dto.request.UpdateTagRequest;
 import backend.academy.linktracker.contract.dto.response.ListTagsResponse;
 import backend.academy.linktracker.contract.dto.response.TagResponse;
+import backend.academy.linktracker.scrapper.common.TagNormalizer;
 import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
@@ -40,7 +41,7 @@ public class SubscriptionTagService {
     @Transactional
     public TagResponse addTag(long chatId, AddTagRequest request) {
         Subscription subscription = getSubscription(chatId, request.link());
-        String normalizedTag = request.tag().trim();
+        String normalizedTag = TagNormalizer.normalize(request.tag());
 
         if (!subscriptionTagRepository.addTag(subscription, normalizedTag)) {
             throw new TagAlreadyExistsException("Tag already exists: " + normalizedTag);
@@ -52,8 +53,8 @@ public class SubscriptionTagService {
     @Transactional
     public TagResponse updateTag(long chatId, UpdateTagRequest request) {
         Subscription subscription = getSubscription(chatId, request.link());
-        String currentTag = request.currentTag().trim();
-        String newTag = request.newTag().trim();
+        String currentTag = TagNormalizer.normalize(request.currentTag());
+        String newTag = TagNormalizer.normalize(request.newTag());
 
         if (!subscriptionTagRepository.existsBySubscriptionAndTag(subscription, currentTag)) {
             throw new TagNotFoundException("Tag not found: " + currentTag);
@@ -73,7 +74,7 @@ public class SubscriptionTagService {
     @Transactional
     public TagResponse removeTag(long chatId, RemoveTagRequest request) {
         Subscription subscription = getSubscription(chatId, request.link());
-        String normalizedTag = request.tag().trim();
+        String normalizedTag = TagNormalizer.normalize(request.tag());
 
         if (!subscriptionTagRepository.deleteTag(subscription, normalizedTag)) {
             throw new TagNotFoundException("Tag not found: " + normalizedTag);

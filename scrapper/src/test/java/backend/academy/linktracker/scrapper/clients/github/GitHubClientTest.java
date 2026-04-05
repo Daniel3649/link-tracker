@@ -37,23 +37,16 @@ class GitHubClientTest {
     }
 
     @Test
-    void shouldFetchRepositoryAndPassIfNoneMatchHeader() {
+    void shouldFetchRepositoryStatusWhenRepositoryExists() {
         GitHubRepositoryKey key = new GitHubRepositoryKey("octocat", "Hello-World");
 
-        wireMock.stubFor(get(urlEqualTo("/repos/octocat/Hello-World"))
-                .withHeader("If-None-Match", equalTo("\"old-etag\""))
-                .willReturn(aResponse().withStatus(HttpStatus.OK.value()).withHeader("ETag", "\"new-etag\"")));
+        wireMock.stubFor(
+                get(urlEqualTo("/repos/octocat/Hello-World")).willReturn(aResponse().withStatus(HttpStatus.OK.value())));
 
-        var result = gitHubClient.fetchRepository(key, "\"old-etag\"");
+        var result = gitHubClient.fetchRepository(key);
 
         assertThat(result.statusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(result.etag()).isNotBlank();
-        assertThat(result.etag()).contains("new-etag");
-
-        wireMock.verify(
-                1,
-                getRequestedFor(urlEqualTo("/repos/octocat/Hello-World"))
-                        .withHeader("If-None-Match", equalTo("\"old-etag\"")));
+        wireMock.verify(1, getRequestedFor(urlEqualTo("/repos/octocat/Hello-World")));
     }
 
     @Test
@@ -66,10 +59,9 @@ class GitHubClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("")));
 
-        var result = gitHubClient.fetchRepository(key, null);
+        var result = gitHubClient.fetchRepository(key);
 
         assertThat(result.statusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-        assertThat(result.etag()).isNull();
     }
 
     @Test

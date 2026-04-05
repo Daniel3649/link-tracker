@@ -10,6 +10,7 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowTimelineFetchResult;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
+import backend.academy.linktracker.scrapper.common.PreparedTrackingState;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
@@ -48,25 +49,25 @@ public class StackOverflowLinkHandler implements LinkHandler {
     }
 
     @Override
-    public void createTrackingState(TrackedLink trackedLink) {
-        StackOverflowQuestionKey key = extractKey(trackedLink.getResourceKey());
+    public PreparedTrackingState prepareTrackingState(ParsedLink parsedLink) {
+        StackOverflowQuestionKey key = extractKey(parsedLink.resourceKey());
 
         StackOverflowQuestionFetchResult questionResult = stackOverflowClient.fetchQuestion(key);
         if (questionResult.question() == null) {
             throw new RepositoryPollingException(
                     "Failed to initialize StackOverflow tracking state for %s: question not found"
-                            .formatted(trackedLink.getUrl()));
+                            .formatted(parsedLink.url()));
         }
 
         StackOverflowTimelineFetchResult timelineResult = stackOverflowClient.fetchQuestionTimeline(key, 1);
-
-        StackOverflowTrackingState state = new StackOverflowTrackingState(trackedLink);
-        state.setTimelineCursor(timelineSupport.buildInitialCursor(timelineResult.events()));
-        state.setNextCheckAt(
-                timelineSupport.calculateNextCheckAt(questionResult.backoffSeconds(), timelineResult.backoffSeconds()));
-        state.setLastQuestionActivityDateEpochSec(questionResult.question().lastActivityDateEpochSec());
-
-        repository.saveIfAbsent(state);
+        return trackedLink -> {
+            StackOverflowTrackingState state = new StackOverflowTrackingState(trackedLink);
+            state.setTimelineCursor(timelineSupport.buildInitialCursor(timelineResult.events()));
+            state.setNextCheckAt(timelineSupport.calculateNextCheckAt(
+                    questionResult.backoffSeconds(), timelineResult.backoffSeconds()));
+            state.setLastQuestionActivityDateEpochSec(questionResult.question().lastActivityDateEpochSec());
+            repository.saveIfAbsent(state);
+        };
     }
 
     @Override

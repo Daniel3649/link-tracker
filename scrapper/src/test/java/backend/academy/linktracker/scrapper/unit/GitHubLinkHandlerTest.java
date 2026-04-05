@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,9 +62,9 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.UNAUTHORIZED, null);
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.UNAUTHORIZED);
 
-        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
+        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class)))
                 .thenReturn(fetchResult);
 
         assertThatThrownBy(() -> handler.createTrackingState(trackedLink))
@@ -82,11 +81,11 @@ class GitHubLinkHandlerTest {
         TrackedLink trackedLink = trackedLink(
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
-        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.OK, null);
+        GitHubRepositoryFetchResult fetchResult = new GitHubRepositoryFetchResult(HttpStatus.OK);
         GitHubRepositoryIssueResponse issue =
                 new GitHubRepositoryIssueResponse(101L, 7L, "Bug", "Body", Instant.now(), null, null);
 
-        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class), nullable(String.class)))
+        when(gitHubClient.fetchRepository(any(GitHubRepositoryKey.class)))
                 .thenReturn(fetchResult);
         when(gitHubClient.fetchRecentIssuesAndPullRequests(any(GitHubRepositoryKey.class), anyInt()))
                 .thenReturn(List.of(issue));
@@ -102,7 +101,6 @@ class GitHubLinkHandlerTest {
                 "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World"));
 
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
-        state.setEtag("\"old-etag\"");
         state.setLastActivityId(1L);
 
         when(trackingStateRepository.findByTrackedLink(trackedLink)).thenReturn(Optional.of(state));

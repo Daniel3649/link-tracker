@@ -5,6 +5,7 @@ import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryF
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
+import backend.academy.linktracker.scrapper.common.PreparedTrackingState;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
@@ -41,23 +42,24 @@ public class GitHubLinkHandler implements LinkHandler {
     }
 
     @Override
-    public void createTrackingState(TrackedLink trackedLink) {
-        GitHubRepositoryKey key = extractKey(trackedLink.getResourceKey());
+    public PreparedTrackingState prepareTrackingState(ParsedLink parsedLink) {
+        GitHubRepositoryKey key = extractKey(parsedLink.resourceKey());
 
-        GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key, null);
+        GitHubRepositoryFetchResult repositoryResult = gitHubClient.fetchRepository(key);
         if (!repositoryResult.isOk()) {
             throw new RepositoryPollingException("Failed to initialize GitHub tracking state for %s. HTTP status: %s"
                     .formatted(
-                            trackedLink.getUrl(), repositoryResult.statusCode().value()));
+                            parsedLink.url(), repositoryResult.statusCode().value()));
         }
 
         List<GitHubRepositoryIssueResponse> recentIssues = gitHubClient.fetchRecentIssuesAndPullRequests(key, 1);
+        Long lastActivityId = recentIssues.isEmpty() ? null : recentIssues.getFirst().id();
 
-        GitHubTrackingState state = new GitHubTrackingState(trackedLink);
-        state.setEtag(repositoryResult.etag());
-        state.setLastActivityId(recentIssues.isEmpty() ? null : recentIssues.getFirst().id());
-
-        trackingStateRepository.saveIfAbsent(state);
+        return trackedLink -> {
+            GitHubTrackingState state = new GitHubTrackingState(trackedLink);
+            state.setLastActivityId(lastActivityId);
+            trackingStateRepository.saveIfAbsent(state);
+        };
     }
 
     @Override
