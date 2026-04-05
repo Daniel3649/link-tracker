@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.*;
 
+import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -22,8 +23,7 @@ class GitHubClientTest {
         wireMock = new WireMockServer(wireMockConfig().dynamicPort());
         wireMock.start();
 
-        gitHubClient = new GitHubClient(
-                RestClient.builder().baseUrl(wireMock.baseUrl()).build());
+        gitHubClient = new GitHubClient(RestClient.builder().baseUrl(wireMock.baseUrl()).build());
     }
 
     @BeforeEach
@@ -73,10 +73,12 @@ class GitHubClientTest {
     }
 
     @Test
-    void shouldReturnEmptyActivityListWhenBodyIsNull() {
+    void shouldReturnEmptyIssueListWhenBodyIsNull() {
         GitHubRepositoryKey key = new GitHubRepositoryKey("octocat", "Hello-World");
 
-        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World/activity"))
+        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World/issues"))
+                .withQueryParam("state", equalTo("all"))
+                .withQueryParam("sort", equalTo("created"))
                 .withQueryParam("direction", equalTo("desc"))
                 .withQueryParam("per_page", equalTo("10"))
                 .willReturn(aResponse()
@@ -84,16 +86,58 @@ class GitHubClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("null")));
 
-        var activities = gitHubClient.fetchRecentActivities(key, 10);
+        var issues = gitHubClient.fetchRecentIssuesAndPullRequests(key, 10);
 
-        assertThat(activities).isEmpty();
+        assertThat(issues).isEmpty();
     }
 
     @Test
-    void shouldThrowWhenActivityResponseBodyIsInvalidJson() {
+    void shouldFetchIssuesAndDetectPullRequestMarker() {
         GitHubRepositoryKey key = new GitHubRepositoryKey("octocat", "Hello-World");
 
-        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World/activity"))
+        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World/issues"))
+                .withQueryParam("state", equalTo("all"))
+                .withQueryParam("sort", equalTo("created"))
+                .withQueryParam("direction", equalTo("desc"))
+                .withQueryParam("per_page", equalTo("10"))
+                .willReturn(okJson("""
+                        [
+                          {
+                            "id": 101,
+                            "number": 7,
+                            "title": "Bug report",
+                            "body": "Issue body",
+                            "created_at": "2026-04-05T09:00:00Z",
+                            "user": { "login": "octocat" }
+                          },
+                          {
+                            "id": 102,
+                            "number": 8,
+                            "title": "Feature PR",
+                            "body": "PR body",
+                            "created_at": "2026-04-05T10:00:00Z",
+                            "user": { "login": "hubot" },
+                            "pull_request": { "url": "https://api.github.com/repos/octocat/Hello-World/pulls/8" }
+                          }
+                        ]
+                        """)));
+
+        var issues = gitHubClient.fetchRecentIssuesAndPullRequests(key, 10);
+
+        assertThat(issues)
+                .extracting(GitHubRepositoryIssueResponse::id)
+                .containsExactly(101L, 102L);
+        assertThat(issues.getFirst().isPullRequest()).isFalse();
+        assertThat(issues.get(1).isPullRequest()).isTrue();
+    }
+
+    @Test
+    void shouldThrowWhenIssuesResponseBodyIsInvalidJson() {
+        GitHubRepositoryKey key = new GitHubRepositoryKey("octocat", "Hello-World");
+
+        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World/issues"))
+                .withQueryParam("state", equalTo("all"))
+                .withQueryParam("sort", equalTo("created"))
                 .withQueryParam("direction", equalTo("desc"))
                 .withQueryParam("per_page", equalTo("10"))
                 .willReturn(aResponse()
@@ -101,8 +145,8 @@ class GitHubClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("{not-json}")));
 
-        assertThatThrownBy(() -> gitHubClient.fetchRecentActivities(key, 10))
+        assertThatThrownBy(() -> gitHubClient.fetchRecentIssuesAndPullRequests(key, 10))
                 .isInstanceOf(RepositoryPollingException.class)
-                .hasMessageContaining("Failed to fetch repository activity");
+                .hasMessageContaining("Failed to fetch repository issues");
     }
 }

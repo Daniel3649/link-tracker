@@ -61,7 +61,7 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
                 .andExpect(jsonPath("$.links[0].url").value("https://github.com/octocat/Hello-World"));
 
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
-        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/issues")));
     }
 
     @Test
@@ -179,7 +179,7 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
                 .andExpect(jsonPath("$.links").isEmpty());
 
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
-        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/issues")));
     }
 
     @Test
@@ -205,7 +205,7 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
         assertThat(subscriptionRepository.findAllByTelegramChatId(1L)).isEmpty();
 
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
-        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
+        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/issues")));
     }
 
     @Test
@@ -263,7 +263,7 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
                 .andExpect(status().is4xxClientError());
 
         wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
-        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
+        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/issues")));
     }
 
     @Test
@@ -285,7 +285,7 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
                 .andExpect(status().is4xxClientError());
 
         wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World")));
-        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/activity")));
+        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/octocat/Hello-World/issues")));
     }
 
     @Test
@@ -317,7 +317,7 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
                 .andExpect(jsonPath("$.links").isEmpty());
 
         wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/user/repo")));
-        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/user/repo/activity")));
+        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/repos/user/repo/issues")));
     }
 
     @Test
@@ -461,22 +461,13 @@ abstract class ScrapperFullChainIntegrationTest extends AbstractIntegrationTest 
         wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World"))
                 .willReturn(aResponse().withStatus(HttpStatus.OK.value()).withHeader("ETag", "\"test-etag-123\"")));
 
-        wireMock.stubFor(
-                get(urlPathEqualTo("/repos/octocat/Hello-World/activity")).willReturn(okJson("""
-                        [
-                          {
-                            "id": 1001,
-                            "activity_type": "push",
-                            "ref": "refs/heads/main",
-                            "before": "1111111111111111111111111111111111111111",
-                            "after": "2222222222222222222222222222222222222222",
-                            "pushed_at": "2026-03-11T10:15:30Z",
-                            "push_type": "branch",
-                            "pusher": {
-                              "login": "octocat"
-                            }
-                          }
-                        ]
+        wireMock.stubFor(get(urlPathEqualTo("/repos/octocat/Hello-World/issues"))
+                .withQueryParam("state", equalTo("all"))
+                .withQueryParam("sort", equalTo("created"))
+                .withQueryParam("direction", equalTo("desc"))
+                .withQueryParam("per_page", equalTo("1"))
+                .willReturn(okJson("""
+                        []
                         """)));
     }
 }

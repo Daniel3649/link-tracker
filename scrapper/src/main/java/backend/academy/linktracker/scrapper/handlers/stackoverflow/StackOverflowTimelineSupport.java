@@ -60,6 +60,23 @@ public class StackOverflowTimelineSupport {
         return result;
     }
 
+    public List<StackOverflowQuestionTimelineEventResponse> extractTrackedEvents(
+            List<StackOverflowQuestionTimelineEventResponse> events) {
+        if (events == null || events.isEmpty()) {
+            return List.of();
+        }
+
+        return events.stream().filter(this::isTrackedEvent).toList();
+    }
+
+    public boolean isTrackedEvent(StackOverflowQuestionTimelineEventResponse event) {
+        if (event == null || !StringUtils.hasText(event.timelineType())) {
+            return false;
+        }
+
+        return "answer".equalsIgnoreCase(event.timelineType()) || "comment".equalsIgnoreCase(event.timelineType());
+    }
+
     public Instant calculateNextCheckAt(Integer... backoffValues) {
         long waitSeconds = MIN_IDENTICAL_REQUEST_INTERVAL_SECONDS;
 

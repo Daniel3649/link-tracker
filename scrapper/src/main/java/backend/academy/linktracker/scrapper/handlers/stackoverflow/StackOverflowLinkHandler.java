@@ -31,7 +31,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
     private final StackOverflowTrackingStateRepository repository;
     private final StackOverflowClient stackOverflowClient;
     private final StackOverflowTimelineSupport timelineSupport;
-    private final StackOverflowTimelineDescriptionBuilder descriptionBuilder;
+    private final StackOverflowTimelineChangeBuilder changeBuilder;
     private final StackOverflowQuestionLinkParser stackOverflowQuestionLinkParser;
 
     @Override
@@ -94,8 +94,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
         if (question == null) {
             state.setNextCheckAt(timelineSupport.calculateNextCheckAt(questionResult.backoffSeconds(), null));
             repository.save(state);
-
-            return Optional.of(new LinkChange("Question is unavailable: " + key.questionId()));
+            return Optional.empty();
         }
 
         Long currentLastActivity = question.lastActivityDateEpochSec();
@@ -110,6 +109,8 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
         List<StackOverflowQuestionTimelineEventResponse> newEvents =
                 timelineSupport.extractNewEvents(timelineResult.events(), cursor);
+        List<StackOverflowQuestionTimelineEventResponse> trackedEvents =
+                timelineSupport.extractTrackedEvents(newEvents);
 
         state.setTimelineCursor(timelineSupport.buildUpdatedCursor(timelineResult.events(), cursor));
         state.setNextCheckAt(
@@ -118,11 +119,11 @@ public class StackOverflowLinkHandler implements LinkHandler {
 
         repository.save(state);
 
-        if (newEvents.isEmpty()) {
-            return Optional.of(new LinkChange("Something changed"));
+        if (trackedEvents.isEmpty()) {
+            return Optional.empty();
         }
 
-        return Optional.of(new LinkChange(descriptionBuilder.buildDescription(newEvents)));
+        return Optional.of(changeBuilder.buildChange(trackedEvents));
     }
 
     private StackOverflowQuestionKey extractKey(ResourceKey resourceKey) {

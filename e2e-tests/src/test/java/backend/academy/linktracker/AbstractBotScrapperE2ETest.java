@@ -244,18 +244,16 @@ abstract class AbstractBotScrapperE2ETest {
                     }
                     """.formatted(repo, owner, repo))));
 
-        MOCK.stubFor(get(urlPathEqualTo("/repos/" + owner + "/" + repo + "/activity"))
+        MOCK.stubFor(get(urlPathEqualTo("/repos/" + owner + "/" + repo + "/issues"))
+                .withQueryParam("state", equalTo("all"))
+                .withQueryParam("sort", equalTo("created"))
+                .withQueryParam("direction", equalTo("desc"))
+                .withQueryParam("per_page", equalTo("1"))
                 .willReturn(aResponse()
                         .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                    [
-                      {
-                        "id": 1001,
-                        "activity_type": "push",
-                        "timestamp": "2026-03-15T10:00:00Z"
-                      }
-                    ]
+                    []
                     """)));
     }
 

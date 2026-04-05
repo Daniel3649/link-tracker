@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.clients.github;
 
-import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryActivityResponse;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
+import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import java.util.List;
@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClientException;
 @Component
 @RequiredArgsConstructor
 public class GitHubClient {
-    private static final ParameterizedTypeReference<List<GitHubRepositoryActivityResponse>> ACTIVITY_LIST_TYPE =
+    private static final ParameterizedTypeReference<List<GitHubRepositoryIssueResponse>> ISSUE_LIST_TYPE =
             new ParameterizedTypeReference<>() {};
 
     private final RestClient gitHubRestClient;
@@ -39,22 +39,24 @@ public class GitHubClient {
         }
     }
 
-    public List<GitHubRepositoryActivityResponse> fetchRecentActivities(GitHubRepositoryKey key, int perPage) {
+    public List<GitHubRepositoryIssueResponse> fetchRecentIssuesAndPullRequests(GitHubRepositoryKey key, int perPage) {
         try {
-            List<GitHubRepositoryActivityResponse> body = gitHubRestClient
+            List<GitHubRepositoryIssueResponse> body = gitHubRestClient
                     .get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/repos/{owner}/{repo}/activity")
+                            .path("/repos/{owner}/{repo}/issues")
+                            .queryParam("state", "all")
+                            .queryParam("sort", "created")
                             .queryParam("direction", "desc")
                             .queryParam("per_page", perPage)
                             .build(key.owner(), key.repo()))
                     .retrieve()
-                    .body(ACTIVITY_LIST_TYPE);
+                    .body(ISSUE_LIST_TYPE);
 
             return body == null ? List.of() : body;
         } catch (RestClientException e) {
             throw new RepositoryPollingException(
-                    "Failed to fetch repository activity for %s/%s".formatted(key.owner(), key.repo()), e);
+                    "Failed to fetch repository issues for %s/%s".formatted(key.owner(), key.repo()), e);
         }
     }
 }
