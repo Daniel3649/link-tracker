@@ -47,6 +47,11 @@ message LinkUpdateMessage {
   repeated int64 tg_chat_ids = 4;
 }
 
+message TextNotificationMessage {
+  string message = 1;
+  repeated int64 tg_chat_ids = 2;
+}
+
 service ScrapperApi {
   rpc RegisterChat(ChatCommand) returns (google.protobuf.Empty);
   rpc UnregisterChat(ChatCommand) returns (google.protobuf.Empty);
@@ -57,4 +62,5 @@ service ScrapperApi {
 
 service BotUpdatesApi {
   rpc SendUpdate(LinkUpdateMessage) returns (google.protobuf.Empty);
+  rpc SendTextNotification(TextNotificationMessage) returns (google.protobuf.Empty);
 }

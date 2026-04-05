@@ -22,4 +22,8 @@ public class SchedulerProperties {
     @Min(50)
     @Max(500)
     private int linkCheckBatchSize = 100;
+
+    @Min(1)
+    @Max(16)
+    private int linkCheckParallelism = 4;
 }

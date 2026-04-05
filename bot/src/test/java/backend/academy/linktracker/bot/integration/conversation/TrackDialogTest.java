@@ -272,6 +272,26 @@ class TrackDialogTest {
         });
     }
 
+    @Test
+    void shouldNotifyUserWhenScrapperIsUnavailable() {
+        long chatId = 667788L;
+
+        wireMock.stubFor(get(urlEqualTo("/links"))
+                .withHeader("Tg-Chat-Id", equalTo(String.valueOf(chatId)))
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.SERVICE_UNAVAILABLE.value())
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(apiErrorJson(
+                                "Scrapper is unavailable",
+                                "Scrapper is unavailable",
+                                String.valueOf(HttpStatus.SERVICE_UNAVAILABLE.value())))));
+
+        updateService.handleEvent(update(1, chatId, "/list"));
+
+        assertThat(capturedMessages(chatId))
+                .anySatisfy(text -> assertThat(text.toLowerCase()).contains("unavailable"));
+    }
+
     private List<String> capturedMessages(long chatId) {
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
 

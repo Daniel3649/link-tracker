@@ -38,4 +38,32 @@ class SchedulerPropertiesTest {
                 .extracting(violation -> violation.getPropertyPath().toString())
                 .contains("linkCheckBatchSize");
     }
+
+    @Test
+    void shouldAcceptParallelismWithinAllowedRange() {
+        SchedulerProperties properties = new SchedulerProperties();
+        properties.setLinkCheckParallelism(4);
+
+        assertThat(validator.validate(properties)).isEmpty();
+    }
+
+    @Test
+    void shouldRejectParallelismBelowMinimum() {
+        SchedulerProperties properties = new SchedulerProperties();
+        properties.setLinkCheckParallelism(0);
+
+        assertThat(validator.validate(properties))
+                .extracting(violation -> violation.getPropertyPath().toString())
+                .contains("linkCheckParallelism");
+    }
+
+    @Test
+    void shouldRejectParallelismAboveMaximum() {
+        SchedulerProperties properties = new SchedulerProperties();
+        properties.setLinkCheckParallelism(17);
+
+        assertThat(validator.validate(properties))
+                .extracting(violation -> violation.getPropertyPath().toString())
+                .contains("linkCheckParallelism");
+    }
 }

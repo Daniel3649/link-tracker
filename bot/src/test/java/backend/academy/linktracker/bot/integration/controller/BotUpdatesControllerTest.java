@@ -89,4 +89,38 @@ class BotUpdatesControllerTest {
 
         wireMock.verify(0, postRequestedFor(urlPathMatching(".*/sendMessage")));
     }
+
+    @Test
+    void shouldAcceptValidTextNotificationAndSendMessagesToTelegram() throws Exception {
+        wireMock.stubFor(post(urlPathMatching("/bot[^/]+/sendMessage")).willReturn(okJson("""
+                    {
+                      "ok": true,
+                      "result": {
+                        "message_id": 2
+                      }
+                    }
+                    """)));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/notifications/text")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                    {
+                      "message": "Link check report\\n- https://github.com/octocat/Hello-World",
+                      "tgChatIds": [1001, 1002]
+                    }
+                    """))
+                .andExpect(status().isOk());
+
+        wireMock.verify(2, postRequestedFor(urlPathMatching(".*/sendMessage")));
+
+        List<LoggedRequest> requests = wireMock.findAll(postRequestedFor(urlPathMatching(".*/sendMessage")));
+        assertEquals(2, requests.size());
+
+        String allBodies = requests.stream().map(LoggedRequest::getBodyAsString).collect(Collectors.joining("\n"));
+
+        assertTrue(allBodies.contains("1001"));
+        assertTrue(allBodies.contains("1002"));
+        assertTrue(allBodies.contains("Link check report"));
+        assertTrue(allBodies.contains("Hello-World"));
+    }
 }

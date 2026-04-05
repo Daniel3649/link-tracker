@@ -3,6 +3,7 @@ package backend.academy.linktracker.contract.grpc;
 import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
+import backend.academy.linktracker.contract.dto.request.TextNotification;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
 import java.net.URI;
@@ -140,6 +141,24 @@ public final class GrpcTransportMapper {
                 parseUri(message.getUrl()),
                 requireNonBlank("description", message.getDescription()),
                 tgChatIds);
+    }
+
+    public static TextNotificationMessage toTextNotificationMessage(TextNotification notification) {
+        requireNonNull("notification", notification);
+
+        return TextNotificationMessage.newBuilder()
+                .setMessage(requireNonBlank("message", notification.message()))
+                .addAllTgChatIds(validatePositiveList("tgChatIds", notification.tgChatIds()))
+                .build();
+    }
+
+    public static TextNotification toTextNotification(TextNotificationMessage message) {
+        List<Long> tgChatIds = validatePositiveList("tgChatIds", message.getTgChatIdsList());
+        if (tgChatIds.isEmpty()) {
+            throw new IllegalArgumentException("tgChatIds must not be empty");
+        }
+
+        return new TextNotification(requireNonBlank("message", message.getMessage()), tgChatIds);
     }
 
     private static String requireUriText(URI uri) {

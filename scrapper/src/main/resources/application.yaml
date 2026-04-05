@@ -49,6 +49,7 @@ app:
   scheduler:
     link-check-delay-ms: 60s
     link-check-batch-size: 100
+    link-check-parallelism: 4
   bot:
     transport: http
     base-url: http://localhost:8080
