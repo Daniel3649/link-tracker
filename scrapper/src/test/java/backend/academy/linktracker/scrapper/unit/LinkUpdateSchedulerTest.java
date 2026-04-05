@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.common.LinkChangeDescriptionFormatter;
 import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +48,9 @@ class LinkUpdateSchedulerTest {
 
     @Mock
     private SchedulerProperties schedulerProperties;
+
+    @Spy
+    private LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
 
     @InjectMocks
     private LinkUpdateScheduler scheduler;

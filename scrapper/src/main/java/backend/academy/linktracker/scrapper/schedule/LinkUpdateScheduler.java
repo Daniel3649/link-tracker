@@ -2,6 +2,7 @@ package backend.academy.linktracker.scrapper.schedule;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.common.LinkChangeDescriptionFormatter;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
@@ -27,6 +28,7 @@ public class LinkUpdateScheduler {
     private final SubscriptionRepository subscriptionRepository;
     private final LinkHandlerRegistry linkHandlerRegistry;
     private final LinkUpdateSender linkUpdateSender;
+    private final LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
     private final SchedulerProperties schedulerProperties;
 
     @Scheduled(fixedDelayString = "${app.scheduler.link-check-delay-ms}")
@@ -94,8 +96,11 @@ public class LinkUpdateScheduler {
             return;
         }
 
-        LinkUpdate update =
-                new LinkUpdate(trackedLink.getId(), URI.create(trackedLink.getUrl()), change.description(), tgChatIds);
+        LinkUpdate update = new LinkUpdate(
+                trackedLink.getId(),
+                URI.create(trackedLink.getUrl()),
+                linkChangeDescriptionFormatter.format(change),
+                tgChatIds);
 
         linkUpdateSender.send(update);
 
