@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.mapper;
 
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import java.net.URI;
 import java.util.List;

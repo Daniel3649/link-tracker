@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import backend.academy.linktracker.scrapper.common.ParsedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.link.parser.StackOverflowQuestionLinkParser;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.StackOverflowQuestionKey;
 import java.net.URI;
 import org.junit.jupiter.api.Test;
 

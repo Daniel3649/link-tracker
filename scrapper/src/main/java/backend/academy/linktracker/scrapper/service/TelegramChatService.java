@@ -1,9 +1,9 @@
 package backend.academy.linktracker.scrapper.service;
 
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,11 +16,20 @@ import org.springframework.stereotype.Service;
 public class TelegramChatService {
     private final TelegramChatRepository telegramChatRepository;
 
-    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void registerChat(long chatId) {
-        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
+        try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {
+
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTER_STARTED)
+                    .log("Telegram chat registration started");
+
             boolean created = telegramChatRepository.saveIfAbsent(new TelegramChat(chatId));
             if (!created) {
+                log.atWarn()
+                        .addKeyValue("event", LogEvent.TELEGRAM_CHAT_REGISTER_FAILED)
+                        .addKeyValue("reason", "chat_already_exists")
+                        .log("Telegram chat registration rejected");
+
                 throw new TelegramChatAlreadyExistsException("Telegram chat already exists. Id: " + chatId);
             }
 
@@ -28,10 +37,19 @@ public class TelegramChatService {
         }
     }
 
-    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void unregisterChat(long chatId) {
-        try (var chatIdMdc = MDC.putCloseable("chatId", String.valueOf(chatId))) {
+        try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {
+
+            log.atInfo()
+                    .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_STARTED)
+                    .log("Telegram chat unregistration started");
+
             if (telegramChatRepository.removeByChatId(chatId).isEmpty()) {
+                log.atWarn()
+                        .addKeyValue("event", LogEvent.TELEGRAM_CHAT_UNREGISTER_FAILED)
+                        .addKeyValue("reason", "chat_not_found")
+                        .log("Telegram chat unregistration rejected");
+
                 throw new TelegramChatNotFoundException("Telegram chat not found. Id: " + chatId);
             }
 

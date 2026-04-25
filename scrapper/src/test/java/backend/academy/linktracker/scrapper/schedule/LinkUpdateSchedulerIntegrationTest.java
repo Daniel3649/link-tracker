@@ -1,0 +1,76 @@
+package backend.academy.linktracker.scrapper.schedule;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import backend.academy.linktracker.contract.dto.request.LinkUpdate;
+import backend.academy.linktracker.scrapper.common.LinkChange;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
+import backend.academy.linktracker.scrapper.handlers.LinkHandler;
+import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
+import backend.academy.linktracker.scrapper.integration.AbstractIntegrationTest;
+import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
+import java.net.URI;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+abstract class LinkUpdateSchedulerIntegrationTest extends AbstractIntegrationTest {
+
+    @Autowired
+    private LinkUpdateScheduler scheduler;
+
+    @MockitoBean
+    private LinkHandlerRegistry linkHandlerRegistry;
+
+    @MockitoBean
+    private LinkUpdateSender linkUpdateSender;
+
+    @Test
+    void shouldSendUpdateOnlyToSubscribedChats() {
+        TelegramChat chat1 = telegramChatRepository.save(new TelegramChat(1L));
+        TelegramChat chat2 = telegramChatRepository.save(new TelegramChat(2L));
+        telegramChatRepository.save(new TelegramChat(999L));
+
+        TrackedLink trackedLink = trackedLinkRepository.save(new TrackedLink(
+                null, "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World")));
+
+        subscriptionRepository.save(new Subscription(null, trackedLink, chat1));
+        subscriptionRepository.save(new Subscription(null, trackedLink, chat2));
+
+        LinkHandler handler = mock(LinkHandler.class);
+        when(linkHandlerRegistry.getHandler(any(URI.class))).thenReturn(handler);
+        when(handler.checkForUpdate(trackedLink)).thenReturn(Optional.of(new LinkChange("Repository changed")));
+
+        scheduler.checkUpdates();
+
+        ArgumentCaptor<LinkUpdate> captor = ArgumentCaptor.forClass(LinkUpdate.class);
+        verify(linkUpdateSender, times(1)).send(captor.capture());
+
+        LinkUpdate update = captor.getValue();
+        assertThat(update.id()).isEqualTo(trackedLink.getId());
+        assertThat(update.url()).isEqualTo(URI.create("https://github.com/octocat/Hello-World"));
+        assertThat(update.tgChatIds()).containsExactlyInAnyOrder(1L, 2L);
+        assertThat(update.tgChatIds()).doesNotContain(999L);
+    }
+
+    @Test
+    void shouldNotSendUpdateWhenThereAreNoSubscribers() {
+        TrackedLink trackedLink = trackedLinkRepository.save(new TrackedLink(
+                null, "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World")));
+
+        LinkHandler handler = mock(LinkHandler.class);
+        when(linkHandlerRegistry.getHandler(any(URI.class))).thenReturn(handler);
+        when(handler.checkForUpdate(trackedLink)).thenReturn(Optional.of(new LinkChange("Repository changed")));
+
+        scheduler.checkUpdates();
+
+        verify(linkUpdateSender, never()).send(any());
+    }
+}

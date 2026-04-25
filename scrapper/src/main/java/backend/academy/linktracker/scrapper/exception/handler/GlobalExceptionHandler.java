@@ -4,9 +4,12 @@ import backend.academy.linktracker.contract.dto.error.ApiErrorResponse;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
+import backend.academy.linktracker.scrapper.exception.link.NotFoundTrackedLinkException;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
+import backend.academy.linktracker.scrapper.exception.tag.TagAlreadyExistsException;
+import backend.academy.linktracker.scrapper.exception.tag.TagNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -43,7 +46,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Некорректные параметры запроса", ex);
     }
 
-    @ExceptionHandler({SubscriptionNotFoundException.class})
+    @ExceptionHandler({
+        SubscriptionNotFoundException.class,
+        TagNotFoundException.class,
+        NotFoundTrackedLinkException.class
+    })
     public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException ex) {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
     }
@@ -62,7 +69,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, "Ресурс не найден", ex);
     }
 
-    @ExceptionHandler({SubscriptionAlreadyExistsException.class})
+    @ExceptionHandler({SubscriptionAlreadyExistsException.class, TagAlreadyExistsException.class})
     public ResponseEntity<ApiErrorResponse> handleConflict(RuntimeException ex) {
         return build(HttpStatus.CONFLICT, "Конфликт состояния ресурса", ex);
     }

@@ -1,4 +1,6 @@
 spring:
+  liquibase:
+    change-log: file:../migrations/master.xml
   grpc:
     server:
       enabled: false
@@ -6,6 +8,8 @@ spring:
         enabled: false
 
 app:
+  database:
+    access-type: SQL
   stackoverflow:
     base-url: ${wiremock.server.baseUrl}
     key: test-stackoverflow-key

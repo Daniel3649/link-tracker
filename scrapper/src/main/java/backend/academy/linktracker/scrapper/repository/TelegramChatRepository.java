@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.repository;
 
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import java.util.Optional;
 
 public interface TelegramChatRepository {

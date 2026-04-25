@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.repository;
 
-import backend.academy.linktracker.scrapper.models.chat.TelegramChat;
-import backend.academy.linktracker.scrapper.models.link.TrackedLink;
-import backend.academy.linktracker.scrapper.models.subscription.Subscription;
+import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
+import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,15 +11,15 @@ public interface SubscriptionRepository {
 
     boolean existsByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
+    boolean existsByTrackedLink(TrackedLink trackedLink);
+
     Subscription save(Subscription subscription);
 
     Optional<Subscription> findByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
-    Optional<Subscription> removeByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
-
     void deleteByTrackedLinkAndTelegramChat(TrackedLink trackedLink, TelegramChat telegramChat);
 
-    List<Subscription> findAllByTelegramChat(TelegramChat telegramChat);
+    List<Subscription> findAllByTelegramChatId(Long id);
 
     List<Subscription> findAllByTrackedLink(TrackedLink trackedLink);
 

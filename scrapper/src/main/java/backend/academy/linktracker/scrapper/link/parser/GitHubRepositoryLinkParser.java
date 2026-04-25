@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.link.parser;
 
 import backend.academy.linktracker.scrapper.common.ParsedLink;
+import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.exception.link.UnsupportedLinkException;
-import backend.academy.linktracker.scrapper.models.link.resourcekey.GitHubRepositoryKey;
 import java.net.URI;
 
 public class GitHubRepositoryLinkParser implements LinkParser {
