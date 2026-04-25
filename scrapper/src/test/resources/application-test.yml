@@ -1,0 +1,24 @@
+spring:
+  grpc:
+    server:
+      enabled: false
+      servlet:
+        enabled: false
+
+app:
+  stackoverflow:
+    base-url: ${wiremock.server.baseUrl}
+    key: test-stackoverflow-key
+    access-token: test-stackoverflow-access-token
+    site: stackoverflow
+
+  github:
+    base-url: ${wiremock.server.baseUrl}
+    token: test-github-token
+
+  scheduler:
+    enabled: false
+
+  bot:
+    transport: http
+    base-url: http://localhost:8080

@@ -1,6 +1,6 @@
 package backend.academy.linktracker.bot.listener;
 
-import backend.academy.linktracker.bot.service.UpdateService;
+import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
@@ -8,13 +8,19 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        prefix = "app.telegram",
+        name = "updates-listener-enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class TelegramUpdatesListener implements UpdatesListener {
     private final TelegramBot bot;
-    private final UpdateService updateService;
+    private final TelegramUpdateService updateService;
 
     @PostConstruct
     public void start() {
@@ -28,9 +34,7 @@ public class TelegramUpdatesListener implements UpdatesListener {
 
     @Override
     public int process(List<Update> updates) {
-        for (Update update : updates) {
-            updateService.handleEvent(update);
-        }
+        updates.forEach(updateService::handleEvent);
         return CONFIRMED_UPDATES_ALL;
     }
 }

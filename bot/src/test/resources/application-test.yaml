@@ -1,6 +1,19 @@
+spring:
+  grpc:
+    server:
+      enabled: false
+      servlet:
+        enabled: false
+
 app:
   telegram:
     url: ${wiremock.server.baseUrl}/bot
     token: test-token
     update-listener-sleep: 1s
+    updates-listener-enabled: false
     debug: true
+    init-commands-on-startup: false
+
+  scrapper:
+    transport: http
+    base-url: ${wiremock.server.baseUrl}

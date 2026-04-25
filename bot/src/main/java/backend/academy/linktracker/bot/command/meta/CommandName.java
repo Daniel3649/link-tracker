@@ -5,7 +5,11 @@ import lombok.Getter;
 @Getter
 public enum CommandName {
     START("start"),
-    HELP("help");
+    HELP("help"),
+    TRACK("track"),
+    CANCEL("cancel"),
+    LIST("list"),
+    UNTRACK("untrack");
 
     private final String text;
 

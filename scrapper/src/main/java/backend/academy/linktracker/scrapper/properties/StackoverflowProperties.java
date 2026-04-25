@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.properties;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,9 +16,13 @@ import org.springframework.validation.annotation.Validated;
 @NoArgsConstructor
 public class StackoverflowProperties {
 
-    @NotEmpty
     private String key;
 
-    @NotEmpty
     private String accessToken;
+
+    @NotBlank
+    private String baseUrl;
+
+    @NotBlank
+    private String site;
 }

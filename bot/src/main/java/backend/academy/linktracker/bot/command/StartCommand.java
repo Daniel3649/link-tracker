@@ -1,10 +1,10 @@
 package backend.academy.linktracker.bot.command;
 
+import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.command.meta.CommandName;
 import backend.academy.linktracker.bot.sender.TelegramSender;
 import backend.academy.linktracker.bot.service.MessageService;
 import com.pengrad.telegrambot.model.Update;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,14 +12,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StartCommand implements Command {
     private final MessageService messageService;
+    private final ScrapperClient scrapperClient;
     private final TelegramSender sender;
 
     @Override
     public void execute(Update update) {
-        Objects.requireNonNull(update);
         long chatId = update.message().chat().id();
-        String message = messageService.get("command.start");
-        sender.sendPlain(chatId, message);
+        scrapperClient.registerChat(chatId);
+        sender.sendPlain(chatId, messageService.get("command.start"));
     }
 
     @Override

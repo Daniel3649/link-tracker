@@ -1,4 +1,4 @@
-package backend.academy.linktracker.bot;
+package backend.academy.linktracker.bot.integration.command;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathTemplate;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
@@ -14,9 +15,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
 import backend.academy.linktracker.bot.properties.TelegramProperties;
 import backend.academy.linktracker.bot.service.MessageService;
-import backend.academy.linktracker.bot.service.UpdateService;
+import backend.academy.linktracker.bot.service.TelegramUpdateService;
 import com.github.tomakehurst.wiremock.matching.ContentPattern;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -24,19 +26,19 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.wiremock.spring.EnableWireMock;
 
 @SpringBootTest
-@Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @EnableWireMock
-public class TelegramBotCommandsIntegrationTest {
+public class TelegramBotCommandsTest {
 
     @Autowired
     TelegramBot telegramBot;
@@ -45,7 +47,10 @@ public class TelegramBotCommandsIntegrationTest {
     TelegramProperties telegramProperties;
 
     @Autowired
-    UpdateService updateService;
+    CommandDispatcher commandDispatcher;
+
+    @Autowired
+    TelegramUpdateService updateService;
 
     @Autowired
     MessageService messageService;
@@ -60,6 +65,7 @@ public class TelegramBotCommandsIntegrationTest {
         long chatId = 987654321L;
 
         stubGetUpdatesOnceThenEmpty("/start", chatId);
+        stubRegisterChatOk(chatId);
         stubSendMessageOk(chatId);
 
         CountDownLatch latch = new CountDownLatch(1);
@@ -98,9 +104,11 @@ public class TelegramBotCommandsIntegrationTest {
 
         assertTrue(latch.await(10, SECONDS));
 
-        String expectedText = messageService.get("command.help.header") + '\n' + "/help - "
-                + messageService.get("command.help.description") + '\n' + "/start - "
-                + messageService.get("command.start.description") + '\n';
+        String expectedText = messageService.get("command.help.header")
+                + '\n'
+                + commandDispatcher.getCommands().stream()
+                        .map(command -> "/" + command.name() + " - " + command.description())
+                        .collect(Collectors.joining("\n", "", "\n"));
 
         await().atMost(10, SECONDS)
                 .untilAsserted(() -> verify(
@@ -127,7 +135,7 @@ public class TelegramBotCommandsIntegrationTest {
 
         assertTrue(latch.await(10, SECONDS));
 
-        String expectedText = messageService.get("command.unknown");
+        String expectedText = messageService.get("exception.unknown-command");
 
         await().atMost(10, SECONDS)
                 .untilAsserted(() -> verify(
@@ -143,7 +151,7 @@ public class TelegramBotCommandsIntegrationTest {
                 .inScenario("cmd")
                 .whenScenarioStateIs(STARTED)
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     {
@@ -168,7 +176,7 @@ public class TelegramBotCommandsIntegrationTest {
                 .inScenario("cmd")
                 .whenScenarioStateIs("EMPTY")
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     { "ok": true, "result": [] }
@@ -178,7 +186,7 @@ public class TelegramBotCommandsIntegrationTest {
     private void stubSendMessageOk(long chatId) {
         stubFor(post(urlMatching("/bot[^/]+/sendMessage"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
                     {
@@ -208,5 +216,9 @@ public class TelegramBotCommandsIntegrationTest {
 
     private static String escapeJson(String s) {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private void stubRegisterChatOk(long chatId) {
+        stubFor(post(urlEqualTo("/tg-chat/" + chatId)).willReturn(aResponse().withStatus(HttpStatus.OK.value())));
     }
 }

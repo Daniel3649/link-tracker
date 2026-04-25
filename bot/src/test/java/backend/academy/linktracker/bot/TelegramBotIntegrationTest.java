@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.wiremock.spring.EnableWireMock;
@@ -55,15 +56,16 @@ class TelegramBotIntegrationTest implements WithAssertions {
     @Test
     void nonExistingTokenRequest() {
         stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
-                .willReturn(aResponse()
-                        .withStatus(404)
-                        .withBody("{\"ok\":false,\"error_code\":404,\"description\":\"Not Found\"}")));
+                .willReturn(aResponse().withStatus(HttpStatus.NOT_FOUND.value()).withBody("""
+                                {"ok":false,"error_code":%d,"description":"Not Found"}
+                                """.formatted(
+                                HttpStatus.NOT_FOUND.value()))));
 
         var getUpdatesRequest = new GetUpdates();
         var getUpdatesResponse = telegramBot.execute(getUpdatesRequest);
 
         assertFalse(getUpdatesResponse.isOk());
-        assertEquals(404, getUpdatesResponse.errorCode());
+        assertEquals(HttpStatus.NOT_FOUND.value(), getUpdatesResponse.errorCode());
 
         verify(
                 1,
@@ -77,7 +79,7 @@ class TelegramBotIntegrationTest implements WithAssertions {
                 .inScenario("Updates Listener")
                 .whenScenarioStateIs(STARTED)
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("""
                                 {
@@ -110,7 +112,7 @@ class TelegramBotIntegrationTest implements WithAssertions {
                 .inScenario("Updates Listener")
                 .whenScenarioStateIs("Updates Received")
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(HttpStatus.OK.value())
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("""
                                 {
