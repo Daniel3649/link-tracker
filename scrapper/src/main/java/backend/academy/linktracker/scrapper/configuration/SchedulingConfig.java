@@ -5,8 +5,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 public class SchedulingConfig {
@@ -23,4 +25,9 @@ public class SchedulingConfig {
 
         return Executors.newFixedThreadPool(parallelism, threadFactory);
     }
+
+    @Configuration
+    @EnableScheduling
+    @ConditionalOnProperty(prefix = "app.scheduler", name = "enabled", havingValue = "true", matchIfMissing = true)
+    static class SchedulingEnabler {}
 }
