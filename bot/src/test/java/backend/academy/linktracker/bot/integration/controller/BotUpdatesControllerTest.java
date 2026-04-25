@@ -96,7 +96,7 @@ class BotUpdatesControllerTest {
     }
 
     @Test
-    void shouldAcceptValidTextNotificationAndSendMessagesToTelegram() throws Exception {
+    void shouldAcceptReportUpdateAndSendMessagesToTelegram() throws Exception {
         wireMock.stubFor(post(urlPathMatching("/bot[^/]+/sendMessage")).willReturn(okJson("""
                     {
                       "ok": true,
@@ -106,11 +106,13 @@ class BotUpdatesControllerTest {
                     }
                     """)));
 
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/notifications/text")
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/updates")
                         .contentType(APPLICATION_JSON)
                         .content("""
                     {
-                      "message": "Link check report\\n- https://github.com/octocat/Hello-World",
+                      "id": 1,
+                      "url": "https://github.com/octocat/Hello-World",
+                      "description": "Link check report\\nReason: RepositoryPollingException: GitHub API unavailable",
                       "tgChatIds": [1001, 1002]
                     }
                     """))

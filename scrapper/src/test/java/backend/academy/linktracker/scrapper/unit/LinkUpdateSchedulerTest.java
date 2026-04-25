@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
-import backend.academy.linktracker.contract.dto.request.TextNotification;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.LinkChangeDescriptionFormatter;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
@@ -17,7 +16,6 @@ import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import backend.academy.linktracker.scrapper.schedule.LinkUpdateScheduler;
 import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
-import backend.academy.linktracker.scrapper.sender.TextNotificationSender;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -50,9 +48,6 @@ class LinkUpdateSchedulerTest {
     private LinkUpdateSender linkUpdateSender;
 
     @Mock
-    private TextNotificationSender textNotificationSender;
-
-    @Mock
     private LinkHandler linkHandler;
 
     @Mock
@@ -73,7 +68,6 @@ class LinkUpdateSchedulerTest {
                 subscriptionRepository,
                 linkHandlerRegistry,
                 linkUpdateSender,
-                textNotificationSender,
                 linkChangeDescriptionFormatter,
                 schedulerProperties,
                 linkUpdateCheckExecutorService);
@@ -319,14 +313,14 @@ class LinkUpdateSchedulerTest {
 
         scheduler.checkUpdates();
 
-        ArgumentCaptor<TextNotification> captor = ArgumentCaptor.forClass(TextNotification.class);
-        verify(textNotificationSender).send(captor.capture());
+        ArgumentCaptor<LinkUpdate> captor = ArgumentCaptor.forClass(LinkUpdate.class);
+        verify(linkUpdateSender).send(captor.capture());
 
+        assertThat(captor.getValue().id()).isEqualTo(10L);
+        assertThat(captor.getValue().url()).isEqualTo(URI.create(failedUrl));
         assertThat(captor.getValue().tgChatIds()).containsExactly(101L);
-        assertThat(captor.getValue().message())
+        assertThat(captor.getValue().description())
                 .contains("Link check report")
-                .contains(failedUrl)
                 .contains("GitHub API unavailable");
-        verify(linkUpdateSender, never()).send(any(LinkUpdate.class));
     }
 }

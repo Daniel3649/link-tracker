@@ -1,7 +1,6 @@
 package backend.academy.linktracker.scrapper.schedule;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
-import backend.academy.linktracker.contract.dto.request.TextNotification;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.LinkChangeDescriptionFormatter;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
@@ -13,12 +12,9 @@ import backend.academy.linktracker.scrapper.properties.SchedulerProperties;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TrackedLinkRepository;
 import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
-import backend.academy.linktracker.scrapper.sender.TextNotificationSender;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -27,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -35,22 +30,16 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class LinkUpdateScheduler {
-    private static final String FAILURE_REPORT_HEADER = """
-            Link check report
-            The following tracked links could not be checked:""";
-    private static final int FAILURE_REPORT_MESSAGE_LIMIT = 3500;
-
+    private static final String FAILURE_REPORT_HEADER = "Link check report";
     private final AtomicBoolean updateCheckInProgress = new AtomicBoolean(false);
 
     private final TrackedLinkRepository trackedLinkRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final LinkHandlerRegistry linkHandlerRegistry;
     private final LinkUpdateSender linkUpdateSender;
-    private final TextNotificationSender textNotificationSender;
     private final LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
     private final SchedulerProperties schedulerProperties;
 
-    @Qualifier("linkUpdateCheckExecutorService")
     private final ExecutorService linkUpdateCheckExecutorService;
 
     @Scheduled(fixedDelayString = "${app.scheduler.link-check-delay-ms}")
@@ -211,76 +200,40 @@ public class LinkUpdateScheduler {
     }
 
     private void sendFailureReports(List<LinkCheckFailure> failedLinks) {
-        Map<Long, List<LinkCheckFailure>> failuresByChatId = groupFailuresByChatId(failedLinks);
-
-        for (Map.Entry<Long, List<LinkCheckFailure>> entry : failuresByChatId.entrySet()) {
-            long chatId = entry.getKey();
-            List<String> reports = buildFailureReports(entry.getValue());
-
-            for (String report : reports) {
-                try {
-                    textNotificationSender.send(new TextNotification(report, List.of(chatId)));
-                } catch (Exception e) {
-                    log.atWarn()
-                            .setCause(e)
-                            .addKeyValue("event", LogEvent.LINK_UPDATE_CHECK_REPORT)
-                            .addKeyValue("chatId", chatId)
-                            .addKeyValue("failedLinksCount", entry.getValue().size())
-                            .log("Failed to send link check failure report");
-                }
-            }
-        }
-    }
-
-    private Map<Long, List<LinkCheckFailure>> groupFailuresByChatId(List<LinkCheckFailure> failedLinks) {
-        Map<Long, List<LinkCheckFailure>> failuresByChatId = new LinkedHashMap<>();
-
         for (LinkCheckFailure failure : failedLinks) {
-            List<Long> chatIds = subscriptionRepository.findAllChatIdsByTrackedLinkId(failure.linkId()).stream()
+            List<Long> tgChatIds = subscriptionRepository.findAllChatIdsByTrackedLinkId(failure.linkId()).stream()
                     .distinct()
                     .toList();
-
-            for (Long chatId : chatIds) {
-                failuresByChatId
-                        .computeIfAbsent(chatId, ignored -> new ArrayList<>())
-                        .add(failure);
-            }
-        }
-
-        return failuresByChatId;
-    }
-
-    private List<String> buildFailureReports(List<LinkCheckFailure> failedLinks) {
-        List<String> lines =
-                failedLinks.stream().map(this::formatFailureLine).distinct().toList();
-        List<String> reports = new ArrayList<>();
-        StringBuilder currentReport = new StringBuilder(FAILURE_REPORT_HEADER);
-
-        for (String line : lines) {
-            if (currentReport.length() + 1 + line.length() > FAILURE_REPORT_MESSAGE_LIMIT
-                    && currentReport.length() > FAILURE_REPORT_HEADER.length()) {
-                reports.add(currentReport.toString());
-                currentReport = new StringBuilder(FAILURE_REPORT_HEADER);
+            if (tgChatIds.isEmpty()) {
+                continue;
             }
 
-            currentReport.append('\n').append(line);
+            try {
+                linkUpdateSender.send(new LinkUpdate(
+                        failure.linkId(),
+                        URI.create(failure.url()),
+                        buildFailureDescription(failure),
+                        tgChatIds));
+            } catch (Exception e) {
+                log.atWarn()
+                        .setCause(e)
+                        .addKeyValue("event", LogEvent.LINK_UPDATE_CHECK_REPORT)
+                        .addKeyValue("linkId", failure.linkId())
+                        .addKeyValue("failedLinksCount", 1)
+                        .log("Failed to send link check failure report");
+            }
         }
-
-        reports.add(currentReport.toString());
-        return reports;
     }
 
-    private String formatFailureLine(LinkCheckFailure failure) {
-        StringBuilder builder = new StringBuilder("- ").append(failure.url());
+    private String buildFailureDescription(LinkCheckFailure failure) {
+        StringBuilder builder = new StringBuilder(FAILURE_REPORT_HEADER);
 
         if (failure.exception() != null && !failure.exception().isBlank()) {
-            builder.append(" (").append(failure.exception());
+            builder.append('\n').append("Reason: ").append(failure.exception());
 
             if (failure.message() != null && !failure.message().isBlank()) {
                 builder.append(": ").append(normalizeInline(failure.message()));
             }
-
-            builder.append(')');
         }
 
         return builder.toString();

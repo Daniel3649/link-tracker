@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
-import backend.academy.linktracker.contract.dto.request.TextNotification;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.LinkChangeSource;
 import backend.academy.linktracker.scrapper.common.LinkChangeType;
@@ -18,9 +17,9 @@ import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
 import backend.academy.linktracker.scrapper.integration.AbstractIntegrationTest;
 import backend.academy.linktracker.scrapper.sender.LinkUpdateSender;
-import backend.academy.linktracker.scrapper.sender.TextNotificationSender;
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -37,9 +36,6 @@ abstract class LinkUpdateSchedulerIntegrationTest extends AbstractIntegrationTes
 
     @MockitoBean
     private LinkUpdateSender linkUpdateSender;
-
-    @MockitoBean
-    private TextNotificationSender textNotificationSender;
 
     @Test
     void shouldSendUpdateOnlyToSubscribedChats() {
@@ -141,15 +137,22 @@ abstract class LinkUpdateSchedulerIntegrationTest extends AbstractIntegrationTes
         scheduler.checkUpdates();
 
         ArgumentCaptor<LinkUpdate> captor = ArgumentCaptor.forClass(LinkUpdate.class);
-        verify(linkUpdateSender, times(1)).send(captor.capture());
-        assertThat(captor.getValue().id()).isEqualTo(successfulTrackedLink.getId());
+        verify(linkUpdateSender, times(2)).send(captor.capture());
 
-        ArgumentCaptor<TextNotification> reportCaptor = ArgumentCaptor.forClass(TextNotification.class);
-        verify(textNotificationSender, times(1)).send(reportCaptor.capture());
-        assertThat(reportCaptor.getValue().tgChatIds()).containsExactly(1L);
-        assertThat(reportCaptor.getValue().message())
+        List<LinkUpdate> sentUpdates = captor.getAllValues();
+        LinkUpdate regularUpdate = sentUpdates.stream()
+                .filter(update -> update.id().equals(successfulTrackedLink.getId()))
+                .findFirst()
+                .orElseThrow();
+        LinkUpdate failureReport = sentUpdates.stream()
+                .filter(update -> update.id().equals(failedTrackedLink.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(regularUpdate.description()).isEqualTo("Repository changed");
+        assertThat(failureReport.tgChatIds()).containsExactly(1L);
+        assertThat(failureReport.description())
                 .contains("Link check report")
-                .contains(failedTrackedLink.getUrl())
                 .contains("GitHub API unavailable")
                 .doesNotContain(successfulTrackedLink.getUrl());
     }

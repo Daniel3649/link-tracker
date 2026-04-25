@@ -6,9 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UpdateMessageBuilder {
     public String buildMessage(LinkUpdate update) {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("Link update").append('\n').append(update.url());
+        StringBuilder builder = new StringBuilder(update.url().toString());
 
         if (update.description() != null && !update.description().isBlank()) {
             builder.append('\n').append('\n').append(update.description());
