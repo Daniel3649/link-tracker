@@ -109,12 +109,12 @@ class StackOverflowLinkHandlerTest {
         Optional<LinkChange> result = handler.checkForUpdate(trackedLink);
 
         assertThat(result).isPresent();
-        assertThat(result.orElseThrow().type()).isEqualTo(LinkChangeType.STACKOVERFLOW_COMMENT);
-        assertThat(result.orElseThrow().description()).isEqualTo("New StackOverflow comment");
-        assertThat(result.orElseThrow().title()).isEqualTo("Example");
-        assertThat(result.orElseThrow().username()).isEqualTo("alice");
-        assertThat(result.orElseThrow().createdAt()).isEqualTo(Instant.ofEpochSecond(200L));
-        assertThat(result.orElseThrow().preview()).isEqualTo("Hello world & bye");
+        assertThat(result.orElseThrow().getType()).isEqualTo(LinkChangeType.STACKOVERFLOW_COMMENT);
+        assertThat(result.orElseThrow().getDescription()).isEqualTo("New StackOverflow comment");
+        assertThat(result.orElseThrow().getTitle()).isEqualTo("Example");
+        assertThat(result.orElseThrow().getUsername()).isEqualTo("alice");
+        assertThat(result.orElseThrow().getCreatedAt()).isEqualTo(Instant.ofEpochSecond(200L));
+        assertThat(result.orElseThrow().getPreview()).isEqualTo("Hello world & bye");
         verify(repository).save(any(StackOverflowTrackingState.class));
     }
 
@@ -140,12 +140,12 @@ class StackOverflowLinkHandlerTest {
         Optional<LinkChange> result = handler.checkForUpdate(trackedLink);
 
         assertThat(result).isPresent();
-        assertThat(result.orElseThrow().type()).isEqualTo(LinkChangeType.STACKOVERFLOW_ANSWER);
-        assertThat(result.orElseThrow().description()).isEqualTo("New StackOverflow answer");
-        assertThat(result.orElseThrow().title()).isEqualTo("Example");
-        assertThat(result.orElseThrow().username()).isEqualTo("bob");
-        assertThat(result.orElseThrow().createdAt()).isEqualTo(Instant.ofEpochSecond(200L));
-        assertThat(result.orElseThrow().preview()).isEqualTo("Answer with <tag>");
+        assertThat(result.orElseThrow().getType()).isEqualTo(LinkChangeType.STACKOVERFLOW_ANSWER);
+        assertThat(result.orElseThrow().getDescription()).isEqualTo("New StackOverflow answer");
+        assertThat(result.orElseThrow().getTitle()).isEqualTo("Example");
+        assertThat(result.orElseThrow().getUsername()).isEqualTo("bob");
+        assertThat(result.orElseThrow().getCreatedAt()).isEqualTo(Instant.ofEpochSecond(200L));
+        assertThat(result.orElseThrow().getPreview()).isEqualTo("Answer with <tag>");
         verify(repository).save(any(StackOverflowTrackingState.class));
     }
 

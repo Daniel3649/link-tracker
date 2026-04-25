@@ -136,12 +136,12 @@ class GitHubLinkHandlerTest {
         Optional<LinkChange> result = handler.checkForUpdate(trackedLink);
 
         assertThat(result).isPresent();
-        assertThat(result.orElseThrow().type()).isEqualTo(LinkChangeType.GITHUB_ISSUE);
-        assertThat(result.orElseThrow().description()).isEqualTo("New GitHub issue");
-        assertThat(result.orElseThrow().title()).isEqualTo("Fix bug");
-        assertThat(result.orElseThrow().username()).isEqualTo("alice");
-        assertThat(result.orElseThrow().createdAt()).isEqualTo(Instant.parse("2026-04-05T08:30:00Z"));
-        assertThat(result.orElseThrow().preview()).isEqualTo("a".repeat(200));
+        assertThat(result.orElseThrow().getType()).isEqualTo(LinkChangeType.GITHUB_ISSUE);
+        assertThat(result.orElseThrow().getDescription()).isEqualTo("New GitHub issue");
+        assertThat(result.orElseThrow().getTitle()).isEqualTo("Fix bug");
+        assertThat(result.orElseThrow().getUsername()).isEqualTo("alice");
+        assertThat(result.orElseThrow().getCreatedAt()).isEqualTo(Instant.parse("2026-04-05T08:30:00Z"));
+        assertThat(result.orElseThrow().getPreview()).isEqualTo("a".repeat(200));
         verify(trackingStateRepository).save(any(GitHubTrackingState.class));
     }
 
@@ -170,12 +170,12 @@ class GitHubLinkHandlerTest {
         Optional<LinkChange> result = handler.checkForUpdate(trackedLink);
 
         assertThat(result).isPresent();
-        assertThat(result.orElseThrow().type()).isEqualTo(LinkChangeType.GITHUB_PULL_REQUEST);
-        assertThat(result.orElseThrow().description()).isEqualTo("New GitHub pull request");
-        assertThat(result.orElseThrow().title()).isEqualTo("Add feature");
-        assertThat(result.orElseThrow().username()).isEqualTo("octocat");
-        assertThat(result.orElseThrow().createdAt()).isEqualTo(Instant.parse("2026-04-05T09:30:00Z"));
-        assertThat(result.orElseThrow().preview()).isEqualTo("PR body");
+        assertThat(result.orElseThrow().getType()).isEqualTo(LinkChangeType.GITHUB_PULL_REQUEST);
+        assertThat(result.orElseThrow().getDescription()).isEqualTo("New GitHub pull request");
+        assertThat(result.orElseThrow().getTitle()).isEqualTo("Add feature");
+        assertThat(result.orElseThrow().getUsername()).isEqualTo("octocat");
+        assertThat(result.orElseThrow().getCreatedAt()).isEqualTo(Instant.parse("2026-04-05T09:30:00Z"));
+        assertThat(result.orElseThrow().getPreview()).isEqualTo("PR body");
         verify(trackingStateRepository).save(any(GitHubTrackingState.class));
     }
 

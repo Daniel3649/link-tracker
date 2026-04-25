@@ -3,8 +3,6 @@ package backend.academy.linktracker.scrapper.handlers.github;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
 import backend.academy.linktracker.scrapper.common.LinkChange;
 import backend.academy.linktracker.scrapper.common.LinkChangePreviewFormatter;
-import backend.academy.linktracker.scrapper.common.LinkChangeSource;
-import backend.academy.linktracker.scrapper.common.LinkChangeType;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,32 +24,6 @@ public class GitHubIssueChangeBuilder {
     }
 
     private LinkChange toStructuredChange(GitHubRepositoryIssueResponse issue, int extraUpdatesCount) {
-        String description = extraUpdatesCount > 0
-                ? "%s (+%d more updates)".formatted(resolveHeader(issue), extraUpdatesCount)
-                : resolveHeader(issue);
-
-        if (issue.isPullRequest()) {
-            return new LinkChange(
-                    description,
-                    LinkChangeSource.GITHUB,
-                    LinkChangeType.GITHUB_PULL_REQUEST,
-                    issue.title(),
-                    issue.user() == null ? null : issue.user().login(),
-                    issue.createdAt(),
-                    previewFormatter.formatPlainText(issue.body()));
-        }
-
-        return new LinkChange(
-                description,
-                LinkChangeSource.GITHUB,
-                LinkChangeType.GITHUB_ISSUE,
-                issue.title(),
-                issue.user() == null ? null : issue.user().login(),
-                issue.createdAt(),
-                previewFormatter.formatPlainText(issue.body()));
-    }
-
-    private String resolveHeader(GitHubRepositoryIssueResponse issue) {
-        return issue.isPullRequest() ? "New GitHub pull request" : "New GitHub issue";
+        return new LinkChange(issue, extraUpdatesCount, previewFormatter);
     }
 }

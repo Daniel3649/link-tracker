@@ -1,27 +1,88 @@
 package backend.academy.linktracker.scrapper.common;
 
+import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowAnswerResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowCommentResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowOwnerResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionResponse;
 import java.time.Instant;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.springframework.util.StringUtils;
 
-public record LinkChange(
-        String description,
-        LinkChangeSource source,
-        LinkChangeType type,
-        String title,
-        String username,
-        Instant createdAt,
-        String preview) {
-    public LinkChange {
-        description = normalize(description);
-        source = source == null ? LinkChangeSource.UNKNOWN : source;
-        type = type == null ? LinkChangeType.GENERIC : type;
-        title = normalize(title);
-        username = normalize(username);
-        preview = normalize(preview);
+@Getter
+@EqualsAndHashCode
+@ToString
+public final class LinkChange {
+    private final String description;
+    private final LinkChangeSource source;
+    private final LinkChangeType type;
+    private final String title;
+    private final String username;
+    private final Instant createdAt;
+    private final String preview;
 
-        if (!StringUtils.hasText(description) && !hasStructuredDetails(title, username, createdAt, preview)) {
+    public LinkChange(
+            String description,
+            LinkChangeSource source,
+            LinkChangeType type,
+            String title,
+            String username,
+            Instant createdAt,
+            String preview) {
+        this.description = normalize(description);
+        this.source = source == null ? LinkChangeSource.UNKNOWN : source;
+        this.type = type == null ? LinkChangeType.GENERIC : type;
+        this.title = normalize(title);
+        this.username = normalize(username);
+        this.createdAt = createdAt;
+        this.preview = normalize(preview);
+
+        if (!StringUtils.hasText(this.description) && !hasStructuredDetails(this.title, this.username, this.createdAt, this.preview)) {
             throw new IllegalArgumentException("LinkChange requires fallback description or structured details");
         }
+    }
+
+    public LinkChange(GitHubRepositoryIssueResponse issue, int extraUpdatesCount, LinkChangePreviewFormatter previewFormatter) {
+        this(
+                resolveGitHubDescription(issue, extraUpdatesCount),
+                LinkChangeSource.GITHUB,
+                resolveGitHubType(issue),
+                issue == null ? null : issue.title(),
+                issue == null || issue.user() == null ? null : issue.user().login(),
+                issue == null ? null : issue.createdAt(),
+                previewFormatter == null ? null : previewFormatter.formatPlainText(issue == null ? null : issue.body()));
+    }
+
+    public LinkChange(
+            StackOverflowQuestionResponse question,
+            StackOverflowAnswerResponse answer,
+            int trackedEventsCount,
+            LinkChangePreviewFormatter previewFormatter) {
+        this(
+                resolveStackOverflowDescription("New StackOverflow answer", trackedEventsCount),
+                LinkChangeSource.STACKOVERFLOW,
+                LinkChangeType.STACKOVERFLOW_ANSWER,
+                question == null ? null : question.title(),
+                extractUsername(answer == null ? null : answer.owner()),
+                toInstant(answer == null ? null : answer.creationDateEpochSec()),
+                previewFormatter == null ? null : previewFormatter.formatHtml(answer == null ? null : answer.body()));
+    }
+
+    public LinkChange(
+            StackOverflowQuestionResponse question,
+            StackOverflowCommentResponse comment,
+            int trackedEventsCount,
+            LinkChangePreviewFormatter previewFormatter) {
+        this(
+                resolveStackOverflowDescription("New StackOverflow comment", trackedEventsCount),
+                LinkChangeSource.STACKOVERFLOW,
+                LinkChangeType.STACKOVERFLOW_COMMENT,
+                question == null ? null : question.title(),
+                extractUsername(comment == null ? null : comment.owner()),
+                toInstant(comment == null ? null : comment.creationDateEpochSec()),
+                previewFormatter == null ? null : previewFormatter.formatHtml(comment == null ? null : comment.body()));
     }
 
     public LinkChange(String description) {
@@ -34,6 +95,37 @@ public record LinkChange(
 
     public boolean hasStructuredDetails() {
         return hasStructuredDetails(title, username, createdAt, preview);
+    }
+
+    private static String resolveGitHubDescription(GitHubRepositoryIssueResponse issue, int extraUpdatesCount) {
+        String header = issue != null && issue.isPullRequest() ? "New GitHub pull request" : "New GitHub issue";
+        if (extraUpdatesCount <= 0) {
+            return header;
+        }
+
+        return "%s (+%d more updates)".formatted(header, extraUpdatesCount);
+    }
+
+    private static LinkChangeType resolveGitHubType(GitHubRepositoryIssueResponse issue) {
+        return issue != null && issue.isPullRequest()
+                ? LinkChangeType.GITHUB_PULL_REQUEST
+                : LinkChangeType.GITHUB_ISSUE;
+    }
+
+    private static String resolveStackOverflowDescription(String baseDescription, int trackedEventsCount) {
+        if (trackedEventsCount <= 1) {
+            return baseDescription;
+        }
+
+        return "%s (+%d more updates)".formatted(baseDescription, trackedEventsCount - 1);
+    }
+
+    private static String extractUsername(StackOverflowOwnerResponse owner) {
+        return owner == null ? null : owner.displayName();
+    }
+
+    private static Instant toInstant(Long epochSec) {
+        return epochSec == null ? null : Instant.ofEpochSecond(epochSec);
     }
 
     private static boolean hasStructuredDetails(String title, String username, Instant createdAt, String preview) {

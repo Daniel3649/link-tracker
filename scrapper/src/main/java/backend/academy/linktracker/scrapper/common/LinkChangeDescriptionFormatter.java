@@ -20,24 +20,24 @@ public class LinkChangeDescriptionFormatter {
 
         List<String> lines = new ArrayList<>();
         lines.add(resolveHeader(change));
-        appendIfPresent(lines, "Title", change.title());
-        appendIfPresent(lines, "User", change.username());
+        appendIfPresent(lines, "Title", change.getTitle());
+        appendIfPresent(lines, "User", change.getUsername());
 
-        if (change.createdAt() != null) {
-            lines.add("Created at: " + CREATED_AT_FORMATTER.format(change.createdAt()));
+        if (change.getCreatedAt() != null) {
+            lines.add("Created at: " + CREATED_AT_FORMATTER.format(change.getCreatedAt()));
         }
 
-        appendIfPresent(lines, "Preview", change.preview());
+        appendIfPresent(lines, "Preview", change.getPreview());
 
         return String.join("\n", lines);
     }
 
     private String resolveHeader(LinkChange change) {
-        if (StringUtils.hasText(change.description())) {
-            return change.description();
+        if (StringUtils.hasText(change.getDescription())) {
+            return change.getDescription();
         }
 
-        return switch (change.type()) {
+        return switch (change.getType()) {
             case GITHUB_ISSUE -> "New GitHub issue";
             case GITHUB_PULL_REQUEST -> "New GitHub pull request";
             case STACKOVERFLOW_ANSWER -> "New StackOverflow answer";
@@ -54,10 +54,10 @@ public class LinkChangeDescriptionFormatter {
     }
 
     private String requireDescription(LinkChange change) {
-        if (!StringUtils.hasText(change.description())) {
+        if (!StringUtils.hasText(change.getDescription())) {
             throw new IllegalArgumentException("Plain LinkChange must contain description");
         }
 
-        return change.description();
+        return change.getDescription();
     }
 }
