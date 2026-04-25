@@ -27,8 +27,6 @@ public class GitHubLinkHandler implements LinkHandler {
 
     private final GitHubClient gitHubClient;
     private final GitHubTrackingStateRepository trackingStateRepository;
-    private final GitHubIssueExtractor issueExtractor;
-    private final GitHubIssueChangeBuilder changeBuilder;
     private final GitHubRepositoryLinkParser gitHubRepositoryLinkParser;
 
     @Override
@@ -80,7 +78,7 @@ public class GitHubLinkHandler implements LinkHandler {
         List<GitHubRepositoryIssueResponse> recentIssues =
                 gitHubClient.fetchRecentIssuesAndPullRequests(key, ISSUE_FETCH_LIMIT);
         List<GitHubRepositoryIssueResponse> newIssues =
-                issueExtractor.extractNewIssuesOrPullRequests(recentIssues, state.getLastActivityId());
+                GitHubIssueExtractor.extractNewIssuesOrPullRequests(recentIssues, state.getLastActivityId());
 
         if (!recentIssues.isEmpty()) {
             state.setLastActivityId(recentIssues.getFirst().id());
@@ -91,7 +89,7 @@ public class GitHubLinkHandler implements LinkHandler {
             return Optional.empty();
         }
 
-        return Optional.of(changeBuilder.buildChange(key, newIssues));
+        return Optional.of(GitHubIssueChangeBuilder.buildChange(key, newIssues));
     }
 
     private GitHubRepositoryKey extractKey(ResourceKey resourceKey) {

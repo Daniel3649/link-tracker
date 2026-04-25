@@ -1,10 +1,9 @@
 package backend.academy.linktracker.bot.command.support;
 
-import org.springframework.stereotype.Component;
+public final class CommandArgSupport {
+    private CommandArgSupport() {}
 
-@Component
-public class CommandArgSupport {
-    public String extractFirstArgument(String rawText) {
+    public static String extractFirstArgument(String rawText) {
         if (rawText == null) {
             return null;
         }

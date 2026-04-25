@@ -4,11 +4,11 @@ import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryI
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.stereotype.Component;
 
-@Component
-public class GitHubIssueExtractor {
-    public List<GitHubRepositoryIssueResponse> extractNewIssuesOrPullRequests(
+public final class GitHubIssueExtractor {
+    private GitHubIssueExtractor() {}
+
+    public static List<GitHubRepositoryIssueResponse> extractNewIssuesOrPullRequests(
             List<GitHubRepositoryIssueResponse> recentIssues, Long lastSeenIssueId) {
         if (recentIssues == null || recentIssues.isEmpty()) {
             return List.of();

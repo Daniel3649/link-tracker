@@ -19,14 +19,13 @@ public class UntrackCommand implements Command {
     private final MessageService messageService;
     private final ScrapperClient scrapperClient;
     private final TelegramSender telegramSender;
-    private final CommandArgSupport commandArgSupport;
 
     @Override
     public void execute(Update update) {
         long chatId = update.message().chat().id();
         String rawText = update.message().text();
 
-        String linkArgument = commandArgSupport.extractFirstArgument(rawText);
+        String linkArgument = CommandArgSupport.extractFirstArgument(rawText);
         if (linkArgument == null) {
             throw new NoArgumentUntrackCommandException("No link argument was provided");
         }

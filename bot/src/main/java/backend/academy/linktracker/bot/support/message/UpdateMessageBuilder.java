@@ -1,11 +1,11 @@
 package backend.academy.linktracker.bot.support.message;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
-import org.springframework.stereotype.Component;
 
-@Component
-public class UpdateMessageBuilder {
-    public String buildMessage(LinkUpdate update) {
+public final class UpdateMessageBuilder {
+    private UpdateMessageBuilder() {}
+
+    public static String buildMessage(LinkUpdate update) {
         StringBuilder builder = new StringBuilder(update.url().toString());
 
         if (update.description() != null && !update.description().isBlank()) {

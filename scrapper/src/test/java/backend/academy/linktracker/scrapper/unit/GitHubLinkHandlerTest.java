@@ -17,8 +17,6 @@ import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
-import backend.academy.linktracker.scrapper.handlers.github.GitHubIssueChangeBuilder;
-import backend.academy.linktracker.scrapper.handlers.github.GitHubIssueExtractor;
 import backend.academy.linktracker.scrapper.handlers.github.GitHubLinkHandler;
 import backend.academy.linktracker.scrapper.link.parser.GitHubRepositoryLinkParser;
 import backend.academy.linktracker.scrapper.repository.GitHubTrackingStateRepository;
@@ -48,12 +46,7 @@ class GitHubLinkHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new GitHubLinkHandler(
-                gitHubClient,
-                trackingStateRepository,
-                new GitHubIssueExtractor(),
-                new GitHubIssueChangeBuilder(),
-                gitHubRepositoryLinkParser);
+        handler = new GitHubLinkHandler(gitHubClient, trackingStateRepository, gitHubRepositoryLinkParser);
     }
 
     @Test
