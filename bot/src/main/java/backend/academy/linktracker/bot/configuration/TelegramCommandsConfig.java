@@ -1,0 +1,50 @@
+package backend.academy.linktracker.bot.configuration;
+
+import backend.academy.linktracker.bot.command.dispatcher.CommandDispatcher;
+import backend.academy.linktracker.bot.logging.LogEvent;
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.BotCommand;
+import com.pengrad.telegrambot.request.SetMyCommands;
+import com.pengrad.telegrambot.response.BaseResponse;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@RequiredArgsConstructor
+public class TelegramCommandsConfig {
+    private static final Logger logger = LoggerFactory.getLogger(TelegramCommandsConfig.class);
+    private final TelegramBot bot;
+    private final CommandDispatcher commandDispatcher;
+
+    @Bean
+    ApplicationRunner setTelegramMenuCommandsOnStartup() {
+        return _ -> {
+            BotCommand[] commands = commandDispatcher.getCommands().stream()
+                    .map(command -> new BotCommand(command.name(), command.description()))
+                    .toArray(BotCommand[]::new);
+
+            BaseResponse resp = bot.execute(new SetMyCommands(commands));
+
+            if (!resp.isOk()) {
+                logger.atError()
+                        .addKeyValue("event", LogEvent.TELEGRAM_SET_MY_COMMANDS_FAILED)
+                        .addKeyValue("command_count", commands.length)
+                        .addKeyValue("commands", commands)
+                        .addKeyValue("telegram_error_code", resp.errorCode())
+                        .addKeyValue("telegram_description", resp.description())
+                        .log("Failed to set Telegram bot menu commands");
+                throw new IllegalStateException("Failed to set bot commands: " + resp.description());
+            }
+
+            logger.atInfo()
+                    .addKeyValue("event", LogEvent.TELEGRAM_SET_MY_COMMANDS_OK)
+                    .addKeyValue("command_count", commands.length)
+                    .addKeyValue("commands", commands)
+                    .log("Telegram bot menu commands set");
+        };
+    }
+}
