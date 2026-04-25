@@ -4,14 +4,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-@Component
-public class LinkChangeDescriptionFormatter {
+public final class LinkChangeDescriptionFormatter {
     private static final DateTimeFormatter CREATED_AT_FORMATTER = DateTimeFormatter.ISO_INSTANT;
 
-    public String format(LinkChange change) {
+    private LinkChangeDescriptionFormatter() {}
+
+    public static String format(LinkChange change) {
         Objects.requireNonNull(change, "change cannot be null");
 
         if (!change.hasStructuredDetails()) {
@@ -32,7 +32,7 @@ public class LinkChangeDescriptionFormatter {
         return String.join("\n", lines);
     }
 
-    private String resolveHeader(LinkChange change) {
+    private static String resolveHeader(LinkChange change) {
         if (StringUtils.hasText(change.getDescription())) {
             return change.getDescription();
         }
@@ -47,13 +47,13 @@ public class LinkChangeDescriptionFormatter {
         };
     }
 
-    private void appendIfPresent(List<String> lines, String label, String value) {
+    private static void appendIfPresent(List<String> lines, String label, String value) {
         if (StringUtils.hasText(value)) {
             lines.add(label + ": " + value);
         }
     }
 
-    private String requireDescription(LinkChange change) {
+    private static String requireDescription(LinkChange change) {
         if (!StringUtils.hasText(change.getDescription())) {
             throw new IllegalArgumentException("Plain LinkChange must contain description");
         }

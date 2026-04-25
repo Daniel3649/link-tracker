@@ -35,7 +35,6 @@ public class StackOverflowLinkHandler implements LinkHandler {
     private final StackOverflowTrackingStateRepository repository;
     private final StackOverflowClient stackOverflowClient;
     private final StackOverflowTimelineSupport timelineSupport;
-    private final StackOverflowTimelineChangeBuilder changeBuilder;
     private final StackOverflowQuestionLinkParser stackOverflowQuestionLinkParser;
 
     @Override
@@ -160,7 +159,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
             }
 
             return new TrackedChangeBuildResult(
-                    changeBuilder.buildCommentChange(question, commentResult.item(), trackedEvents.size()),
+                    new LinkChange(question, commentResult.item(), trackedEvents.size()),
                     commentResult.backoffSeconds());
         }
 
@@ -178,7 +177,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
         }
 
         return new TrackedChangeBuildResult(
-                changeBuilder.buildAnswerChange(question, answerResult.item(), trackedEvents.size()),
+                new LinkChange(question, answerResult.item(), trackedEvents.size()),
                 answerResult.backoffSeconds());
     }
 

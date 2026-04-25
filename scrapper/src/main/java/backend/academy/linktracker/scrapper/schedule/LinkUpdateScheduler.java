@@ -37,7 +37,6 @@ public class LinkUpdateScheduler {
     private final SubscriptionRepository subscriptionRepository;
     private final LinkHandlerRegistry linkHandlerRegistry;
     private final LinkUpdateSender linkUpdateSender;
-    private final LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
     private final SchedulerProperties schedulerProperties;
 
     private final ExecutorService linkUpdateCheckExecutorService;
@@ -188,7 +187,7 @@ public class LinkUpdateScheduler {
         LinkUpdate update = new LinkUpdate(
                 trackedLink.getId(),
                 URI.create(trackedLink.getUrl()),
-                linkChangeDescriptionFormatter.format(change),
+                LinkChangeDescriptionFormatter.format(change),
                 tgChatIds);
 
         linkUpdateSender.send(update);

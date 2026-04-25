@@ -19,14 +19,12 @@ import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverf
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionTimelineEventResponse;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowTimelineFetchResult;
 import backend.academy.linktracker.scrapper.common.LinkChange;
-import backend.academy.linktracker.scrapper.common.LinkChangePreviewFormatter;
 import backend.academy.linktracker.scrapper.common.LinkChangeType;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.StackOverflowQuestionKey;
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOverflowTrackingState;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowLinkHandler;
-import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowTimelineChangeBuilder;
 import backend.academy.linktracker.scrapper.handlers.stackoverflow.StackOverflowTimelineSupport;
 import backend.academy.linktracker.scrapper.link.parser.StackOverflowQuestionLinkParser;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
@@ -56,11 +54,7 @@ class StackOverflowLinkHandlerTest {
     @BeforeEach
     void setUp() {
         handler = new StackOverflowLinkHandler(
-                repository,
-                stackOverflowClient,
-                new StackOverflowTimelineSupport(),
-                new StackOverflowTimelineChangeBuilder(new LinkChangePreviewFormatter()),
-                stackOverflowQuestionLinkParser);
+                repository, stackOverflowClient, new StackOverflowTimelineSupport(), stackOverflowQuestionLinkParser);
     }
 
     @Test

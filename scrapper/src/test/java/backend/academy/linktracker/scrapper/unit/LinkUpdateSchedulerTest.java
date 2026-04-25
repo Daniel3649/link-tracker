@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.contract.dto.request.LinkUpdate;
 import backend.academy.linktracker.scrapper.common.LinkChange;
-import backend.academy.linktracker.scrapper.common.LinkChangeDescriptionFormatter;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.exception.client.RepositoryPollingException;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
@@ -55,20 +54,16 @@ class LinkUpdateSchedulerTest {
 
     private ExecutorService linkUpdateCheckExecutorService;
 
-    private LinkChangeDescriptionFormatter linkChangeDescriptionFormatter;
-
     private LinkUpdateScheduler scheduler;
 
     @BeforeEach
     void setUp() {
         linkUpdateCheckExecutorService = Executors.newFixedThreadPool(4);
-        linkChangeDescriptionFormatter = new LinkChangeDescriptionFormatter();
         scheduler = new LinkUpdateScheduler(
                 trackedLinkRepository,
                 subscriptionRepository,
                 linkHandlerRegistry,
                 linkUpdateSender,
-                linkChangeDescriptionFormatter,
                 schedulerProperties,
                 linkUpdateCheckExecutorService);
     }

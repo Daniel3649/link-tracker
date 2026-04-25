@@ -2,16 +2,16 @@ package backend.academy.linktracker.scrapper.common;
 
 import java.util.regex.Pattern;
 import org.apache.commons.text.StringEscapeUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-@Component
-public class LinkChangePreviewFormatter {
+public final class LinkChangePreviewFormatter {
     private static final int MAX_PREVIEW_LENGTH = 200;
     private static final Pattern HTML_TAG_PATTERN = Pattern.compile("<[^>]+>");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[\\s\\u00A0]+");
 
-    public String formatPlainText(String value) {
+    private LinkChangePreviewFormatter() {}
+
+    public static String formatPlainText(String value) {
         if (!StringUtils.hasText(value)) {
             return null;
         }
@@ -19,7 +19,7 @@ public class LinkChangePreviewFormatter {
         return normalize(StringEscapeUtils.unescapeHtml4(value));
     }
 
-    public String formatHtml(String value) {
+    public static String formatHtml(String value) {
         if (!StringUtils.hasText(value)) {
             return null;
         }
@@ -28,7 +28,7 @@ public class LinkChangePreviewFormatter {
         return normalize(StringEscapeUtils.unescapeHtml4(withoutTags));
     }
 
-    private String normalize(String value) {
+    private static String normalize(String value) {
         if (!StringUtils.hasText(value)) {
             return null;
         }

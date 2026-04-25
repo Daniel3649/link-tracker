@@ -44,7 +44,7 @@ public final class LinkChange {
         }
     }
 
-    public LinkChange(GitHubRepositoryIssueResponse issue, int extraUpdatesCount, LinkChangePreviewFormatter previewFormatter) {
+    public LinkChange(GitHubRepositoryIssueResponse issue, int extraUpdatesCount) {
         this(
                 resolveGitHubDescription(issue, extraUpdatesCount),
                 LinkChangeSource.GITHUB,
@@ -52,14 +52,10 @@ public final class LinkChange {
                 issue == null ? null : issue.title(),
                 issue == null || issue.user() == null ? null : issue.user().login(),
                 issue == null ? null : issue.createdAt(),
-                previewFormatter == null ? null : previewFormatter.formatPlainText(issue == null ? null : issue.body()));
+                LinkChangePreviewFormatter.formatPlainText(issue == null ? null : issue.body()));
     }
 
-    public LinkChange(
-            StackOverflowQuestionResponse question,
-            StackOverflowAnswerResponse answer,
-            int trackedEventsCount,
-            LinkChangePreviewFormatter previewFormatter) {
+    public LinkChange(StackOverflowQuestionResponse question, StackOverflowAnswerResponse answer, int trackedEventsCount) {
         this(
                 resolveStackOverflowDescription("New StackOverflow answer", trackedEventsCount),
                 LinkChangeSource.STACKOVERFLOW,
@@ -67,14 +63,10 @@ public final class LinkChange {
                 question == null ? null : question.title(),
                 extractUsername(answer == null ? null : answer.owner()),
                 toInstant(answer == null ? null : answer.creationDateEpochSec()),
-                previewFormatter == null ? null : previewFormatter.formatHtml(answer == null ? null : answer.body()));
+                LinkChangePreviewFormatter.formatHtml(answer == null ? null : answer.body()));
     }
 
-    public LinkChange(
-            StackOverflowQuestionResponse question,
-            StackOverflowCommentResponse comment,
-            int trackedEventsCount,
-            LinkChangePreviewFormatter previewFormatter) {
+    public LinkChange(StackOverflowQuestionResponse question, StackOverflowCommentResponse comment, int trackedEventsCount) {
         this(
                 resolveStackOverflowDescription("New StackOverflow comment", trackedEventsCount),
                 LinkChangeSource.STACKOVERFLOW,
@@ -82,7 +74,7 @@ public final class LinkChange {
                 question == null ? null : question.title(),
                 extractUsername(comment == null ? null : comment.owner()),
                 toInstant(comment == null ? null : comment.creationDateEpochSec()),
-                previewFormatter == null ? null : previewFormatter.formatHtml(comment == null ? null : comment.body()));
+                LinkChangePreviewFormatter.formatHtml(comment == null ? null : comment.body()));
     }
 
     public LinkChange(String description) {

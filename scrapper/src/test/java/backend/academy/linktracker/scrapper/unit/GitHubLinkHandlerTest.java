@@ -12,7 +12,6 @@ import backend.academy.linktracker.scrapper.clients.github.GitHubClient;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryFetchResult;
 import backend.academy.linktracker.scrapper.clients.github.dto.GitHubRepositoryIssueResponse;
 import backend.academy.linktracker.scrapper.common.LinkChange;
-import backend.academy.linktracker.scrapper.common.LinkChangePreviewFormatter;
 import backend.academy.linktracker.scrapper.common.LinkChangeType;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
@@ -53,7 +52,7 @@ class GitHubLinkHandlerTest {
                 gitHubClient,
                 trackingStateRepository,
                 new GitHubIssueExtractor(),
-                new GitHubIssueChangeBuilder(new LinkChangePreviewFormatter()),
+                new GitHubIssueChangeBuilder(),
                 gitHubRepositoryLinkParser);
     }
 
