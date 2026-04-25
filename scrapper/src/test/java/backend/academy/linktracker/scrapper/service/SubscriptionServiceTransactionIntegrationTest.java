@@ -9,10 +9,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
+import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
 import backend.academy.linktracker.scrapper.common.ParsedLink;
 import backend.academy.linktracker.scrapper.common.PreparedTrackingState;
 import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
+import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.GitHubRepositoryKey;
+import backend.academy.linktracker.scrapper.domains.link.trackingstate.GitHubTrackingState;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
 import backend.academy.linktracker.scrapper.handlers.registry.LinkHandlerRegistry;
@@ -67,5 +70,34 @@ abstract class SubscriptionServiceTransactionIntegrationTest extends AbstractInt
 
         assertThat(trackedLinkRepository.findAll()).isEmpty();
         assertThat(subscriptionRepository.findAllByTelegramChatId(1L)).isEmpty();
+    }
+
+    @Test
+    void shouldKeepTrackedLinkAfterRemovingLastSubscription() {
+        telegramChatRepository.save(new TelegramChat(1L));
+
+        URI uri = URI.create("https://github.com/octocat/Hello-World");
+        LinkHandler handler = mock(LinkHandler.class);
+
+        when(linkHandlerRegistry.getHandler(uri)).thenReturn(handler);
+        when(handler.parse(uri))
+                .thenReturn(new ParsedLink(uri.toString(), new GitHubRepositoryKey("octocat", "Hello-World")));
+        when(handler.prepareTrackingState(any(ParsedLink.class))).thenReturn((PreparedTrackingState) trackedLink -> {});
+
+        subscriptionService.addSubscription(1L, new AddLinkRequest(uri, Set.of("java"), List.of()));
+
+        TrackedLink trackedLink = trackedLinkRepository.findAll().getFirst();
+        GitHubTrackingState trackingState = new GitHubTrackingState(trackedLink);
+        trackingState.setLastActivityId(1001L);
+        assertThat(gitHubTrackingStateRepository.saveIfAbsent(trackingState)).isTrue();
+
+        subscriptionService.removeSubscription(1L, new RemoveLinkRequest(uri));
+
+        assertThat(subscriptionRepository.findAllByTelegramChatId(1L)).isEmpty();
+        assertThat(trackedLinkRepository.findAll()).hasSize(1);
+        assertThat(gitHubTrackingStateRepository.findByTrackedLink(trackedLink))
+                .get()
+                .extracting(GitHubTrackingState::getLastActivityId)
+                .isEqualTo(1001L);
     }
 }

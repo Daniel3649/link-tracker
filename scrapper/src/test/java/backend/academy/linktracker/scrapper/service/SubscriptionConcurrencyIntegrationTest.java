@@ -20,7 +20,6 @@ import backend.academy.linktracker.scrapper.service.persistence.SubscriptionPers
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,8 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 
 abstract class SubscriptionConcurrencyIntegrationTest extends AbstractIntegrationTest {
     private static final URI URI = java.net.URI.create("https://github.com/octocat/Hello-World");
@@ -44,23 +41,15 @@ abstract class SubscriptionConcurrencyIntegrationTest extends AbstractIntegratio
     @Autowired
     private SubscriptionPersistenceService subscriptionPersistenceService;
 
-    @Autowired
-    private LinkService linkService;
-
-    @Autowired
-    private PlatformTransactionManager transactionManager;
-
     @MockitoBean
     private LinkHandlerRegistry linkHandlerRegistry;
 
     private ExecutorService executorService;
-    private TransactionTemplate transactionTemplate;
     private LinkHandler handler;
 
     @BeforeEach
     void setUpConcurrencyTest() {
         executorService = Executors.newFixedThreadPool(2);
-        transactionTemplate = new TransactionTemplate(transactionManager);
         handler = mock(LinkHandler.class);
 
         when(linkHandlerRegistry.getHandler(URI)).thenReturn(handler);
@@ -83,26 +72,12 @@ abstract class SubscriptionConcurrencyIntegrationTest extends AbstractIntegratio
         subscriptionService.addSubscription(1L, addRequest);
 
         TrackedLink trackedLink = trackedLinkRepository.findAll().getFirst();
-        CountDownLatch trackedLinkLocked = new CountDownLatch(1);
-        CountDownLatch allowConcurrentAdd = new CountDownLatch(1);
-
-        Future<?> addFuture = executorService.submit(() -> transactionTemplate.executeWithoutResult(status -> {
-            TrackedLink lockedTrackedLink =
-                    linkService.lockTrackedLink(trackedLink).orElseThrow();
-            trackedLinkLocked.countDown();
-            await(allowConcurrentAdd);
-            subscriptionPersistenceService.createSubscription(lockedTrackedLink, new TelegramChat(2L), Set.of());
-        }));
-
-        assertThat(trackedLinkLocked.await(1, TimeUnit.SECONDS)).isTrue();
+        Future<?> addFuture = executorService.submit(
+                () -> subscriptionPersistenceService.createSubscription(trackedLink, new TelegramChat(2L), Set.of()));
 
         Future<LinkResponse> removeFuture =
                 executorService.submit(() -> subscriptionService.removeSubscription(1L, removeRequest));
 
-        Thread.sleep(200);
-        assertThat(removeFuture.isDone()).isFalse();
-
-        allowConcurrentAdd.countDown();
         await(addFuture);
         LinkResponse removedSubscription = removeFuture.get(5, TimeUnit.SECONDS);
 
@@ -116,15 +91,6 @@ abstract class SubscriptionConcurrencyIntegrationTest extends AbstractIntegratio
                         .getUrl())
                 .isEqualTo(URI.toString());
         assertThat(trackedLinkRepository.findAll()).hasSize(1);
-    }
-
-    private void await(CountDownLatch latch) {
-        try {
-            assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new AssertionError("Interrupted while waiting for latch", e);
-        }
     }
 
     private void await(Future<?> future)

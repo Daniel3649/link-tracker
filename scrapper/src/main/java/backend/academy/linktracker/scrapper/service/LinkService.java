@@ -60,11 +60,6 @@ public class LinkService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public Optional<TrackedLink> lockTrackedLink(TrackedLink trackedLink) {
-        return trackedLinkRepository.findByIdForUpdate(trackedLink.getId());
-    }
-
-    @Transactional(propagation = Propagation.MANDATORY)
     public TrackedLink getOrCreateTrackedLink(PreparedTrackedLink preparedTrackedLink) {
         ParsedLink parsedLink = preparedTrackedLink.parsedLink();
         PreparedTrackingState trackingState = preparedTrackedLink.trackingState();
@@ -103,7 +98,7 @@ public class LinkService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void deleteTrackedLinkWithState(TrackedLink trackedLink) {
+    public void resetTrackingState(TrackedLink trackedLink) {
         URI uri = URI.create(trackedLink.getUrl());
         LinkHandler handler = handlerRegistry.getHandler(uri);
         ResourceKey resourceKey = trackedLink.getResourceKey();
@@ -111,16 +106,13 @@ public class LinkService {
         try (var _ = MDC.putCloseable("url", uri.toString());
                 var _ = MDC.putCloseable("resourceKey", resourceKey.toString());
                 var _ = MDC.putCloseable("trackedLinkId", trackedLink.getId().toString())) {
+            handler.deleteTrackingStateIfExists(trackedLink);
+            handler.createTrackingState(trackedLink);
 
             log.atInfo()
-                    .addKeyValue("event", LogEvent.TRACKED_LINK_DELETE_STARTED)
+                    .addKeyValue("event", LogEvent.TRACKING_STATE_RESET)
                     .addKeyValue("handler", handler.getClass().getSimpleName())
-                    .log("Tracked link deletion started");
-
-            handler.deleteTrackingStateIfExists(trackedLink);
-            trackedLinkRepository.delete(trackedLink);
-
-            log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_DELETED).log("Tracked link deleted");
+                    .log("Tracking state reset");
         }
     }
 

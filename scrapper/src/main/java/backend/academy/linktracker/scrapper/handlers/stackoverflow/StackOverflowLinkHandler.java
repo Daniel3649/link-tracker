@@ -177,8 +177,7 @@ public class StackOverflowLinkHandler implements LinkHandler {
         }
 
         return new TrackedChangeBuildResult(
-                new LinkChange(question, answerResult.item(), trackedEvents.size()),
-                answerResult.backoffSeconds());
+                new LinkChange(question, answerResult.item(), trackedEvents.size()), answerResult.backoffSeconds());
     }
 
     private boolean isCommentEvent(StackOverflowQuestionTimelineEventResponse event) {

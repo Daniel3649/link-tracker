@@ -7,12 +7,14 @@ import org.junit.jupiter.api.Test;
 class LinkChangePreviewFormatterTest {
     @Test
     void shouldNormalizePlainTextPreview() {
-        assertThat(LinkChangePreviewFormatter.formatPlainText("  Hello \n   world  ")).isEqualTo("Hello world");
+        assertThat(LinkChangePreviewFormatter.formatPlainText("  Hello \n   world  "))
+                .isEqualTo("Hello world");
     }
 
     @Test
     void shouldStripHtmlAndUnescapeEntities() {
-        assertThat(LinkChangePreviewFormatter.formatHtml("<p>Hello&nbsp;<b>world</b> &amp; <code>&lt;tag&gt;</code></p>"))
+        assertThat(LinkChangePreviewFormatter.formatHtml(
+                        "<p>Hello&nbsp;<b>world</b> &amp; <code>&lt;tag&gt;</code></p>"))
                 .isEqualTo("Hello world & <tag>");
     }
 
@@ -20,6 +22,8 @@ class LinkChangePreviewFormatterTest {
     void shouldTrimPreviewToTwoHundredCharacters() {
         String input = "a".repeat(210);
 
-        assertThat(LinkChangePreviewFormatter.formatPlainText(input)).hasSize(200).isEqualTo("a".repeat(200));
+        assertThat(LinkChangePreviewFormatter.formatPlainText(input))
+                .hasSize(200)
+                .isEqualTo("a".repeat(200));
     }
 }

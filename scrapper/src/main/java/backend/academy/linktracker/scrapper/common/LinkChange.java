@@ -39,7 +39,8 @@ public final class LinkChange {
         this.createdAt = createdAt;
         this.preview = normalize(preview);
 
-        if (!StringUtils.hasText(this.description) && !hasStructuredDetails(this.title, this.username, this.createdAt, this.preview)) {
+        if (!StringUtils.hasText(this.description)
+                && !hasStructuredDetails(this.title, this.username, this.createdAt, this.preview)) {
             throw new IllegalArgumentException("LinkChange requires fallback description or structured details");
         }
     }
@@ -55,7 +56,8 @@ public final class LinkChange {
                 LinkChangePreviewFormatter.formatPlainText(issue == null ? null : issue.body()));
     }
 
-    public LinkChange(StackOverflowQuestionResponse question, StackOverflowAnswerResponse answer, int trackedEventsCount) {
+    public LinkChange(
+            StackOverflowQuestionResponse question, StackOverflowAnswerResponse answer, int trackedEventsCount) {
         this(
                 resolveStackOverflowDescription("New StackOverflow answer", trackedEventsCount),
                 LinkChangeSource.STACKOVERFLOW,
@@ -66,7 +68,8 @@ public final class LinkChange {
                 LinkChangePreviewFormatter.formatHtml(answer == null ? null : answer.body()));
     }
 
-    public LinkChange(StackOverflowQuestionResponse question, StackOverflowCommentResponse comment, int trackedEventsCount) {
+    public LinkChange(
+            StackOverflowQuestionResponse question, StackOverflowCommentResponse comment, int trackedEventsCount) {
         this(
                 resolveStackOverflowDescription("New StackOverflow comment", trackedEventsCount),
                 LinkChangeSource.STACKOVERFLOW,

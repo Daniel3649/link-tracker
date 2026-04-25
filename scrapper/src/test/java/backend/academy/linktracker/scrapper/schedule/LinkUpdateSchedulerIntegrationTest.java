@@ -67,15 +67,12 @@ abstract class LinkUpdateSchedulerIntegrationTest extends AbstractIntegrationTes
 
     @Test
     void shouldNotSendUpdateWhenThereAreNoSubscribers() {
-        TrackedLink trackedLink = trackedLinkRepository.save(new TrackedLink(
+        trackedLinkRepository.save(new TrackedLink(
                 null, "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World")));
-
-        LinkHandler handler = mock(LinkHandler.class);
-        when(linkHandlerRegistry.getHandler(any(URI.class))).thenReturn(handler);
-        when(handler.checkForUpdate(trackedLink)).thenReturn(Optional.of(new LinkChange("Repository changed")));
 
         scheduler.checkUpdates();
 
+        verifyNoInteractions(linkHandlerRegistry);
         verify(linkUpdateSender, never()).send(any());
     }
 

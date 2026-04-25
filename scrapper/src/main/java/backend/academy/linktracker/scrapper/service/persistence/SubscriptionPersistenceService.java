@@ -11,6 +11,7 @@ import backend.academy.linktracker.scrapper.logging.LogEvent;
 import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.SubscriptionTagRepository;
 import backend.academy.linktracker.scrapper.service.LinkService;
+import java.net.URI;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,17 +36,26 @@ public class SubscriptionPersistenceService {
 
     @Transactional
     public Subscription createSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
-        TrackedLink lockedTrackedLink = linkService.lockTrackedLink(trackedLink).orElseThrow(() -> {
-            log.atWarn()
-                    .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_FAILED)
-                    .addKeyValue("reason", "tracked_link_not_found")
-                    .addKeyValue("trackedLinkId", trackedLink.getId())
-                    .log("Subscription add failed because tracked link disappeared");
+        TrackedLink existingTrackedLink = linkService
+                .findTrackedLink(URI.create(trackedLink.getUrl()))
+                .orElseThrow(() -> {
+                    log.atWarn()
+                            .addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_FAILED)
+                            .addKeyValue("reason", "tracked_link_not_found")
+                            .addKeyValue("trackedLinkId", trackedLink.getId())
+                            .log("Subscription add failed because tracked link disappeared");
 
-            return new NotFoundTrackedLinkException("Tracked link not found: " + trackedLink.getUrl());
-        });
+                    return new NotFoundTrackedLinkException("Tracked link not found: " + trackedLink.getUrl());
+                });
 
-        return persistSubscription(lockedTrackedLink, telegramChat, tags);
+        boolean hadSubscribers = subscriptionRepository.existsByTrackedLink(existingTrackedLink);
+        Subscription savedSubscription = persistSubscription(existingTrackedLink, telegramChat, tags);
+
+        if (!hadSubscribers) {
+            linkService.resetTrackingState(existingTrackedLink);
+        }
+
+        return savedSubscription;
     }
 
     private Subscription persistSubscription(TrackedLink trackedLink, TelegramChat telegramChat, Set<String> tags) {
@@ -73,16 +83,8 @@ public class SubscriptionPersistenceService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Subscription deleteSubscription(TrackedLink trackedLink, TelegramChat telegramChat) {
-        TrackedLink lockedTrackedLink = linkService.lockTrackedLink(trackedLink).orElseThrow(() -> {
-            log.atWarn()
-                    .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_TRACKED_LINK_NOT_FOUND)
-                    .log("Subscription remove rejected because tracked link disappeared");
-
-            return new SubscriptionNotFoundException("Subscription not found for link: " + trackedLink.getUrl());
-        });
-
         Subscription subscription = subscriptionRepository
-                .findByTrackedLinkAndTelegramChat(lockedTrackedLink, telegramChat)
+                .findByTrackedLinkAndTelegramChat(trackedLink, telegramChat)
                 .orElseThrow(() -> {
                     log.atWarn()
                             .addKeyValue("event", LogEvent.SUBSCRIPTION_REMOVE_REJECTED)
@@ -94,16 +96,9 @@ public class SubscriptionPersistenceService {
                 });
 
         subscriptionTagRepository.deleteAllBySubscription(subscription);
-        subscriptionRepository.deleteByTrackedLinkAndTelegramChat(lockedTrackedLink, telegramChat);
+        subscriptionRepository.deleteByTrackedLinkAndTelegramChat(trackedLink, telegramChat);
 
-        boolean trackedLinkHasSubscribers = subscriptionRepository.existsByTrackedLink(lockedTrackedLink);
-        if (!trackedLinkHasSubscribers) {
-            linkService.deleteTrackedLinkWithState(lockedTrackedLink);
-
-            log.atInfo()
-                    .addKeyValue("event", LogEvent.ORPHAN_TRACKED_LINK_DELETED)
-                    .log("Orphan tracked link deleted");
-        }
+        boolean trackedLinkHasSubscribers = subscriptionRepository.existsByTrackedLink(trackedLink);
 
         log.atInfo()
                 .addKeyValue("event", LogEvent.SUBSCRIPTION_DELETED)

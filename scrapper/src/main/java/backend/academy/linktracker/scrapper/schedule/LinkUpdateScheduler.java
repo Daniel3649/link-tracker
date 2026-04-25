@@ -209,10 +209,7 @@ public class LinkUpdateScheduler {
 
             try {
                 linkUpdateSender.send(new LinkUpdate(
-                        failure.linkId(),
-                        URI.create(failure.url()),
-                        buildFailureDescription(failure),
-                        tgChatIds));
+                        failure.linkId(), URI.create(failure.url()), buildFailureDescription(failure), tgChatIds));
             } catch (Exception e) {
                 log.atWarn()
                         .setCause(e)
