@@ -4,10 +4,13 @@ import backend.academy.linktracker.contract.dto.request.AddLinkRequest;
 import backend.academy.linktracker.contract.dto.request.RemoveLinkRequest;
 import backend.academy.linktracker.contract.dto.response.LinkResponse;
 import backend.academy.linktracker.contract.dto.response.ListLinksResponse;
+import backend.academy.linktracker.scrapper.common.PreparedTrackedLink;
+import backend.academy.linktracker.scrapper.common.TagNormalizer;
 import backend.academy.linktracker.scrapper.domains.chat.TelegramChat;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.subscription.Subscription;
 import backend.academy.linktracker.scrapper.exception.chat.TelegramChatNotFoundException;
+import backend.academy.linktracker.scrapper.exception.link.NotFoundTrackedLinkException;
 import backend.academy.linktracker.scrapper.exception.subscription.SubscriptionNotFoundException;
 import backend.academy.linktracker.scrapper.logging.LogEvent;
 import backend.academy.linktracker.scrapper.mapper.SubscriptionMapper;
@@ -15,6 +18,7 @@ import backend.academy.linktracker.scrapper.repository.SubscriptionRepository;
 import backend.academy.linktracker.scrapper.repository.TelegramChatRepository;
 import backend.academy.linktracker.scrapper.service.persistence.SubscriptionPersistenceService;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -32,12 +36,10 @@ public class SubscriptionService {
     private final SubscriptionMapper subscriptionMapper;
 
     public LinkResponse addSubscription(long chatId, AddLinkRequest request) {
+        Set<String> normalizedTags = TagNormalizer.normalizeAll(request.tags());
+
         try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId));
-                var _ = MDC.putCloseable(
-                        "tagsCount",
-                        request.tags() == null
-                                ? "0"
-                                : String.valueOf(request.tags().size()))) {
+                var _ = MDC.putCloseable("tagsCount", String.valueOf(normalizedTags.size()))) {
 
             log.atInfo().addKeyValue("event", LogEvent.SUBSCRIPTION_ADD_STARTED).log("Subscription add started");
             TelegramChat telegramChat = telegramChatRepository
@@ -51,12 +53,24 @@ public class SubscriptionService {
                         return new TelegramChatNotFoundException("Chat not found. Id: " + chatId);
                     });
 
-            // LinkService сам держит транзакцию на запись tracked_link и tracking state,
-            // а сохранение subscription и tags отдельно инкапсулировано в persistence service.
-            TrackedLink trackedLink = linkService.getOrCreateTrackedLink(request.link());
-
-            Subscription savedSubscription =
-                    subscriptionPersistenceService.createSubscription(trackedLink, telegramChat, request.tags());
+            Subscription savedSubscription;
+            TrackedLink trackedLink =
+                    linkService.findTrackedLink(request.link()).orElse(null);
+            if (trackedLink != null) {
+                try {
+                    savedSubscription = subscriptionPersistenceService.createSubscription(
+                            trackedLink, telegramChat, normalizedTags);
+                } catch (NotFoundTrackedLinkException e) {
+                    PreparedTrackedLink preparedTrackedLink = linkService.prepareTrackedLink(request.link());
+                    savedSubscription = subscriptionPersistenceService.createSubscription(
+                            preparedTrackedLink, telegramChat, normalizedTags);
+                }
+            } else {
+                PreparedTrackedLink preparedTrackedLink = linkService.prepareTrackedLink(request.link());
+                savedSubscription = subscriptionPersistenceService.createSubscription(
+                        preparedTrackedLink, telegramChat, normalizedTags);
+            }
+            trackedLink = savedSubscription.getTrackedLink();
 
             log.atInfo()
                     .addKeyValue("event", LogEvent.SUBSCRIPTION_ADDED)
@@ -68,6 +82,7 @@ public class SubscriptionService {
         }
     }
 
+    @Transactional
     public LinkResponse removeSubscription(long chatId, RemoveLinkRequest request) {
         try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {
 

@@ -8,5 +8,6 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <include relativeToChangelogFile="true" file="001-init-schema.sql"/>
+    <include relativeToChangelogFile="true" file="002-drop-github-etag.sql"/>
 
 </databaseChangeLog>

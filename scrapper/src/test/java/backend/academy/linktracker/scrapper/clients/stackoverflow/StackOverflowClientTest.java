@@ -117,6 +117,68 @@ class StackOverflowClientTest {
     }
 
     @Test
+    void shouldFetchAnswerWithBodyAndOwner() {
+        wireMock.stubFor(get(urlPathEqualTo("/answers/456"))
+                .withQueryParam("site", equalTo("stackoverflow"))
+                .withQueryParam("key", equalTo("test-stackoverflow-key"))
+                .withQueryParam("filter", equalTo("withbody"))
+                .willReturn(okJson("""
+                {
+                  "items": [
+                    {
+                      "answer_id": 456,
+                      "creation_date": 1741680000,
+                      "body": "<p>Answer body</p>",
+                      "owner": {
+                        "display_name": "alice"
+                      }
+                    }
+                  ],
+                  "backoff": 3
+                }
+                """)));
+
+        var result = stackOverflowClient.fetchAnswer(456L);
+
+        assertThat(result.item()).isNotNull();
+        assertThat(result.item().answerId()).isEqualTo(456L);
+        assertThat(result.item().body()).isEqualTo("<p>Answer body</p>");
+        assertThat(result.item().owner().displayName()).isEqualTo("alice");
+        assertThat(result.backoffSeconds()).isEqualTo(3);
+    }
+
+    @Test
+    void shouldFetchCommentWithBodyAndOwner() {
+        wireMock.stubFor(get(urlPathEqualTo("/comments/789"))
+                .withQueryParam("site", equalTo("stackoverflow"))
+                .withQueryParam("key", equalTo("test-stackoverflow-key"))
+                .withQueryParam("filter", equalTo("withbody"))
+                .willReturn(okJson("""
+                {
+                  "items": [
+                    {
+                      "comment_id": 789,
+                      "creation_date": 1741681234,
+                      "body": "<p>Comment body</p>",
+                      "owner": {
+                        "display_name": "bob"
+                      }
+                    }
+                  ],
+                  "backoff": 4
+                }
+                """)));
+
+        var result = stackOverflowClient.fetchComment(789L);
+
+        assertThat(result.item()).isNotNull();
+        assertThat(result.item().commentId()).isEqualTo(789L);
+        assertThat(result.item().body()).isEqualTo("<p>Comment body</p>");
+        assertThat(result.item().owner().displayName()).isEqualTo("bob");
+        assertThat(result.backoffSeconds()).isEqualTo(4);
+    }
+
+    @Test
     void shouldThrowWhenTimelineEndpointReturnsServerError() {
         StackOverflowQuestionKey key = new StackOverflowQuestionKey(123L);
 

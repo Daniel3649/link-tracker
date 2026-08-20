@@ -5,22 +5,24 @@ import backend.academy.linktracker.scrapper.domains.link.trackingstate.StackOver
 import backend.academy.linktracker.scrapper.domains.link.trackingstate.cursor.StackOverflowTimelineCursor;
 import backend.academy.linktracker.scrapper.repository.StackOverflowTrackingStateRepository;
 import backend.academy.linktracker.scrapper.repository.orm.entity.StackOverflowTrackingStateEntity;
-import backend.academy.linktracker.scrapper.repository.orm.entity.TrackedLinkEntity;
 import backend.academy.linktracker.scrapper.repository.orm.jpa.StackOverflowTrackingStateJpaRepository;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
-public class OrmStackOverflowTrackingStateRepository implements StackOverflowTrackingStateRepository {
+public class OrmStackOverflowTrackingStateRepository
+        extends AbstractOrmTrackingStateRepository<StackOverflowTrackingState, StackOverflowTrackingStateEntity>
+        implements StackOverflowTrackingStateRepository {
     private final StackOverflowTrackingStateJpaRepository repository;
-    private final EntityManager entityManager;
+
+    public OrmStackOverflowTrackingStateRepository(
+            StackOverflowTrackingStateJpaRepository repository, EntityManager entityManager) {
+        super(repository, entityManager, "stackoverflow_tracking_state");
+        this.repository = repository;
+    }
 
     @Override
     public StackOverflowTrackingState save(StackOverflowTrackingState stackOverflowTrackingState) {
-        return toDomain(repository.save(toEntity(stackOverflowTrackingState)));
+        return saveState(stackOverflowTrackingState, stackOverflowTrackingState.getTrackedLink());
     }
 
     @Override
@@ -29,46 +31,41 @@ public class OrmStackOverflowTrackingStateRepository implements StackOverflowTra
     }
 
     @Override
-    @Transactional
     public boolean saveIfAbsent(StackOverflowTrackingState stackOverflowTrackingState) {
-        try {
-            repository.saveAndFlush(toEntity(stackOverflowTrackingState));
-            return true;
-        } catch (DataIntegrityViolationException e) {
-            return false;
-        }
+        return saveIfAbsentState(stackOverflowTrackingState);
     }
 
     @Override
     public Optional<StackOverflowTrackingState> findByTrackedLink(TrackedLink trackedLink) {
-        return repository.findById(trackedLink.getId()).map(entity -> toDomain(entity, trackedLink));
+        return findStateByTrackedLink(trackedLink);
     }
 
     @Override
-    public void clear() {
-        entityManager
-                .createNativeQuery("truncate table stackoverflow_tracking_state cascade")
-                .executeUpdate();
+    protected StackOverflowTrackingStateEntity createNewEntity(StackOverflowTrackingState state) {
+        StackOverflowTrackingStateEntity entity = new StackOverflowTrackingStateEntity();
+        entity.setTrackedLink(trackedLinkReference(state.getTrackedLink().getId()));
+        updateEntity(entity, state);
+        return entity;
     }
 
-    private StackOverflowTrackingStateEntity toEntity(StackOverflowTrackingState state) {
+    @Override
+    protected StackOverflowTrackingStateEntity createEmptyEntity(Long trackedLinkId) {
         StackOverflowTrackingStateEntity entity = new StackOverflowTrackingStateEntity();
-        entity.setTrackedLink(entityManager.getReference(
-                TrackedLinkEntity.class, state.getTrackedLink().getId()));
+        entity.setTrackedLink(trackedLinkReference(trackedLinkId));
+        return entity;
+    }
 
+    @Override
+    protected void updateEntity(StackOverflowTrackingStateEntity entity, StackOverflowTrackingState state) {
         StackOverflowTimelineCursor cursor = state.getTimelineCursor();
         entity.setLastCreationDateEpochSec(cursor != null ? cursor.lastCreationDateEpochSec() : 0L);
         entity.setLastEventKey(cursor != null ? cursor.lastEventKey() : null);
         entity.setNextCheckAt(state.getNextCheckAt());
         entity.setLastQuestionActivityDateEpochSec(state.getLastQuestionActivityDateEpochSec());
-        return entity;
     }
 
-    private StackOverflowTrackingState toDomain(StackOverflowTrackingStateEntity entity) {
-        return toDomain(entity, OrmTrackedLinkSupport.toDomain(entity.getTrackedLink()));
-    }
-
-    private StackOverflowTrackingState toDomain(StackOverflowTrackingStateEntity entity, TrackedLink trackedLink) {
+    @Override
+    protected StackOverflowTrackingState toDomain(StackOverflowTrackingStateEntity entity, TrackedLink trackedLink) {
         StackOverflowTrackingState state = new StackOverflowTrackingState(trackedLink);
         state.setTimelineCursor(
                 new StackOverflowTimelineCursor(entity.getLastCreationDateEpochSec(), entity.getLastEventKey()));

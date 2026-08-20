@@ -63,7 +63,7 @@ public class OrmTrackedLinkRepository implements TrackedLinkRepository {
 
     @Override
     public List<TrackedLink> findNextBatchAfterId(long lastSeenId, int limit) {
-        return repository.findByIdGreaterThanOrderByIdAsc(lastSeenId, PageRequest.of(0, limit)).stream()
+        return repository.findActiveByIdGreaterThanOrderByIdAsc(lastSeenId, PageRequest.of(0, limit)).stream()
                 .map(OrmTrackedLinkSupport::toDomain)
                 .toList();
     }

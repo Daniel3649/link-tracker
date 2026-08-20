@@ -1,6 +1,8 @@
 package backend.academy.linktracker.scrapper.service;
 
 import backend.academy.linktracker.scrapper.common.ParsedLink;
+import backend.academy.linktracker.scrapper.common.PreparedTrackedLink;
+import backend.academy.linktracker.scrapper.common.PreparedTrackingState;
 import backend.academy.linktracker.scrapper.domains.link.TrackedLink;
 import backend.academy.linktracker.scrapper.domains.link.resourcekey.ResourceKey;
 import backend.academy.linktracker.scrapper.handlers.LinkHandler;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -49,10 +52,18 @@ public class LinkService {
         }
     }
 
-    @Transactional
-    public TrackedLink getOrCreateTrackedLink(URI uri) {
+    public PreparedTrackedLink prepareTrackedLink(URI uri) {
         LinkHandler handler = handlerRegistry.getHandler(uri);
         ParsedLink parsedLink = handler.parse(uri);
+        PreparedTrackingState trackingState = handler.prepareTrackingState(parsedLink);
+        return new PreparedTrackedLink(parsedLink, trackingState);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public TrackedLink getOrCreateTrackedLink(PreparedTrackedLink preparedTrackedLink) {
+        ParsedLink parsedLink = preparedTrackedLink.parsedLink();
+        PreparedTrackingState trackingState = preparedTrackedLink.trackingState();
+        LinkHandler handler = handlerRegistry.getHandler(URI.create(parsedLink.url()));
         ResourceKey resourceKey = parsedLink.resourceKey();
 
         try (var _ = MDC.putCloseable("url", parsedLink.url());
@@ -74,7 +85,7 @@ public class LinkService {
                         return trackedLink;
                     })
                     .orElseGet(() -> {
-                        TrackedLink createdTrackedLink = createTrackedLink(handler, parsedLink);
+                        TrackedLink createdTrackedLink = createTrackedLink(handler, parsedLink, trackingState);
 
                         log.atInfo()
                                 .addKeyValue("event", LogEvent.TRACKED_LINK_CREATED)
@@ -86,8 +97,8 @@ public class LinkService {
         }
     }
 
-    @Transactional
-    public void deleteTrackedLinkWithState(TrackedLink trackedLink) {
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void resetTrackingState(TrackedLink trackedLink) {
         URI uri = URI.create(trackedLink.getUrl());
         LinkHandler handler = handlerRegistry.getHandler(uri);
         ResourceKey resourceKey = trackedLink.getResourceKey();
@@ -95,20 +106,18 @@ public class LinkService {
         try (var _ = MDC.putCloseable("url", uri.toString());
                 var _ = MDC.putCloseable("resourceKey", resourceKey.toString());
                 var _ = MDC.putCloseable("trackedLinkId", trackedLink.getId().toString())) {
+            handler.deleteTrackingStateIfExists(trackedLink);
+            handler.createTrackingState(trackedLink);
 
             log.atInfo()
-                    .addKeyValue("event", LogEvent.TRACKED_LINK_DELETE_STARTED)
+                    .addKeyValue("event", LogEvent.TRACKING_STATE_RESET)
                     .addKeyValue("handler", handler.getClass().getSimpleName())
-                    .log("Tracked link deletion started");
-
-            handler.deleteTrackingStateIfExists(trackedLink);
-            trackedLinkRepository.delete(trackedLink);
-
-            log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_DELETED).log("Tracked link deleted");
+                    .log("Tracking state reset");
         }
     }
 
-    private TrackedLink createTrackedLink(LinkHandler handler, ParsedLink parsedLink) {
+    private TrackedLink createTrackedLink(
+            LinkHandler handler, ParsedLink parsedLink, PreparedTrackingState trackingState) {
         try {
             TrackedLink newTrackedLink = new TrackedLink(null, parsedLink.url(), parsedLink.resourceKey());
             TrackedLink savedTrackedLink = trackedLinkRepository.save(newTrackedLink);
@@ -117,7 +126,7 @@ public class LinkService {
                     MDC.putCloseable("trackedLinkId", savedTrackedLink.getId().toString())) {
                 log.atInfo().addKeyValue("event", LogEvent.TRACKED_LINK_SAVED).log("Tracked link saved");
 
-                handler.createTrackingState(savedTrackedLink);
+                trackingState.persist(savedTrackedLink);
 
                 log.atInfo()
                         .addKeyValue("event", LogEvent.TRACKING_STATE_CREATED)

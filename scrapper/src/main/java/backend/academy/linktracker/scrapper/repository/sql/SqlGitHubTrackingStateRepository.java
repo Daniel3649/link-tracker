@@ -15,8 +15,8 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     @Override
     public boolean saveIfAbsent(GitHubTrackingState gitHubTrackingState) {
         return jdbcTemplate.update("""
-                        insert into github_tracking_state (link_id, etag, last_activity_id)
-                        values (:linkId, :etag, :lastActivityId)
+                        insert into github_tracking_state (link_id, last_activity_id)
+                        values (:linkId, :lastActivityId)
                         on conflict (link_id) do nothing
                         """, parameters(gitHubTrackingState)) > 0;
     }
@@ -24,11 +24,10 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     @Override
     public GitHubTrackingState save(GitHubTrackingState gitHubTrackingState) {
         jdbcTemplate.update("""
-                insert into github_tracking_state (link_id, etag, last_activity_id)
-                values (:linkId, :etag, :lastActivityId)
+                insert into github_tracking_state (link_id, last_activity_id)
+                values (:linkId, :lastActivityId)
                 on conflict (link_id) do update
-                set etag = excluded.etag,
-                    last_activity_id = excluded.last_activity_id
+                set last_activity_id = excluded.last_activity_id
                 """, parameters(gitHubTrackingState));
 
         return gitHubTrackingState;
@@ -45,7 +44,7 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
         return jdbcTemplate
                 .query(
                         """
-                        select etag, last_activity_id
+                        select last_activity_id
                         from github_tracking_state
                         where link_id = :linkId
                         """,
@@ -63,14 +62,12 @@ public class SqlGitHubTrackingStateRepository implements GitHubTrackingStateRepo
     private MapSqlParameterSource parameters(GitHubTrackingState gitHubTrackingState) {
         return new MapSqlParameterSource()
                 .addValue("linkId", gitHubTrackingState.getTrackedLink().getId())
-                .addValue("etag", gitHubTrackingState.getEtag())
                 .addValue("lastActivityId", gitHubTrackingState.getLastActivityId());
     }
 
     private GitHubTrackingState mapState(java.sql.ResultSet resultSet, TrackedLink trackedLink)
             throws java.sql.SQLException {
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
-        state.setEtag(resultSet.getString("etag"));
         state.setLastActivityId((Long) resultSet.getObject("last_activity_id"));
         return state;
     }

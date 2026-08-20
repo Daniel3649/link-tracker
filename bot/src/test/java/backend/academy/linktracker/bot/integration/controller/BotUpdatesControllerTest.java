@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -65,7 +67,10 @@ class BotUpdatesControllerTest {
 
         assertEquals(2, requests.size());
 
-        String allBodies = requests.stream().map(LoggedRequest::getBodyAsString).collect(Collectors.joining("\n"));
+        String allBodies = requests.stream()
+                .map(LoggedRequest::getBodyAsString)
+                .map(body -> URLDecoder.decode(body, StandardCharsets.UTF_8))
+                .collect(Collectors.joining("\n"));
 
         assertTrue(allBodies.contains("1001"));
         assertTrue(allBodies.contains("1002"));
@@ -88,5 +93,44 @@ class BotUpdatesControllerTest {
                         HttpStatus.OK.value(), result.getResponse().getStatus()));
 
         wireMock.verify(0, postRequestedFor(urlPathMatching(".*/sendMessage")));
+    }
+
+    @Test
+    void shouldAcceptReportUpdateAndSendMessagesToTelegram() throws Exception {
+        wireMock.stubFor(post(urlPathMatching("/bot[^/]+/sendMessage")).willReturn(okJson("""
+                    {
+                      "ok": true,
+                      "result": {
+                        "message_id": 2
+                      }
+                    }
+                    """)));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/updates")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                    {
+                      "id": 1,
+                      "url": "https://github.com/octocat/Hello-World",
+                      "description": "Link check report\\nReason: RepositoryPollingException: GitHub API unavailable",
+                      "tgChatIds": [1001, 1002]
+                    }
+                    """))
+                .andExpect(status().isOk());
+
+        wireMock.verify(2, postRequestedFor(urlPathMatching(".*/sendMessage")));
+
+        List<LoggedRequest> requests = wireMock.findAll(postRequestedFor(urlPathMatching(".*/sendMessage")));
+        assertEquals(2, requests.size());
+
+        String allBodies = requests.stream()
+                .map(LoggedRequest::getBodyAsString)
+                .map(body -> URLDecoder.decode(body, StandardCharsets.UTF_8))
+                .collect(Collectors.joining("\n"));
+
+        assertTrue(allBodies.contains("1001"));
+        assertTrue(allBodies.contains("1002"));
+        assertTrue(allBodies.contains("Link check report"));
+        assertTrue(allBodies.contains("Hello-World"));
     }
 }

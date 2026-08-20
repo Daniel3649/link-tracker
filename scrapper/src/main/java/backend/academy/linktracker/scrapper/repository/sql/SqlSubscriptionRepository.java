@@ -150,6 +150,14 @@ public class SqlSubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
+    public List<Long> findAllChatIdsByTrackedLinkId(Long trackedLinkId) {
+        return jdbcTemplate.query(
+                "select s.chat_id from subscription s where s.link_id = :linkId order by s.id",
+                new MapSqlParameterSource("linkId", trackedLinkId),
+                (resultSet, rowNum) -> resultSet.getLong("chat_id"));
+    }
+
+    @Override
     public void clear() {
         jdbcTemplate.getJdbcTemplate().execute("truncate table subscription cascade");
     }

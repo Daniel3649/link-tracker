@@ -20,7 +20,6 @@ public class ListCommand implements Command {
     private final MessageService messageService;
     private final ScrapperClient scrapperClient;
     private final TelegramSender telegramSender;
-    private final CommandArgSupport commandArgSupport;
 
     @Override
     public void execute(Update update) {
@@ -30,7 +29,7 @@ public class ListCommand implements Command {
 
         long chatId = update.message().chat().id();
         String rawText = update.message().text();
-        String tagFilter = normalizeTagFilter(commandArgSupport.extractFirstArgument(rawText));
+        String tagFilter = normalizeTagFilter(CommandArgSupport.extractFirstArgument(rawText));
 
         ListLinksResponse response = scrapperClient.getLinks(chatId);
         List<LinkResponse> links = response.links() == null ? Collections.emptyList() : response.links();

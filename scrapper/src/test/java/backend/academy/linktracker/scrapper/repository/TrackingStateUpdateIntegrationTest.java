@@ -20,12 +20,10 @@ abstract class TrackingStateUpdateIntegrationTest extends AbstractIntegrationTes
                 null, "https://github.com/octocat/Hello-World", new GitHubRepositoryKey("octocat", "Hello-World")));
 
         GitHubTrackingState state = new GitHubTrackingState(trackedLink);
-        state.setEtag("\"etag-1\"");
         state.setLastActivityId(1001L);
 
         assertThat(gitHubTrackingStateRepository.saveIfAbsent(state)).isTrue();
 
-        state.setEtag("\"etag-2\"");
         state.setLastActivityId(2002L);
         gitHubTrackingStateRepository.save(state);
 
@@ -33,7 +31,6 @@ abstract class TrackingStateUpdateIntegrationTest extends AbstractIntegrationTes
                 gitHubTrackingStateRepository.findByTrackedLink(trackedLink).orElseThrow();
 
         assertThat(persisted.getTrackedLink()).isEqualTo(trackedLink);
-        assertThat(persisted.getEtag()).isEqualTo("\"etag-2\"");
         assertThat(persisted.getLastActivityId()).isEqualTo(2002L);
     }
 

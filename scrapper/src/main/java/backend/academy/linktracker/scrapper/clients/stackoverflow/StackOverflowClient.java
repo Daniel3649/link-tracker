@@ -1,6 +1,9 @@
 package backend.academy.linktracker.scrapper.clients.stackoverflow;
 
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowAnswerResponse;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowApiResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowCommentResponse;
+import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowItemFetchResult;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionFetchResult;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionResponse;
 import backend.academy.linktracker.scrapper.clients.stackoverflow.dto.StackOverflowQuestionTimelineEventResponse;
@@ -21,6 +24,12 @@ import org.springframework.web.client.RestClientException;
 public class StackOverflowClient {
     private static final ParameterizedTypeReference<StackOverflowApiResponse<StackOverflowQuestionResponse>>
             QUESTION_RESPONSE_TYPE = new ParameterizedTypeReference<>() {};
+
+    private static final ParameterizedTypeReference<StackOverflowApiResponse<StackOverflowAnswerResponse>>
+            ANSWER_RESPONSE_TYPE = new ParameterizedTypeReference<>() {};
+
+    private static final ParameterizedTypeReference<StackOverflowApiResponse<StackOverflowCommentResponse>>
+            COMMENT_RESPONSE_TYPE = new ParameterizedTypeReference<>() {};
 
     private static final ParameterizedTypeReference<
                     StackOverflowApiResponse<StackOverflowQuestionTimelineEventResponse>>
@@ -91,6 +100,14 @@ public class StackOverflowClient {
         }
     }
 
+    public StackOverflowItemFetchResult<StackOverflowAnswerResponse> fetchAnswer(long answerId) {
+        return fetchSingleItem("/answers/{id}", answerId, "answer " + answerId, ANSWER_RESPONSE_TYPE);
+    }
+
+    public StackOverflowItemFetchResult<StackOverflowCommentResponse> fetchComment(long commentId) {
+        return fetchSingleItem("/comments/{id}", commentId, "comment " + commentId, COMMENT_RESPONSE_TYPE);
+    }
+
     private void validateResponse(StackOverflowApiResponse<?> response, String target) {
         if (response == null) {
             throw new RepositoryPollingException("Empty StackOverflow API response for " + target);
@@ -99,6 +116,38 @@ public class StackOverflowClient {
         if (response.errorId() != null) {
             throw new RepositoryPollingException("StackOverflow API error for %s: %s (%s)"
                     .formatted(target, response.errorMessage(), response.errorName()));
+        }
+    }
+
+    private <T> StackOverflowItemFetchResult<T> fetchSingleItem(
+            String path, long id, String target, ParameterizedTypeReference<StackOverflowApiResponse<T>> responseType) {
+        try {
+            StackOverflowApiResponse<T> response = stackOverflowRestClient
+                    .get()
+                    .uri(uriBuilder -> {
+                        var builder = uriBuilder
+                                .path(path)
+                                .queryParam("site", properties.getSite())
+                                .queryParam("filter", "withbody");
+
+                        if (StringUtils.hasText(properties.getKey())) {
+                            builder.queryParam("key", properties.getKey());
+                        }
+
+                        return builder.build(id);
+                    })
+                    .retrieve()
+                    .body(responseType);
+
+            validateResponse(response, target);
+
+            T item = response.items() == null || response.items().isEmpty()
+                    ? null
+                    : response.items().getFirst();
+
+            return new StackOverflowItemFetchResult<>(item, response.backoff());
+        } catch (RestClientException e) {
+            throw new RepositoryPollingException("Failed to call StackOverflow API for " + target, e);
         }
     }
 }

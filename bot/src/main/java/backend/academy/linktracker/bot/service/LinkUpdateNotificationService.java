@@ -15,14 +15,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LinkUpdateNotificationService {
     private final TelegramSender telegramSender;
-    private final UpdateMessageBuilder updateMessageBuilder;
 
     public void sendNotification(LinkUpdate update) {
         Objects.requireNonNull(update, "update cannot be null");
 
         try (var _ = MDC.putCloseable("linkId", String.valueOf(update.id()));
                 var _ = MDC.putCloseable("url", update.url().toString())) {
-            String message = updateMessageBuilder.buildMessage(update);
+            String message = UpdateMessageBuilder.buildMessage(update);
 
             for (Long chatId : update.tgChatIds()) {
                 try (var _ = MDC.putCloseable("chatId", String.valueOf(chatId))) {

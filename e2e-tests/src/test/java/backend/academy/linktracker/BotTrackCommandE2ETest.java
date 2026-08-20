@@ -23,6 +23,7 @@ class BotTrackCommandE2ETest extends AbstractBotScrapperE2ETest {
         stubTelegramSendMessageOk(chatId);
         stubTelegramSetMyCommandsOk();
         stubGitHubEndpoints();
+        assertThat(registerChat(chatId).statusCode()).isEqualTo(HttpStatus.OK.value());
 
         await().atMost(ASSERTION_TIMEOUT)
                 .pollInterval(Duration.ofMillis(300))

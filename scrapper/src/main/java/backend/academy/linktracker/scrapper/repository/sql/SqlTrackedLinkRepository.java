@@ -68,8 +68,17 @@ public class SqlTrackedLinkRepository implements TrackedLinkRepository {
     @Override
     public List<TrackedLink> findNextBatchAfterId(long lastSeenId, int limit) {
         return jdbcTemplate.query(
-                "select " + SqlTrackedLinkSupport.TRACKED_LINK_COLUMNS
-                        + " from tracked_link where id > :lastSeenId order by id limit :limit",
+                "select " + SqlTrackedLinkSupport.TRACKED_LINK_COLUMNS + " " + """
+                         from tracked_link tl
+                         where tl.id > :lastSeenId
+                           and exists (
+                               select 1
+                               from subscription s
+                               where s.link_id = tl.id
+                           )
+                         order by tl.id
+                         limit :limit
+                         """,
                 new MapSqlParameterSource().addValue("lastSeenId", lastSeenId).addValue("limit", limit),
                 (resultSet, rowNum) -> SqlTrackedLinkSupport.mapTrackedLink(resultSet));
     }

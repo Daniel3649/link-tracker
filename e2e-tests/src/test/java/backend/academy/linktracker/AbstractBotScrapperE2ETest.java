@@ -168,25 +168,19 @@ abstract class AbstractBotScrapperE2ETest {
         MOCK.stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
                 .inScenario("telegram-track-flow")
                 .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
-                .willReturn(okJson(singleUpdateJson(1, chatId, "/start")))
-                .willSetStateTo("TRACK"));
-
-        MOCK.stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
-                .inScenario("telegram-track-flow")
-                .whenScenarioStateIs("TRACK")
-                .willReturn(okJson(singleUpdateJson(2, chatId, "/track")))
+                .willReturn(okJson(singleUpdateJson(1, chatId, "/track")))
                 .willSetStateTo("LINK"));
 
         MOCK.stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
                 .inScenario("telegram-track-flow")
                 .whenScenarioStateIs("LINK")
-                .willReturn(okJson(singleUpdateJson(3, chatId, link.toString())))
+                .willReturn(okJson(singleUpdateJson(2, chatId, link.toString())))
                 .willSetStateTo("TAGS"));
 
         MOCK.stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
                 .inScenario("telegram-track-flow")
                 .whenScenarioStateIs("TAGS")
-                .willReturn(okJson(singleUpdateJson(4, chatId, tags)))
+                .willReturn(okJson(singleUpdateJson(3, chatId, tags)))
                 .willSetStateTo("EMPTY"));
 
         MOCK.stubFor(post(urlMatching("/bot[^/]+/getUpdates"))
@@ -244,18 +238,16 @@ abstract class AbstractBotScrapperE2ETest {
                     }
                     """.formatted(repo, owner, repo))));
 
-        MOCK.stubFor(get(urlPathEqualTo("/repos/" + owner + "/" + repo + "/activity"))
+        MOCK.stubFor(get(urlPathEqualTo("/repos/" + owner + "/" + repo + "/issues"))
+                .withQueryParam("state", equalTo("all"))
+                .withQueryParam("sort", equalTo("created"))
+                .withQueryParam("direction", equalTo("desc"))
+                .withQueryParam("per_page", equalTo("1"))
                 .willReturn(aResponse()
                         .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                    [
-                      {
-                        "id": 1001,
-                        "activity_type": "push",
-                        "timestamp": "2026-03-15T10:00:00Z"
-                      }
-                    ]
+                    []
                     """)));
     }
 

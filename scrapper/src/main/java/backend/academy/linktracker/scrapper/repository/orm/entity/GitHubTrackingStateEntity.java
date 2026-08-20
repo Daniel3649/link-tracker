@@ -27,9 +27,6 @@ public class GitHubTrackingStateEntity {
     @JoinColumn(name = "link_id", nullable = false)
     private TrackedLinkEntity trackedLink;
 
-    @Column(name = "etag")
-    private String etag;
-
     @Column(name = "last_activity_id")
     private Long lastActivityId;
 }

@@ -23,5 +23,7 @@ public interface SubscriptionRepository {
 
     List<Subscription> findAllByTrackedLink(TrackedLink trackedLink);
 
+    List<Long> findAllChatIdsByTrackedLinkId(Long trackedLinkId);
+
     void clear();
 }

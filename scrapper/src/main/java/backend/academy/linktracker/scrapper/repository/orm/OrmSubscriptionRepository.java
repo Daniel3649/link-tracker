@@ -100,6 +100,11 @@ public class OrmSubscriptionRepository implements SubscriptionRepository {
     }
 
     @Override
+    public List<Long> findAllChatIdsByTrackedLinkId(Long trackedLinkId) {
+        return repository.findAllChatIdsByTrackedLinkIdOrderByIdAsc(trackedLinkId);
+    }
+
+    @Override
     public void clear() {
         entityManager.createNativeQuery("truncate table subscription cascade").executeUpdate();
     }
